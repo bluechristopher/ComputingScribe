@@ -44,26 +44,11 @@ jobs:
         if: env.PROJECT_ID != ''
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for GCP Artifact Registry
-        if: env.PROJECT_ID != ''
-        run: |
-          gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev --quiet
-
-      - name: Build and Push Docker Image
-        if: env.PROJECT_ID != ''
-        run: |
-          # Create Artifact Registry repo if it doesn't exist
-          gcloud artifacts repositories describe ${{ env.REPOSITORY }} --location=${{ env.GAR_LOCATION }} || \
-          gcloud artifacts repositories create ${{ env.REPOSITORY }} --repository-format=docker --location=${{ env.GAR_LOCATION }} --description="EduScribe AI Docker Repository"
-
-          docker build -t ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:latest .
-          docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:latest
-
-      - name: Deploy to Cloud Run
+      - name: Build Container and Deploy to Cloud Run
         if: env.PROJECT_ID != ''
         run: |
           gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --image=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:latest \
+            --source . \
             --region=${{ env.GAR_LOCATION }} \
             --platform=managed \
             --allow-unauthenticated \
