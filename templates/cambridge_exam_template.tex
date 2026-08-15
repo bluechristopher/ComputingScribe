@@ -1,0 +1,80 @@
+\documentclass[11pt,a4paper]{article}
+
+% ==============================================================================
+% CAMBRIDGE EXAM GENERAL TEMPLATE
+% ==============================================================================
+\newcommand{\Institution}{((INSTITUTION))}
+\newcommand{\ExamYear}{((EXAM_YEAR))}
+\newcommand{\ExamYearShort}{((EXAM_YEAR_SHORT))}
+\newcommand{\SyllabusCode}{((SYLLABUS_CODE))}
+\newcommand{\PaperNumber}{((PAPER_NUMBER))}
+\newcommand{\ExamSeries}{((EXAM_SERIES))}
+\newcommand{\FullPaperCode}{\SyllabusCode/\PaperNumber/\ExamSeries/\ExamYearShort}
+
+\usepackage[a4paper,
+  left=1.65cm,
+  right=1.65cm,
+  top=1.5cm,
+  bottom=2.3cm,
+  headheight=14pt,
+  headsep=18pt,
+  footskip=25pt
+]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\usepackage{courier}
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{textcomp}
+\usepackage{upquote}
+\usepackage{enumitem}
+\usepackage{calc}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{amsmath}
+
+\linespread{1.08}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+
+\newcommand{\Marks}[1]{%
+  \leavevmode
+  \unskip
+  \penalty9999
+  \hbox{}\nobreak\hfill
+  \quad
+  \hbox{[#1]}%
+  \par
+}
+
+\newcommand{\code}[1]{{\ttfamily #1}}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  upquote=true,
+  breaklines=true,
+  frame=single,
+  tabsize=4,
+  backgroundcolor=\color{gray!8}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\textbf{\thepage}}
+\fancyfoot[L]{\fontsize{8.5pt}{10pt}\selectfont \copyright\ \Institution\ \ExamYear}
+\fancyfoot[C]{\fontsize{8.5pt}{10pt}\selectfont \FullPaperCode}
+\fancyfoot[R]{\fontsize{9.5pt}{11pt}\selectfont\textbf{[Turn over}}
+
+\begin{document}
+\setcounter{page}{2}
+
+% __AGENT_BODY_SLOT__
+
+\end{document}

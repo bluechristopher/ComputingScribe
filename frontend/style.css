@@ -1,0 +1,406 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+
+/* ==============================================================================
+   1. UNIVERSAL TYPOGRAPHY & APP ROOT
+   ============================================================================== */
+html, body, [class*="css"], .stApp {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+.stApp {
+    background-color: #f8fafc !important;
+}
+
+/* ==============================================================================
+   2. MAIN (RIGHT PANEL) - FULL LIGHT THEME & 100% CONTRAST DARK TEXT
+   ============================================================================== */
+section.main,
+[data-testid="stMain"],
+[data-testid="stMainBlockContainer"],
+.main {
+    background-color: #f8fafc !important;
+}
+
+/* Force dark color on all labels, radio options, paragraphs, spans in main panel */
+[data-testid="stMain"] label,
+[data-testid="stMain"] label *,
+[data-testid="stMain"] label p,
+[data-testid="stMain"] label span,
+[data-testid="stMain"] [data-testid="stWidgetLabel"],
+[data-testid="stMain"] [data-testid="stWidgetLabel"] *,
+[data-testid="stMain"] [data-testid="stWidgetLabel"] p,
+[data-testid="stMain"] [data-testid="stWidgetLabel"] label,
+[data-testid="stMain"] [data-testid="stRadio"] label,
+[data-testid="stMain"] [data-testid="stRadio"] label *,
+[data-testid="stMain"] [data-testid="stRadio"] p,
+[data-testid="stMain"] [data-testid="stRadio"] span,
+[data-testid="stMain"] div[role="radiogroup"] label,
+[data-testid="stMain"] div[role="radiogroup"] label *,
+[data-testid="stMain"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stMain"] [data-testid="stMarkdownContainer"] span,
+[data-testid="stMain"] [data-testid="stMarkdownContainer"] strong,
+[data-testid="stMain"] [data-testid="stMarkdownContainer"] em,
+[data-testid="stMain"] [data-testid="stMarkdownContainer"] li,
+[data-testid="stMain"] p,
+[data-testid="stMain"] span,
+[data-testid="stMain"] div,
+[data-testid="stMain"] li {
+    color: #0f172a !important;
+}
+
+/* Main Panel Headings */
+[data-testid="stMain"] h1, 
+[data-testid="stMain"] h2, 
+[data-testid="stMain"] h3, 
+[data-testid="stMain"] h4,
+[data-testid="stMain"] h5,
+[data-testid="stMain"] h6 {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
+/* Expander in Main Panel */
+[data-testid="stMain"] [data-testid="stExpander"],
+[data-testid="stMain"] details {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-testid="stMain"] [data-testid="stExpander"] summary,
+[data-testid="stMain"] [data-testid="stExpander"] summary * {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
+[data-testid="stMain"] [data-testid="stExpanderDetails"] {
+    background-color: #ffffff !important;
+    border-top: 1px solid #f1f5f9 !important;
+}
+
+/* Main Panel Inputs, Textarea, and Selectbox Bars (Light Box + Dark Text) */
+[data-testid="stMain"] input,
+[data-testid="stMain"] textarea,
+[data-testid="stMain"] select,
+[data-testid="stMain"] [data-baseweb="select"] > div {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #94a3b8 !important;
+    border-radius: 8px !important;
+}
+
+[data-testid="stMain"] [data-baseweb="select"] span,
+[data-testid="stMain"] [data-baseweb="select"] div,
+[data-testid="stMain"] [data-baseweb="select"] input {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+}
+
+[data-testid="stMain"] [data-baseweb="select"] svg {
+    fill: #0f172a !important;
+}
+
+/* Inline Code Badges in Main Panel */
+[data-testid="stMain"] code {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    border: 1px solid #e2e8f0 !important;
+    font-weight: 600 !important;
+}
+
+/* Header & Banner */
+.main-header {
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%) !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 16px !important;
+    padding: 24px 30px !important;
+    margin-bottom: 24px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+}
+
+.main-title {
+    font-size: 2.2rem !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.5px !important;
+    margin-bottom: 6px !important;
+}
+
+.main-tagline {
+    font-size: 1.05rem !important;
+    color: #334155 !important;
+    font-weight: 500 !important;
+    line-height: 1.5 !important;
+}
+
+/* Badges */
+.badge-pill {
+    display: inline-block !important;
+    padding: 4px 12px !important;
+    border-radius: 9999px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    margin-right: 8px !important;
+}
+
+.badge-gemini {
+    background-color: #eff6ff !important;
+    color: #1d4ed8 !important;
+    border: 1px solid #bfdbfe !important;
+}
+
+.badge-latex {
+    background-color: #f0fdf4 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
+}
+
+.badge-fairness {
+    background-color: #fef3c7 !important;
+    color: #b45309 !important;
+    border: 1px solid #fde68a !important;
+}
+
+/* Custom Cards */
+.ed-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    color: #0f172a !important;
+}
+
+.ed-card * {
+    color: #0f172a !important;
+}
+
+.card-title {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin-bottom: 8px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.card-subtitle {
+    font-size: 0.9rem !important;
+    color: #475569 !important;
+    margin-bottom: 12px !important;
+    font-weight: 500 !important;
+}
+
+/* Metric Display */
+.metric-box {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    padding: 14px 16px !important;
+    text-align: center !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03) !important;
+}
+
+.metric-value {
+    font-size: 1.6rem !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+}
+
+.metric-label {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Main Panel Primary Buttons */
+[data-testid="stMain"] .stButton > button {
+    font-family: 'Montserrat', sans-serif !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 8px 20px !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Tabs */
+button[data-baseweb="tab"] {
+    font-family: 'Montserrat', sans-serif !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: #2563eb !important;
+    border-bottom: 2px solid #2563eb !important;
+}
+
+/* ==============================================================================
+   3. SIDEBAR (LEFT PANEL) - DARK THEME WITH GOLD & LIGHT SILVER
+   ============================================================================== */
+section[data-testid="stSidebar"],
+[data-testid="stSidebar"] {
+    background-color: #0f172a !important;
+    border-right: 1px solid #1e293b !important;
+}
+
+[data-testid="stSidebar"] hr {
+    border-color: #334155 !important;
+}
+
+/* Sidebar Headings in Gold */
+[data-testid="stSidebar"] h1, 
+[data-testid="stSidebar"] h2, 
+[data-testid="stSidebar"] h3, 
+[data-testid="stSidebar"] h4,
+[data-testid="stSidebar"] .stMarkdown h3 {
+    color: #fbbf24 !important; /* Gold */
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+}
+
+/* Sidebar Paragraphs, Labels, and Lists in Light Silver */
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] *,
+[data-testid="stSidebar"] p, 
+[data-testid="stSidebar"] span, 
+[data-testid="stSidebar"] label, 
+[data-testid="stSidebar"] li,
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] *,
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
+    color: #e2e8f0 !important; /* Light Silver */
+    font-weight: 500 !important;
+}
+
+/* Sidebar Captions in Warm Amber / Gold Tint */
+[data-testid="stSidebar"] .stCaption,
+[data-testid="stSidebar"] small {
+    color: #fcd34d !important; /* Soft Gold */
+    font-weight: 500 !important;
+}
+
+/* Sidebar Inputs & Selectbox Bars (Dark Box + Light Text) */
+[data-testid="stSidebar"] input, 
+[data-testid="stSidebar"] textarea, 
+[data-testid="stSidebar"] select,
+[data-testid="stSidebar"] [data-baseweb="select"],
+[data-testid="stSidebar"] [data-baseweb="select"] > div {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+    border: 1px solid #475569 !important;
+    border-radius: 8px !important;
+}
+
+[data-testid="stSidebar"] [data-baseweb="select"] span,
+[data-testid="stSidebar"] [data-baseweb="select"] div,
+[data-testid="stSidebar"] [data-baseweb="select"] input {
+    color: #f8fafc !important;
+}
+
+[data-testid="stSidebar"] [data-baseweb="select"] svg {
+    fill: #fbbf24 !important; /* Gold arrow in sidebar */
+}
+
+[data-testid="stSidebar"] input:focus,
+[data-testid="stSidebar"] [data-baseweb="select"] > div:focus-within {
+    border-color: #fbbf24 !important;
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25) !important;
+}
+
+/* Sidebar File Uploader */
+[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+    background-color: #1e293b !important;
+    border: 1px dashed #fbbf24 !important;
+    border-radius: 10px !important;
+    padding: 10px !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section {
+    background-color: #1e293b !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section span,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section small {
+    color: #e2e8f0 !important;
+}
+
+/* Sidebar Buttons */
+[data-testid="stSidebar"] .stButton > button {
+    background-color: #1e293b !important;
+    color: #fbbf24 !important; /* Gold Text */
+    border: 1px solid #fbbf24 !important; /* Gold Border */
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background-color: #fbbf24 !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3) !important;
+}
+
+/* ==============================================================================
+   4. DROPDOWN MENUS & POPOVER LISTS (GLOBAL OVERLAYS)
+   ============================================================================== */
+div[data-baseweb="popover"],
+div[data-baseweb="popover"] > div,
+ul[role="listbox"],
+div[data-baseweb="menu"] {
+    background-color: #0f172a !important; /* Elegant dark navy */
+    border: 1px solid #334155 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45) !important;
+    min-width: 540px !important; /* Ensures full syllabus topic visibility without truncation */
+    max-width: 95vw !important;
+    z-index: 999999 !important;
+}
+
+li[role="option"],
+div[data-baseweb="menu"] li,
+div[role="option"],
+ul[role="listbox"] li {
+    background-color: #0f172a !important;
+    color: #f8fafc !important; /* Crisp white */
+    font-weight: 500 !important;
+    font-size: 0.95rem !important;
+    padding: 13px 18px !important;
+    border-bottom: 1px solid #1e293b !important;
+    white-space: normal !important; /* Never truncate with ellipsis */
+    line-height: 1.45 !important;
+    word-break: normal !important;
+}
+
+li[role="option"] span,
+li[role="option"] div,
+ul[role="listbox"] li * {
+    color: #f8fafc !important;
+    white-space: normal !important;
+}
+
+li[role="option"]:hover,
+li[role="option"][aria-selected="true"],
+div[data-baseweb="menu"] li:hover,
+div[data-baseweb="menu"] li[aria-selected="true"] {
+    background-color: #1e293b !important;
+    color: #fbbf24 !important; /* Gold on hover/selection */
+}
+
+li[role="option"]:hover span,
+li[role="option"][aria-selected="true"] span,
+li[role="option"]:hover div,
+li[role="option"][aria-selected="true"] div {
+    color: #fbbf24 !important;
+    font-weight: 600 !important;
+}
+
+/* Code Listings */
+pre, code {
+    font-family: 'Fira Code', 'Courier New', monospace !important;
+}

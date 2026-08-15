@@ -1,0 +1,96 @@
+{
+  "teacher_profiles": {
+    "default_teacher": {
+      "name": "H2 Computing Educator",
+      "institution": "Anderson Serangoon Junior College",
+      "syllabus_code": "9569",
+      "syllabus_name": "Singapore-Cambridge GCE A-Level H2 Computing (2027)",
+      "exam_series": "PRELIM",
+      "exam_year": "2027",
+      "learned_styles": {
+        "sec1_linear_adts": {
+          "category": "sec1_linear_adts",
+          "module": "Section 1: Data and Data Structures",
+          "topic": "Stacks, Circular Queues & Linked Lists",
+          "preferred_depth": "long_contextual",
+          "task_count": 4,
+          "total_marks": 100,
+          "use_jupyter_cells": true,
+          "include_starter_code": true,
+          "rubric_style": "granular_partial_credit"
+        },
+        "sec1_nonlinear_bst_hash": {
+          "category": "sec1_nonlinear_bst_hash",
+          "module": "Section 1: Data and Data Structures",
+          "topic": "Binary Search Trees & Hash Tables",
+          "preferred_depth": "long_contextual",
+          "task_count": 4,
+          "total_marks": 100,
+          "use_jupyter_cells": true,
+          "include_starter_code": true,
+          "rubric_style": "granular_partial_credit"
+        },
+        "sec2_algorithms_sorting_searching": {
+          "category": "sec2_algorithms_sorting_searching",
+          "module": "Section 2: Algorithms and Problem Solving",
+          "topic": "Quicksort, Merge Sort, Binary Search & Big-O Complexity",
+          "preferred_depth": "long_contextual",
+          "task_count": 5,
+          "total_marks": 100,
+          "include_pseudocode_boxes": true,
+          "include_trace_tables": true,
+          "rubric_style": "cambridge_ao_breakdown"
+        },
+        "sec2_logic_decision_tables": {
+          "category": "sec2_logic_decision_tables",
+          "module": "Section 2: Algorithms and Problem Solving",
+          "topic": "Decision Tables, Logic Simplification & Test Data",
+          "preferred_depth": "short_direct",
+          "task_count": 6,
+          "total_marks": 100,
+          "include_decision_tables": true,
+          "rubric_style": "cambridge_ao_breakdown"
+        },
+        "sec3_oop_hierarchies": {
+          "category": "sec3_oop_hierarchies",
+          "module": "Section 3: System Design and Implementation",
+          "topic": "OOP Classes, Encapsulation, Inheritance & Polymorphism",
+          "preferred_depth": "long_contextual",
+          "task_count": 4,
+          "total_marks": 100,
+          "include_starter_code": true,
+          "rubric_style": "granular_partial_credit"
+        },
+        "sec3_sql_normalisation": {
+          "category": "sec3_sql_normalisation",
+          "module": "Section 3: System Design and Implementation",
+          "topic": "Relational Databases, 1NF-3NF Normalisation & SQL DDL/DML",
+          "preferred_depth": "long_contextual",
+          "task_count": 5,
+          "total_marks": 100,
+          "include_schema_diagrams": true,
+          "rubric_style": "syntax_and_output_verification"
+        },
+        "sec3_web_networks_security": {
+          "category": "sec3_web_networks_security",
+          "module": "Section 3: System Design and Implementation",
+          "topic": "Web Apps (Flask/HTTP), OSI/TCP-IP, Subnetting & Encryption",
+          "preferred_depth": "long_contextual",
+          "task_count": 5,
+          "total_marks": 100,
+          "include_comparison_matrices": true,
+          "rubric_style": "cambridge_ao_breakdown"
+        },
+        "sec4_ethics_ai_pdpa": {
+          "category": "sec4_ethics_ai_pdpa",
+          "module": "Section 4: Ethics, Legislation & Emerging Tech",
+          "topic": "PDPA, Intellectual Property, AI/ML Ethics & Cybersecurity",
+          "preferred_depth": "short_direct",
+          "task_count": 5,
+          "total_marks": 100,
+          "rubric_style": "point_per_distinct_fact"
+        }
+      }
+    }
+  }
+}

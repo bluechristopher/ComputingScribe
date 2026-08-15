@@ -1,0 +1,570 @@
+\documentclass[11pt,a4paper]{article}
+
+% ==============================================================================
+% EXAM CONFIGURATION
+% ==============================================================================
+\newcommand{\Institution}{Anderson Serangoon Junior College}
+\newcommand{\ExamYear}{2026}
+\newcommand{\ExamYearShort}{26}
+\newcommand{\SyllabusCode}{9569}
+\newcommand{\PaperNumber}{01}
+\newcommand{\ExamSeries}{PRELIM}
+
+\newcommand{\FullPaperCode}{\SyllabusCode/\PaperNumber/\ExamSeries/\ExamYearShort}
+% ==============================================================================
+
+\usepackage[a4paper,
+  left=1.65cm,
+  right=1.65cm,
+  top=1.5cm,
+  bottom=2.3cm,
+  headheight=14pt,
+  headsep=18pt,
+  footskip=25pt
+]{geometry}
+
+\usepackage{iftex}
+\ifXeTeX
+  \usepackage{fontspec}
+  \setmainfont{Arial}
+  \setmonofont{Courier New}
+\else\ifLuaTeX
+  \usepackage{fontspec}
+  \setmainfont{Arial}
+  \setmonofont{Courier New}
+\else
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{helvet}
+  \usepackage{courier}
+  \renewcommand{\familydefault}{\sfdefault}
+\fi\fi
+
+\usepackage{textcomp}
+\usepackage{upquote}
+\usepackage{enumitem}
+\usepackage{calc}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage[normalem]{ulem}
+
+% Configure dashed underline length and spacing for database schemas
+\setlength{\dashlength}{0.25em}
+\setlength{\dashgap}{0.2em}
+
+% --- Paragraph and Line Spacing ---
+\linespread{1.08}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45em}
+
+% --- Bulletproof Right-Aligned Marks Macro (Standard Weight) ---
+\newcommand{\Marks}[1]{%
+  \leavevmode
+  \unskip
+  \penalty9999
+  \hbox{}\nobreak\hfill
+  \quad
+  \hbox{[#1]}%
+  \par
+}
+
+% --- Inline Code Macro ---
+\newcommand{\code}[1]{{\ttfamily #1}}
+
+% --- Cambridge List Structure Setup ---
+% Level 0: Main Question numbers (1, 2, ...)
+\newlist{questions}{enumerate}{1}
+\setlist[questions]{
+  label=\textbf{\arabic*},
+  leftmargin=0.8cm,
+  labelwidth=0.8cm,
+  labelsep=0pt,
+  itemindent=0pt,
+  align=left,
+  topsep=1.2em,
+  itemsep=1.5em,
+  parsep=0.45em
+}
+
+% Level 1: Parts (a), (b), ...
+\newlist{parts}{enumerate}{1}
+\setlist[parts]{
+  label=\textbf{(\alph*)},
+  leftmargin=0.8cm,
+  labelwidth=0.8cm,
+  labelsep=0pt,
+  itemindent=0pt,
+  align=left,
+  topsep=0.6em,
+  itemsep=0.8em,
+  parsep=0.45em
+}
+
+% Level 2: Sub-parts (i), (ii), ...
+\newlist{subparts}{enumerate}{1}
+\setlist[subparts]{
+  label=\textbf{(\roman*)},
+  leftmargin=0.8cm,
+  labelwidth=0.8cm,
+  labelsep=0pt,
+  itemindent=0pt,
+  align=left,
+  topsep=0.4em,
+  itemsep=0.6em,
+  parsep=0.35em
+}
+
+% Cambridge-style Scenario Bullets
+\newlist{tightitemize}{itemize}{1}
+\setlist[tightitemize]{
+  label=\textbullet,
+  leftmargin=0.8cm,
+  labelwidth=0.4cm,
+  labelsep=0.4cm,
+  topsep=0.4em,
+  itemsep=0.2em,
+  parsep=0.2em
+}
+
+% --- Pseudocode Listing Environment ---
+\usepackage{etoolbox}
+\def\padtwo#1{\ifnum#1<10 0\arabic{#1}\else\arabic{#1}\fi}
+
+\lstnewenvironment{pseudocode}[1][]
+{
+  \lstset{
+    basicstyle=\ttfamily\fontsize{10.5pt}{13pt}\selectfont,
+    numbers=left,
+    numberstyle=\ttfamily\fontsize{10.5pt}{13pt}\selectfont\padtwo,
+    numbersep=1.2em,
+    xleftmargin=1.0cm,
+    stepnumber=1,
+    breaklines=true,
+    showstringspaces=false,
+    tabsize=2,
+    keepspaces=true,
+    upquote=true,
+    escapeinside={(*@}{@*)},
+    #1
+  }
+}{}
+
+% --- Cambridge Header & Footer Setup ---
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Page number at top centre
+\fancyhead[C]{\textbf{\thepage}}
+
+% Footers
+\fancyfoot[L]{\fontsize{8.5pt}{10pt}\selectfont \copyright\ \Institution\ \ExamYear}
+\fancyfoot[C]{\fontsize{8.5pt}{10pt}\selectfont \FullPaperCode}
+\newcommand{\TurnOver}{\fancyfoot[R]{\fontsize{9.5pt}{11pt}\selectfont\textbf{[Turn over}}}
+\newcommand{\NoTurnOver}{\fancyfoot[R]{}}
+
+% --- Begin Document ---
+\begin{document}
+
+% ==============================================================================
+% PAGE 2
+% ==============================================================================
+\setcounter{page}{2}
+\TurnOver
+
+\begin{questions}
+
+\item A company sells components.
+\begin{tightitemize}
+  \item Customers order a number of components.
+  \item The company supplies a maximum of 50 components per order.
+  \item The company arranges delivery if the number of components ordered is no more than its current stock level and the customer has sufficient funds to cover the order cost. If the customer has sufficient funds, but the company does not have the number of components required in stock, the order is put on hold. Otherwise, the order is rejected.
+\end{tightitemize}
+
+\begin{parts}
+  \item Copy and complete the decision table. Include all possible combinations and do \textbf{not} remove redundancies at this point.
+  
+  \vspace{0.4em}
+  \begin{tabular}{|l|l|c|c|c|c|c|c|c|c|}
+    \cline{3-10}
+    \multicolumn{2}{c|}{} & \multicolumn{8}{c|}{\textbf{Rules}} \\
+    \hline
+    \multirow{3}{*}{\textbf{Conditions}} 
+    & components ordered $\le 50$ & \hspace{1.2em} & \hspace{1.2em} & \hspace{1.2em} & \hspace{1.2em} & \hspace{1.2em} & \hspace{1.2em} & \hspace{1.2em} & \hspace{1.2em} \\ \cline{2-10}
+    & customer has sufficient funds & & & & & & & & \\ \cline{2-10}
+    & amount in stock $<$ components ordered & & & & & & & & \\ \hline
+    \hline
+    \multirow{3}{*}{\textbf{Actions}} 
+    & deliver components & & & & & & & & \\ \cline{2-10}
+    & hold order & & & & & & & & \\ \cline{2-10}
+    & reject order & & & & & & & & \\ \hline
+  \end{tabular}
+  \Marks{4}
+
+  \item Draw a simplified decision table by removing redundancies from your answer in part \textbf{(a)}. \Marks{2}
+
+  \item Write pseudo-code to input the number of components the customer wants to order and output an appropriate response from:
+  \begin{tightitemize}
+    \item 'Order accepted'
+    \item 'Max order size exceeded'
+    \item 'Insufficient stock'
+    \item 'Insufficient funds'
+  \end{tightitemize}
+  
+  Use the identifier names in the table in your pseudo-code:
+  
+  \vspace{0.4em}
+  \begin{tabular}{|l|p{8.5cm}|}
+    \hline
+    \multicolumn{1}{|c|}{\textbf{Identifier name}} & \multicolumn{1}{c|}{\textbf{Description}} \\
+    \hline
+    \code{InStock} & number of components currently in stock \\ \hline
+    \code{NumOrdered} & number of components customer wants to order \\ \hline
+    \code{TotalOrderCost} & the order cost \\ \hline
+    \code{CustBalance} & the customer's funds \\ \hline
+  \end{tabular}
+  \Marks{5}
+
+  \item Copy and complete the table to give suitable numerical values for \code{NumOrdered} for the test cases given:
+  
+  \vspace{0.4em}
+  \begin{tabular}{|p{4.2cm}|p{3.5cm}|}
+    \hline
+    \multicolumn{1}{|c|}{\textbf{Test case}} & \multicolumn{1}{c|}{\textbf{Value}} \\ \hline
+    abnormal & \\ \hline
+    extreme  & \\ \hline
+    normal   & \\ \hline
+  \end{tabular}
+  \Marks{3}
+\end{parts}
+
+\newpage
+
+% ==============================================================================
+% PAGE 3
+% ==============================================================================
+\TurnOver
+
+\item A function \code{Puzzle} uses iteration.
+
+\begin{pseudocode}
+FUNCTION Puzzle(N : INTEGER) RETURNS STRING
+  S = ""
+  WHILE N != 0
+    R = N MOD 2
+    N = N DIV 2
+    S = ToString(R) + S
+  ENDWHILE
+  RETURN S
+ENDFUNCTION
+\end{pseudocode}
+
+\code{ToString} is a predefined subroutine that converts an integer to a string.
+
+\begin{parts}
+  \item Copy and complete the trace table for the function call \code{Puzzle(109)}.
+  
+  You may add as many additional rows to the table as you need.
+
+  \vspace{0.4em}
+  \begin{tabular}{|p{2.8cm}|p{2.8cm}|p{2.8cm}|}
+    \hline
+    \centering\textbf{N} & \centering\textbf{S} & \centering\textbf{R} \tabularnewline
+    \hline
+    & & \tabularnewline
+    & & \tabularnewline
+    & & \tabularnewline
+    & & \tabularnewline
+    \hline
+  \end{tabular}
+  \Marks{3}
+
+  \item Give \textbf{one} reason why \code{R} needs to be converted to a string on line 06. \Marks{1}
+
+  \item Identify the purpose of the function \code{Puzzle}. \Marks{1}
+
+  \item Rewrite the function \code{Puzzle} as a recursive function. \Marks{3}
+
+  \item Identify \textbf{two} advantages of using the iterative version of the function \code{Puzzle} instead of the recursive version. \Marks{2}
+
+  \item Both the ASCII and the Unicode value for the character 'n' is 110.
+  \begin{subparts}
+    \item Calculate the hexadecimal value for the denary value 110. \Marks{1}
+    \item Identify \textbf{two} benefits of using Unicode for encoding characters. \Marks{2}
+  \end{subparts}
+\end{parts}
+
+\newpage
+
+% ==============================================================================
+% PAGE 4
+% ==============================================================================
+\TurnOver
+
+\item An outdoor clothing shop takes orders from customers.
+
+It uses a database to store customers' orders for the products it sells. It also stores its suppliers' details. Suppliers provide the products that the company sells to its customers. No two suppliers provide the same product.
+
+Each customer has:
+\begin{tightitemize}
+  \item a customer number
+  \item a name
+  \item a delivery address
+  \item an email address.
+\end{tightitemize}
+
+Each supplier has:
+\begin{tightitemize}
+  \item a supplier number
+  \item a name
+  \item an email address
+  \item a telephone number.
+\end{tightitemize}
+
+Each product has:
+\begin{tightitemize}
+  \item an identification code
+  \item a description
+  \item a retail price
+  \item a current stock level
+  \item a minimum stock level.
+\end{tightitemize}
+
+Each order has:
+\begin{tightitemize}
+  \item an order number
+  \item a transaction date
+  \item a set of order lines, where each order line specifies the quantity of each product that the customer orders.
+\end{tightitemize}
+For example, there are two order lines if a customer orders three pairs of gloves and two hats.
+
+\begin{parts}
+  \item The database will have \textbf{five} tables.
+  
+  Copy and complete this entity-relationship (ER) diagram by showing \textbf{four} one-to-many relationships. When copying the diagram, do \textbf{not} rearrange the layout of the five given entities. If needed, your answer may include lines that cross over each other.
+  
+  \vspace{0.8em}
+  \noindent\begin{minipage}{\linewidth}
+  \centering
+  \begin{tikzpicture}[every node/.style={draw, thick, minimum width=2.8cm, minimum height=0.9cm, align=center}]
+    \node (cust) at (0, 3.4) {Customer};
+    \node (ord) at (-2.8, 1.7) {Order};
+    \node (ordline) at (2.8, 1.7) {OrderLine};
+    \node (supp) at (-2.8, 0) {Supplier};
+    \node (prod) at (2.8, 0) {Product};
+  \end{tikzpicture}
+  \end{minipage}
+  \vspace{0.4em}
+  \Marks{4}
+\end{parts}
+
+\newpage
+
+% ==============================================================================
+% PAGE 5
+% ==============================================================================
+\TurnOver
+
+\begin{parts}
+  \setcounter{partsi}{1} % continues as (b)
+  \item A table description can be expressed as:
+  
+  \code{TableName (\uline{Attribute 1}, \dashuline{Attribute 2}, Attribute 3, ...)}
+  
+  The primary key is indicated by underlining one or more attributes. Foreign keys are indicated by using a dashed underline.
+  
+  Write table definitions for each of the tables listed.
+  
+  Do \textbf{not} use any compound primary keys.
+  
+  \begin{subparts}
+    \item Customer \Marks{1}
+    \item Order \Marks{2}
+    \item OrderLine \Marks{2}
+    \item Supplier \Marks{1}
+    \item Product \Marks{2}
+  \end{subparts}
+
+  \item The company wants a report to display the products that need to be ordered from its suppliers.
+  
+  Products need to be reordered when the current stock level drops below the minimum stock level.
+  
+  A report is produced that displays product description, price, supplier name and supplier email address for the items that need reordering.
+  
+  Write an SQL query to output the required data. \Marks{4}
+
+  \item Give \textbf{one} reason why a supplier's telephone number should \textbf{not} be stored as an integer. \Marks{1}
+
+  \item Identify \textbf{two} suitable validation checks that could be performed when a customer email address is input. \Marks{2}
+
+  \item The company is investigating using a NoSQL Database Management System (DBMS) rather than a relational database.
+  
+  State \textbf{two} reasons why the company may \textbf{not} want to use a NoSQL DBMS. \Marks{2}
+\end{parts}
+
+\newpage
+
+% ==============================================================================
+% PAGE 6
+% ==============================================================================
+\TurnOver
+
+\item A stack is to be implemented as a class.
+
+The stack will be implemented as a static array of 10 string elements.
+
+Part of a class diagram is given:
+
+\vspace{0.6em}
+\noindent\begin{minipage}{\linewidth}
+\centering
+\begin{tabular}{|p{6.0cm}|}
+  \hline
+  \multicolumn{1}{|c|}{\textbf{Stack}} \\
+  \hline
+  \code{- MaxSize : Integer} \\
+  \vspace{7.5em} \\
+  \hline
+  \code{+ IsEmpty() : Boolean} \\
+  \vspace{7.5em} \\
+  \hline
+\end{tabular}
+\hspace{1.2cm}
+\begin{tabular}{|c|p{2.2cm}|}
+  \multicolumn{2}{c}{\textbf{Legend}} \\
+  \hline
+  \code{+} & Public \\ \hline
+  \code{-} & Private \\ \hline
+\end{tabular}
+\end{minipage}
+\vspace{0.6em}
+
+\begin{parts}
+  \item Copy and complete the class diagram to add the attributes and methods necessary for the stack class, making it clear whether they are public or private. \Marks{5}
+
+  \item Describe \textbf{two} benefits of using Object-Oriented Programming (OOP) to implement the stack as a class. \Marks{4}
+
+  \item Explain how the stack class could be used to reverse a variable length sequence of inputs such as X Y Z to output Z Y X. \Marks{3}
+
+  \item A stack could be implemented by using a dynamic linked list.
+  
+  Identify \textbf{two} benefits of using a dynamic structure. \Marks{2}
+\end{parts}
+
+\newpage
+
+% ==============================================================================
+% PAGE 7
+% ==============================================================================
+\TurnOver
+
+% ==============================================================================
+% QUESTION 5 (Fixed Alignment)
+% ==============================================================================
+\item A bank currently provides services to its customers via a web application.
+
+\begin{parts}
+  \item Customers type in a Uniform Resource Locator (URL) into a web browser to access the web application.
+  
+  \vspace{0.4em}
+  {\centering \code{https://www.newbank.com/onlinebanking/sign-in.html}\par}
+  \vspace{0.4em}
+  
+  Copy and complete the table to describe each part of the URL.
+  
+  \vspace{0.4em}
+  \begin{tabular}{|p{5.8cm}|p{6.8cm}|}
+    \hline
+    \multicolumn{1}{|c|}{\textbf{Part of URL}} & \multicolumn{1}{c|}{\textbf{Description}} \\
+    \hline
+    https & \\ \hline
+    www & hostname \\ \hline
+    newbank.com & \\ \hline
+    onlinebanking/sign-in.html & \\ \hline
+  \end{tabular}
+  \Marks{3}
+
+  \item Explain how the IP address of the bank's server is found when the URL is entered into a web browser. \Marks{2}
+
+  \item The bank uses an intrusion detection system (IDS) as part of its security measures.
+  
+  State \textbf{three} features of an IDS. \Marks{3}
+
+  \item The bank wants to develop a new native application for its customers to access their accounts from mobile phones.
+  \begin{subparts}
+    \item Explain what is meant by a native application. \Marks{2}
+    \item Identify \textbf{two} benefits of developing a native application. \Marks{2}
+  \end{subparts}
+
+  \item The software team that develops the application also writes technical documentation.
+  
+  They use version control with naming conventions for the technical documentation.
+  \begin{subparts}
+    \item Give \textbf{two} benefits of using version control. \Marks{2}
+    \item Explain the need for naming conventions. \Marks{2}
+  \end{subparts}
+\end{parts}
+
+\newpage
+
+% ==============================================================================
+% PAGE 8
+% ==============================================================================
+\NoTurnOver
+
+\item A programmer has implemented two sorting algorithms: bubble sort and merge sort.
+
+The contents of an array are shown:
+
+\vspace{0.4em}
+\noindent\begin{minipage}{\linewidth}
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+  \hline
+  \hspace{0.8em}9\hspace{0.8em} & \hspace{0.8em}6\hspace{0.8em} & \hspace{0.8em}1\hspace{0.8em} & \hspace{0.8em}3\hspace{0.8em} & \hspace{0.8em}7\hspace{0.8em} \\
+  \hline
+\end{tabular}
+\end{minipage}
+\vspace{0.4em}
+
+\begin{parts}
+  \item Use annotated diagrams to show how a bubble sort algorithm will sort the data in the array into ascending order. \Marks{3}
+
+  \item Use annotated diagrams to show how a merge sort algorithm will sort the data in the array into ascending order. \Marks{3}
+
+  \item Using Big-O notation, state the worst-case time complexity of each sorting algorithm in the table.
+  
+  Copy and complete the table:
+  
+  \vspace{0.4em}
+  \begin{tabular}{|p{5.5cm}|p{6.0cm}|}
+    \hline
+    \multicolumn{1}{|c|}{\textbf{Sorting algorithm}} & \multicolumn{1}{c|}{\textbf{Worst-case time complexity}} \\
+    \hline
+    bubble sort & \\ \hline
+    merge sort  & \\ \hline
+  \end{tabular}
+  \Marks{2}
+
+  \item Identify \textbf{two} reasons why a bubble sort might be used instead of a merge sort. \Marks{2}
+
+  \item A binary search algorithm can be used to search for a value in an array.
+  \begin{subparts}
+    \item State \textbf{one} precondition required for a binary search to work. \Marks{1}
+    \item Describe the steps in a binary search. \Marks{5}
+  \end{subparts}
+\end{parts}
+
+\item Autonomous taxis are unmanned vehicles that operate using Artificial Intelligence (AI). These taxis make decisions independently. For example, they navigate the quickest and safest route to pick up and drop off passengers at their destination.
+
+Discuss the ethical issues that may be raised by the introduction of autonomous taxis. \Marks{6}
+
+\end{questions}
+
+\end{document}

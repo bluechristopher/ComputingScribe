@@ -1,0 +1,79 @@
+\documentclass[11pt,a4paper]{article}
+
+% ==============================================================================
+% CAMBRIDGE MARK SCHEME TEMPLATE
+% ==============================================================================
+\newcommand{\Institution}{((INSTITUTION))}
+\newcommand{\ExamYear}{((EXAM_YEAR))}
+\newcommand{\ExamYearShort}{((EXAM_YEAR_SHORT))}
+\newcommand{\SyllabusCode}{((SYLLABUS_CODE))}
+\newcommand{\PaperNumber}{((PAPER_NUMBER))}
+\newcommand{\ExamSeries}{((EXAM_SERIES))}
+\newcommand{\FullPaperCode}{\SyllabusCode/\PaperNumber/\ExamSeries/\ExamYearShort}
+
+\usepackage[a4paper,
+  left=1.65cm,
+  right=1.65cm,
+  top=1.8cm,
+  bottom=2.3cm,
+  headheight=14pt,
+  headsep=18pt,
+  footskip=25pt
+]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\usepackage{courier}
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{textcomp}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{colortbl}
+
+\linespread{1.08}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4em}
+
+\newcommand{\code}[1]{{\ttfamily #1}}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  upquote=true,
+  breaklines=true,
+  frame=none,
+  tabsize=2
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{\Institution}}
+\fancyhead[R]{\textbf{MARK SCHEME -- \FullPaperCode}}
+\fancyfoot[L]{\fontsize{8.5pt}{10pt}\selectfont \copyright\ \Institution\ \ExamYear}
+\fancyfoot[C]{\fontsize{8.5pt}{10pt}\selectfont \FullPaperCode}
+\fancyfoot[R]{\textbf{\thepage}}
+
+\begin{document}
+
+{\noindent\Large\textbf{CAMBRIDGE INTERNATIONAL EXAMINATIONS}}\par
+{\noindent\large\textbf{MARK SCHEME for the \ExamSeries\ \ExamYear\ series}}\par
+\vspace{0.4em}
+{\noindent\textbf{\SyllabusCode\ PAPER \PaperNumber\ (MAXIMUM RAW MARK: ((TOTAL_MARKS)))}}\par
+\vspace{0.8em}
+
+\textbf{Generic Marking Principles:}
+\begin{itemize}[leftmargin=0.6cm, itemsep=0.1em, topsep=0.2em]
+  \item Marks are awarded for what candidates know and can do, not deducted for errors.
+  \item Marks must be awarded in line with the specific mark scheme.
+  \item Partial marks are awarded as indicated in the guidance column.
+\end{itemize}
+
+\vspace{0.8em}
+
+% __AGENT_BODY_SLOT__
+
+\end{document}
