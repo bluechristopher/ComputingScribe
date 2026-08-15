@@ -44,6 +44,16 @@ jobs:
         if: env.PROJECT_ID != ''
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Enable Required Google Cloud APIs
+        if: env.PROJECT_ID != ''
+        run: |
+          gcloud services enable \
+            artifactregistry.googleapis.com \
+            run.googleapis.com \
+            cloudbuild.googleapis.com \
+            firestore.googleapis.com \
+            --project=${{ env.PROJECT_ID }} --quiet
+
       - name: Configure Docker for GCP Artifact Registry
         if: env.PROJECT_ID != ''
         run: |
