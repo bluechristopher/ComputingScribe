@@ -65,17 +65,11 @@ with st.sidebar:
         st.rerun()
 
     st.markdown("---")
-    st.markdown("### ⚡ AI Engine & Infrastructure")
-    st.markdown("🔒 **Backend Security**: API Credentials Encrypted & Secured Server-Side")
+    st.markdown("### ⚡ AI Engine & Security")
+    AppConfig.DEFAULT_MODEL = "gemini-3.7-flash"
+    st.markdown("🤖 **Core Model**: `Gemini 3.7 Flash` *(Default)*")
+    st.markdown("🔒 **Security**: Credentials Secured Server-Side")
     
-    model_choice = st.selectbox(
-        "Gemini Model Selection",
-        options=["gemini-3.7-flash", "gemini-2.5-flash", "gemini-1.5-pro"],
-        index=0,
-        help="Primary reasoning & self-healing compilation model."
-    )
-    AppConfig.DEFAULT_MODEL = model_choice
-
     gcp_status = "🟢 Google Cloud Run & Vertex AI Active" if AppConfig.is_gcp_active() else "🟢 Cloud Engine Active"
     st.caption(f"Infrastructure: {gcp_status}")
 
