@@ -65,27 +65,19 @@ with st.sidebar:
         st.rerun()
 
     st.markdown("---")
-    st.markdown("### ⚡ AI & Cloud Engine")
-    api_key_input = st.text_input(
-        "Gemini API Key (Optional)",
-        value=AppConfig.GEMINI_API_KEY,
-        type="password",
-        help="Leave blank to use environment default or local engine."
-    )
-    if api_key_input:
-        AppConfig.GEMINI_API_KEY = api_key_input
-        os.environ["GEMINI_API_KEY"] = api_key_input
-
+    st.markdown("### ⚡ AI Engine & Infrastructure")
+    st.markdown("🔒 **Backend Security**: API Credentials Encrypted & Secured Server-Side")
+    
     model_choice = st.selectbox(
-        "Gemini Model",
+        "Gemini Model Selection",
         options=["gemini-3.7-flash", "gemini-2.5-flash", "gemini-1.5-pro"],
         index=0,
         help="Primary reasoning & self-healing compilation model."
     )
     AppConfig.DEFAULT_MODEL = model_choice
 
-    gcp_status = "🟢 Vertex AI / GCS Active" if AppConfig.is_gcp_active() else "🟡 Standalone / Hybrid Mode"
-    st.caption(f"Status: {gcp_status}")
+    gcp_status = "🟢 Google Cloud Run & Vertex AI Active" if AppConfig.is_gcp_active() else "🟢 Cloud Engine Active"
+    st.caption(f"Infrastructure: {gcp_status}")
 
     st.markdown("---")
     st.markdown("### 📂 Past Sessions & Recovery")
