@@ -3,7 +3,9 @@ EduScribe AI - Question Author Module
 Specialised authoring engine for Cambridge Practical & Theory exam papers and matching Mark Schemes.
 """
 
+import re
 import json
+import uuid
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
