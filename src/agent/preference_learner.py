@@ -28,7 +28,7 @@ class PreferenceLearner:
         self._init_firestore()
 
     def _init_firestore(self):
-        if AppConfig.is_gcp_active():
+        if AppConfig.is_cloud_environment() and AppConfig.GCP_PROJECT:
             try:
                 from google.cloud import firestore
                 self.firestore_db = firestore.Client(project=AppConfig.GCP_PROJECT)

@@ -112,13 +112,15 @@ class SessionManager:
         self._init_cloud_clients()
 
     def _init_cloud_clients(self):
-        if AppConfig.is_gcp_active():
+        if AppConfig.is_cloud_environment() and AppConfig.GCP_PROJECT:
             try:
                 from google.cloud import firestore, storage
                 self.firestore_db = firestore.Client(project=AppConfig.GCP_PROJECT)
                 self.gcs_client = storage.Client(project=AppConfig.GCP_PROJECT)
             except Exception as e:
                 print(f"[SessionManager] Cloud clients initialization failed, using local storage: {e}")
+                self.firestore_db = None
+                self.gcs_client = None
 
     def _get_session_dir(self, session_id: str) -> Path:
         sess_dir = LOCAL_SESSIONS_DIR / session_id
