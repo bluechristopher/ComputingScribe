@@ -1,4 +1,4 @@
-# 🎓 EduScribe AI — Hackathon Submission
+# 🎓 EduScribe AI - Notes for Hackathon Submission
 
 **Hackathon Category:** Collaborative Partner  
 *Build an agent that leads the way and takes notes. It should ask clarifying questions, guide the user step-by-step, and have a clear way to capture feedback, so it constantly adapts to the user's unique way of thinking.*
@@ -102,7 +102,7 @@ EduScribe AI is not a generic text generator; it is a **collaborative pedagogica
 2. **Cambridge International AS & A Level Computer Science (9618)**:
    - Command word taxonomy, tabular mark scheme rubrics, and pseudocode standards.
 3. **Past Singapore-Cambridge A-Level Computing Papers & Marking Styling References**:
-   - Authentic typographic layouts, nested task structures (`Task 1.1`, `Task 1.2`), right-aligned mark brackets (`\hfill [3]`), code listing boxes, and standard marking guidance conventions.
+   - Extracting the specific typographic layouts, nested task structures (`Task 1.1`, `Task 1.2`), right-aligned mark brackets (`\hfill [3]`), code listing boxes, and standard marking guidance conventions.
 
 ---
 
@@ -153,7 +153,7 @@ flowchart TD
 
 ## 🚀 7. Spin-Up & Reproducibility Instructions
 
-### Option A: Run via Docker (Recommended — Full TeXLive Included)
+### Option A: Run via Docker
 
 ```bash
 # 1. Clone repository
