@@ -90,14 +90,19 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 📂 Past Sessions & Recovery")
     
+    @st.cache_data(ttl=15)
+    def _fetch_cached_sessions(t_id: str):
+        return session_mgr.list_sessions(teacher_id=t_id)
+
     if st.button("➕ Start New Session", use_container_width=True):
         st.session_state.current_session = None
         st.session_state.compilation_logs = []
         st.session_state.studio_questions = []
         st.session_state.studio_current_draft = None
+        _fetch_cached_sessions.clear()
         st.rerun()
 
-    saved_sessions = session_mgr.list_sessions(teacher_id=st.session_state.teacher_id)
+    saved_sessions = _fetch_cached_sessions(st.session_state.teacher_id)
     if saved_sessions:
         session_options = {f"{s['title'][:28]}... ({s['paper_type']})": s["session_id"] for s in saved_sessions}
         selected_label = st.selectbox("Saved Drafts", options=list(session_options.keys()))
@@ -115,6 +120,7 @@ with st.sidebar:
         with col_del:
             if st.button("🗑️ Delete", use_container_width=True):
                 session_mgr.delete_session(selected_sess_id)
+                _fetch_cached_sessions.clear()
                 if st.session_state.current_session and st.session_state.current_session.session_id == selected_sess_id:
                     st.session_state.current_session = None
                 st.warning("Session deleted.")
