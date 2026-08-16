@@ -630,7 +630,7 @@ Return a valid JSON object matching this schema with the updated code:
         paper_type: str = "practical",
         syllabus_code: str = "9569",
         paper_number: str = "02",
-        institution: str = "Anderson Serangoon Junior College",
+        institution: str = "HelloWorld Junior College",
         exam_year: str = "2027",
         exam_series: str = "PRELIM"
     ) -> Dict[str, str]:

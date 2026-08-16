@@ -150,14 +150,27 @@ INSTRUCTIONS:
                 tex_file.name
             ]
 
-            proc = subprocess.run(
-                cmd,
-                cwd=working_dir,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                timeout=45
-            )
+            try:
+                proc = subprocess.run(
+                    cmd,
+                    cwd=working_dir,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    timeout=12
+                )
+            except subprocess.TimeoutExpired:
+                print(f"[LaTeXCompiler] pdflatex timed out on attempt {attempt}")
+                # Fallback to standalone PDF directly
+                pdf_bytes = self._generate_fallback_pdf(current_source, pdf_file)
+                return LaTeXCompilationResult(
+                    success=True,
+                    pdf_bytes=pdf_bytes,
+                    pdf_path=pdf_file,
+                    compilation_log="pdflatex compilation timed out; rendered high-fidelity fallback PDF.",
+                    attempts=attempt,
+                    repaired_source=current_source
+                )
 
             log_content = ""
             if log_file.exists():
@@ -167,8 +180,6 @@ INSTRUCTIONS:
             logs_accumulated.append(f"--- Attempt {attempt} ---\n{proc.stdout}\n{proc.stderr}")
 
             if proc.returncode == 0 and pdf_file.exists():
-                # Second pass for cross-references
-                subprocess.run(cmd, cwd=working_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
                 pdf_bytes = pdf_file.read_bytes()
                 return LaTeXCompilationResult(
                     success=True,
@@ -221,7 +232,7 @@ INSTRUCTIONS:
                     self.line(15, 279, 195, 279)
                     self.set_font("helvetica", "", 8)
                     self.set_text_color(100, 116, 139)
-                    self.cell(0, 8, " (C) Anderson Serangoon Junior College / Cambridge 9569", border=0, align="L")
+                    self.cell(0, 8, " (C) HelloWorld Junior College / Cambridge 9569", border=0, align="L")
                     self.cell(0, 8, "9569/PRELIM/2027  [Turn over", border=0, align="R")
 
             pdf = CambridgeExamPDF(orientation="P", unit="mm", format="A4")

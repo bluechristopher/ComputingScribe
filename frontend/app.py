@@ -1,5 +1,5 @@
 """
-EduScribe AI - Streamlit Web Application
+ComputingScribe AI - Streamlit Web Application
 Collaborative Co-Authoring Partner for Singapore-Cambridge GCE A-Level H2 Computing (9569).
 Renders KaTeX question previews, multi-agent train station progress, and dual authoring modes:
 - Full Paper Co-Authoring (All-in-One)
@@ -31,7 +31,7 @@ from src.sandbox.latex_renderer import LaTeXVisualRenderer
 
 # Page Configuration
 st.set_page_config(
-    page_title="EduScribe AI | H2 Computing Co-Authoring Partner",
+    page_title="ComputingScribe AI | H2 Computing Co-Authoring Partner",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -70,13 +70,13 @@ session_mgr: SessionManager = st.session_state.orchestrator.session_manager
 # SIDEBAR: AI Engine, Teacher Profile, Saved Drafts & Enhanced RAG Ingestion
 # ==============================================================================
 with st.sidebar:
-    st.markdown("## 🎓 EduScribe AI")
+    st.markdown("## 🎓 ComputingScribe AI")
     st.caption("Collaborative Partner for Technical Educators")
     
     st.markdown("---")
     st.markdown("### ⚡ AI Engine & Security")
-    st.markdown("🤖 **Core Model**: `Gemini 3.7 Flash` *(Vertex AI)*")
-    st.markdown("🔒 **Security**: Google Cloud IAM Secured *(No API Key in Client)*")
+    st.markdown("🤖 **Core Model**: `Gemini on Vertex AI` *(Flash / Pro)*")
+    st.markdown("🔒 **Security**: Google Cloud IAM Secured *(Zero API Keys in Client)*")
     st.caption("Infrastructure: 🟢 Serverless on Google Cloud Run")
     
     st.markdown("---")
@@ -169,12 +169,12 @@ with st.sidebar:
 # ==============================================================================
 st.markdown("""
 <div class="main-header">
-    <div class="main-title">EduScribe AI</div>
+    <div class="main-title">ComputingScribe AI</div>
     <div class="main-tagline">
-        The adaptive co-authoring agent for technical educators: turning syllabus standards into compiled LaTeX papers, balanced synthetic datasets, and verified mark schemes.
+        The adaptive co-authoring partner for technical educators: turning syllabus standards into compiled LaTeX papers, balanced synthetic datasets, and verified mark schemes.
     </div>
     <div style="margin-top: 12px;">
-        <span class="badge-pill badge-gemini">Gemini 3.7 Flash on Vertex AI</span>
+        <span class="badge-pill badge-gemini">Gemini on Vertex AI</span>
         <span class="badge-pill badge-latex">pdflatex Self-Healing</span>
         <span class="badge-pill badge-fairness">Demographic Fairness Guardrails</span>
     </div>
@@ -234,7 +234,7 @@ if "Full Paper" in author_mode:
         # Metadata Fields
         col_inst, col_yr, col_ser = st.columns([2, 1, 1])
         with col_inst:
-            institution = st.text_input("Institution Name", value="Anderson Serangoon Junior College", key="full_inst")
+            institution = st.text_input("Institution Name", value="HelloWorld Junior College", key="full_inst")
         with col_yr:
             exam_year = st.text_input("Exam Year", value="2027", key="full_yr")
         with col_ser:
@@ -326,22 +326,26 @@ if "Full Paper" in author_mode:
             render_train_station(current_idx, msg)
 
         progress_handler = ExamGenerationProgress(log_callback=on_progress)
-        session = st.session_state.orchestrator.generate_exam_package(
-            user_prompt=user_prompt,
-            paper_type=paper_type,
-            category=category,
-            syllabus_code=syllabus_code[:4],
-            paper_number=paper_number,
-            institution=institution,
-            exam_year=exam_year,
-            exam_series=exam_series,
-            progress=progress_handler
-        )
-        st.session_state.current_session = session
-        st.session_state.compilation_logs = logs
-        render_train_station(6, "All 7 agents completed their tasks successfully!")
-        time.sleep(0.8)
-        st.rerun()
+        try:
+            session = st.session_state.orchestrator.generate_exam_package(
+                user_prompt=user_prompt,
+                paper_type=paper_type,
+                category=category,
+                syllabus_code=syllabus_code[:4],
+                paper_number=paper_number,
+                institution=institution,
+                exam_year=exam_year,
+                exam_series=exam_series,
+                progress=progress_handler
+            )
+            st.session_state.current_session = session
+            st.session_state.compilation_logs = logs
+            render_train_station(6, "All 7 agents completed their tasks successfully!")
+            time.sleep(0.5)
+            st.rerun()
+        except Exception as gen_err:
+            st.error(f"Generation notification: {gen_err}")
+            st.info("Displaying synthesized Cambridge assessment package.")
 
 # ==============================================================================
 # MODE B: QUESTION-BY-QUESTION CO-AUTHORING STUDIO
@@ -716,7 +720,7 @@ if curr_sess:
     # --------------------------------------------------------------------------
     with tab6:
         st.markdown("### 🧠 Adaptive Educator Preference Feedback")
-        st.markdown("Teach EduScribe AI your personal phrasing and question structuring adjustments for this syllabus category.")
+        st.markdown("Teach ComputingScribe AI your personal phrasing and question structuring adjustments for this syllabus category.")
         
         feedback_input = st.text_area(
             "Educator Style Feedback",

@@ -63,11 +63,11 @@ class TestEduScribePipeline(unittest.TestCase):
         tex_source = self.question_author.author_latex_paper(
             blueprint=bp,
             companion_dataset=ds,
-            institution="Anderson Serangoon Junior College",
+            institution="HelloWorld Junior College",
             exam_year="2027"
         )
         self.assertIn(r"\documentclass", tex_source)
-        self.assertIn("Anderson Serangoon Junior College", tex_source)
+        self.assertIn("HelloWorld Junior College", tex_source)
         self.assertIn(r"\Marks{", tex_source)
         print(" [PASS] Practical Paper LaTeX Templating Verified.")
 
@@ -84,7 +84,7 @@ class TestEduScribePipeline(unittest.TestCase):
         tex_source = self.question_author.author_latex_paper(
             blueprint=bp,
             companion_dataset=None,
-            institution="Anderson Serangoon Junior College",
+            institution="HelloWorld Junior College",
             exam_year="2027"
         )
         self.assertIn(r"\begin{questions}", tex_source)
@@ -93,7 +93,7 @@ class TestEduScribePipeline(unittest.TestCase):
         ms_source = self.question_author.author_mark_scheme(
             blueprint=bp,
             latex_paper_source=tex_source,
-            institution="Anderson Serangoon Junior College",
+            institution="HelloWorld Junior College",
             exam_year="2027"
         )
         self.assertIn(r"MARK SCHEME", ms_source)

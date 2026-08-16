@@ -57,7 +57,7 @@ class EduScribeOrchestrator:
         session_id: Optional[str] = None,
         syllabus_code: str = "9569",
         paper_number: str = "02",
-        institution: str = "Anderson Serangoon Junior College",
+        institution: str = "HelloWorld Junior College",
         exam_year: str = "2027",
         exam_series: str = "PRELIM",
         progress: Optional[ExamGenerationProgress] = None
@@ -244,7 +244,7 @@ class EduScribeOrchestrator:
         paper_type: str = "practical",
         syllabus_code: str = "9569",
         paper_number: str = "02",
-        institution: str = "Anderson Serangoon Junior College",
+        institution: str = "HelloWorld Junior College",
         exam_year: str = "2027",
         exam_series: str = "PRELIM",
         session_id: Optional[str] = None

@@ -3,7 +3,7 @@
 % ==============================================================================
 % EXAM CONFIGURATION
 % ==============================================================================
-\newcommand{\Institution}{Anderson Serangoon Junior College}
+\newcommand{\Institution}{HelloWorld Junior College}
 \newcommand{\ExamYear}{2026}
 \newcommand{\ExamYearShort}{26}
 \newcommand{\SyllabusCode}{9569}
