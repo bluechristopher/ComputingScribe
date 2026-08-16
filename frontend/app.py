@@ -224,30 +224,27 @@ category_options = {
 # ==============================================================================
 if "Full Paper" in author_mode:
     with st.expander("🛠️ Full Exam Specifications & Co-Authoring Prompt", expanded=True if not st.session_state.current_session else False):
-        col_paper, col_topic = st.columns([1, 1.5])
+        col_type, col_style_info = st.columns([1.2, 1.8])
         
-        with col_paper:
+        with col_type:
             paper_type = st.radio(
-                "9569 Examination Paper",
-                options=["theory", "practical"],
-                format_func=lambda x: "📖 Paper 1: Written Examination (Theory / 9569/01)" if x == "theory" else "💻 Paper 2: Lab Practical Examination (Practical / 9569/02)",
-                horizontal=False,
+                "Paper Format",
+                ["practical", "theory"],
+                format_func=lambda x: "Paper 2 Practical (9569/02)" if x == "practical" else "Paper 1 Theory (9569/01)",
+                horizontal=True,
                 key="full_paper_type"
             )
             syllabus_code = "9569"
             paper_number = "01" if paper_type == "theory" else "02"
             st.markdown("**Syllabus Standard:** `9569 H2 Computing (2027 SEAB/Cambridge)`")
 
-        with col_topic:
-            category = st.selectbox(
-                "2027 Syllabus Section / Core Topic",
-                options=list(category_options.keys()),
-                format_func=lambda k: category_options[k],
-                index=0 if paper_type == "practical" else 3,
-                key="full_category"
-            )
-            style = pref_learner.get_style_for_category(category)
-            st.markdown(f"**Learned Style:** `{style.get('preferred_depth', 'long_contextual')}` | `{style.get('task_count', 4)}` questions | `{style.get('rubric_style', 'granular_partial_credit')}`")
+        with col_style_info:
+            style = pref_learner.get_style()
+            st.markdown("**Adaptive Educator Style:**")
+            st.markdown(f"- **Depth & Context:** `{style.get('preferred_depth', 'long_contextual')}`")
+            st.markdown(f"- **Rubrics:** `{style.get('rubric_style', 'granular_partial_credit')}`")
+            st.caption("✨ Calibrated across comprehensive 9569 syllabus sections.")
+            category = "comprehensive_syllabus"
 
         # Metadata Fields
         col_inst, col_yr, col_ser = st.columns([2, 1, 1])
@@ -783,17 +780,17 @@ if curr_sess:
     # --------------------------------------------------------------------------
     with tab6:
         st.markdown("### 🧠 Adaptive Educator Preference Feedback")
-        st.markdown("Teach ComputingScribe AI your personal phrasing and question structuring adjustments for this syllabus category.")
+        st.markdown("Teach ComputingScribe AI your personal phrasing, scenario depth, and question structuring style. Preferences apply across all paper authoring.")
         
         feedback_input = st.text_area(
             "Educator Style Feedback",
             placeholder="e.g. 'I prefer concise 2-sentence scenario preambles and explicit type annotations in Python starter boxes.'"
         )
-        if st.button("💾 Adapt & Save Preferences to Firestore"):
+        if st.button("💾 Adapt & Save Preferences to Memory"):
             updated = pref_learner.adapt_preferences_from_feedback(
-                category=curr_sess.category,
+                category="generic",
                 user_prompt=curr_sess.title,
                 educator_feedback=feedback_input
             )
-            st.success(f"Preferences updated and saved to Firestore memory for category '{curr_sess.category}'!")
+            st.success("Generic educator preferences updated and saved!")
             st.json(updated)

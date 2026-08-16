@@ -65,27 +65,42 @@ class PreferenceLearner:
         default_profile = defaults.get("teacher_profiles", {}).get("default_teacher", {})
         return default_profile.get("learned_styles", {})
 
-    def get_style_for_category(self, category: str) -> Dict[str, Any]:
-        """Retrieves learned style for a specific syllabus category."""
+    def get_style(self, category: str = "generic") -> Dict[str, Any]:
+        """Retrieves learned generic style preferences for this educator across topics."""
         all_styles = self.load_all_styles()
+        # 1. First check generic global style
+        if "generic" in all_styles:
+            base_style = dict(all_styles["generic"])
+            if category != "generic" and category in all_styles:
+                base_style.update(all_styles[category])
+            return base_style
+        
+        # 2. Check specific category if present
         if category in all_styles:
             return all_styles[category]
-        # Return sensible default
+            
+        # 3. Default generic preference
         return {
-            "category": category,
-            "preferred_depth": "long_contextual" if "practical" in category.lower() else "short_direct",
-            "task_count": 4 if "practical" in category.lower() else 5,
-            "total_marks": 75,
+            "category": "generic",
+            "preferred_depth": "long_contextual",
+            "task_count": 4,
+            "total_marks": 100,
             "rubric_style": "granular_partial_credit",
             "include_starter_code": True,
-            "include_dataset_generation": "practical" in category.lower(),
+            "include_dataset_generation": True,
             "custom_directives": []
         }
 
-    def save_style_for_category(self, category: str, style_data: Dict[str, Any]):
-        """Persists updated style preferences in Firestore & local cache."""
+    def get_style_for_category(self, category: str = "generic") -> Dict[str, Any]:
+        """Alias for get_style for backward compatibility."""
+        return self.get_style(category)
+
+    def save_style(self, style_data: Dict[str, Any], category: str = "generic"):
+        """Persists updated generic style preferences in Firestore & local cache."""
         all_styles = self.load_all_styles()
         all_styles[category] = style_data
+        if category != "generic" and "generic" not in all_styles:
+            all_styles["generic"] = style_data
 
         # Save to local cache
         try:
@@ -103,41 +118,55 @@ class PreferenceLearner:
             except Exception as e:
                 print(f"[PreferenceLearner] Note saving to Firestore: {e}")
 
-    def adapt_preferences_from_feedback(self, category: str, user_prompt: str, educator_feedback: str = ""):
+    def save_style_for_category(self, category: str, style_data: Dict[str, Any]):
+        """Alias for save_style."""
+        self.save_style(style_data, category)
+
+    def adapt_preferences_from_feedback(self, category: str = "generic", user_prompt: str = "", educator_feedback: str = ""):
         """
-        Uses Gemini 3.7 Flash to extract updated pedagogical preferences from natural educator interactions.
+        Uses Gemini 3.7 Flash to extract updated generic pedagogical preferences from natural educator feedback.
         """
         prompt_text = f"""
 You are an expert pedagogical metadata extractor.
-Given the educator's request and feedback, extract updated authoring style preferences.
+Given the educator's request and feedback, extract updated generic authoring style preferences.
 
-Category: {category}
+Category Context: {category}
 Educator Input: {user_prompt}
-Educator Feedback / Edits: {educator_feedback}
+Feedback: {educator_feedback}
 
-Return a valid JSON object matching these fields:
+Return a valid JSON object matching this schema:
 {{
-  "preferred_depth": "short_direct" or "long_contextual",
-  "task_count": integer (1 to 8),
-  "total_marks": integer (10 to 100),
-  "rubric_style": "granular_partial_credit" or "cambridge_ao_breakdown" or "point_per_distinct_fact",
-  "custom_directives": ["bullet", "point", "directives"]
+  "category": "generic",
+  "preferred_depth": "long_contextual" or "short_direct",
+  "task_count": integer,
+  "total_marks": integer,
+  "rubric_style": "granular_partial_credit" or "point_based",
+  "include_starter_code": boolean,
+  "include_dataset_generation": boolean,
+  "custom_directives": ["directive 1", "directive 2"]
 }}
 """
-        try:
-            client = AppConfig.get_gemini_client()
-            if client and hasattr(client, "GenerativeModel"):
+        client = AppConfig.get_gemini_client()
+        if client and hasattr(client, "GenerativeModel"):
+            try:
                 model = client.GenerativeModel(AppConfig.DEFAULT_MODEL)
                 response = model.generate_content(
                     prompt_text,
                     generation_config={"response_mime_type": "application/json"}
                 )
-                extracted = json.loads(response.text)
-                current = self.get_style_for_category(category)
-                current.update(extracted)
-                self.save_style_for_category(category, current)
-                return current
-        except Exception as e:
-            print(f"[PreferenceLearner] Adaptive learning extraction skipped/failed: {e}")
-        
-        return self.get_style_for_category(category)
+                updated_style = json.loads(response.text)
+                self.save_style(updated_style, "generic")
+                return updated_style
+            except Exception as e:
+                print(f"[PreferenceLearner] Gemini style extraction error: {e}")
+
+        # Fallback manual update
+        current = self.get_style("generic")
+        if "short" in educator_feedback.lower() or "direct" in educator_feedback.lower():
+            current["preferred_depth"] = "short_direct"
+        elif "context" in educator_feedback.lower() or "detailed" in educator_feedback.lower():
+            current["preferred_depth"] = "long_contextual"
+        if educator_feedback:
+            current.setdefault("custom_directives", []).append(educator_feedback)
+        self.save_style(current, "generic")
+        return current
