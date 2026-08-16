@@ -30,11 +30,11 @@ class VertexAIModelWrapper:
         self.model_name = str(model_name).strip()
         self.client_type = client_type
         self.raw_client = raw_client
-        # Candidate model names in order of speed and capability
+        # Candidate model names in order of capability and speed (Gemini 3.7 Flash first)
         self.model_candidates = [
             self.model_name,
-            "gemini-2.5-flash",
             "gemini-3.7-flash",
+            "gemini-2.5-flash",
             "gemini-2.0-flash",
             "gemini-1.5-flash"
         ]
@@ -101,14 +101,14 @@ class UnifiedGeminiClient:
         self.client_type = client_type
         self.raw_client = raw_client
 
-    def GenerativeModel(self, model_name: str = "gemini-2.5-flash") -> VertexAIModelWrapper:
+    def GenerativeModel(self, model_name: str = "gemini-3.7-flash") -> VertexAIModelWrapper:
         return VertexAIModelWrapper(model_name, self.client_type, self.raw_client)
 
 
 class AppConfig:
-    # Model Configuration
-    DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
-    FALLBACK_MODEL = "gemini-1.5-flash"
+    # Model Configuration: Gemini 3.7 Flash Primary
+    DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.7-flash").strip()
+    FALLBACK_MODEL = "gemini-2.5-flash"
     
     _raw_project = os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT") or "eduscribe-ai"
     GCP_PROJECT = _raw_project.strip()

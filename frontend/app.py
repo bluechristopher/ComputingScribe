@@ -75,7 +75,7 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("### ⚡ AI Engine & Security")
-    st.markdown("🤖 **Core Model**: `Gemini on Vertex AI` *(Flash / Pro)*")
+    st.markdown("🤖 **Core Model**: `Gemini 3.7 Flash` *(Vertex AI / Google GenAI)*")
     st.markdown("🔒 **Security**: Google Cloud IAM Secured *(Zero API Keys in Client)*")
     st.caption("Infrastructure: 🟢 Serverless on Google Cloud Run")
     
