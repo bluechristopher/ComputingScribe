@@ -74,10 +74,25 @@ with st.sidebar:
     st.caption("Collaborative Partner for Technical Educators")
     
     st.markdown("---")
-    st.markdown("### ⚡ AI Engine & Security")
-    st.markdown("🤖 **Core Model**: `Gemini 3.7 Flash` *(Vertex AI / Google GenAI)*")
-    st.markdown("🔒 **Security**: Google Cloud IAM Secured *(Zero API Keys in Client)*")
-    st.caption("Infrastructure: 🟢 Serverless on Google Cloud Run")
+    st.markdown("### ⚡ AI Engine & API Key")
+    
+    # Check if API Key is already set in session_state or environment
+    active_key = st.session_state.get("gemini_api_key") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
+    
+    api_key_input = st.text_input(
+        "🔑 Gemini API Key",
+        value=active_key,
+        type="password",
+        placeholder="AIzaSy...",
+        help="Paste your Gemini API key here for live Gemini 3.7 Flash generation."
+    )
+    
+    if api_key_input:
+        st.session_state["gemini_api_key"] = api_key_input.strip()
+        os.environ["GEMINI_API_KEY"] = api_key_input.strip()
+        st.success("🟢 **Gemini 3.7 Flash**: Direct API Active")
+    else:
+        st.caption("Enter your Gemini API key above to activate live Gemini 3.7 Flash generation.")
     
     st.markdown("---")
     st.markdown("### 👩‍🏫 Educator Profile")
