@@ -47,7 +47,7 @@ if css_file.exists():
 if "teacher_id" not in st.session_state:
     st.session_state.teacher_id = "default_educator"
 
-if "orchestrator" not in st.session_state:
+if "orchestrator" not in st.session_state or not hasattr(st.session_state.orchestrator, "refine_full_paper"):
     st.session_state.orchestrator = EduScribeOrchestrator(teacher_id=st.session_state.teacher_id)
 
 if "current_session" not in st.session_state:
