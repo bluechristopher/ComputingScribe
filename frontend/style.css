@@ -160,24 +160,56 @@ section[data-testid="stSidebar"],
     fill: #cbd5e1 !important;
 }
 
-/* Sidebar Expanders - Metallic Dark Sheen */
+/* Sidebar Expanders - Dark Blue Header & Crisp White Text */
 [data-testid="stSidebar"] [data-testid="stExpander"],
 [data-testid="stSidebar"] details {
-    background: linear-gradient(145deg, #202228, #141518) !important;
-    border: 1px solid #3b4252 !important;
+    background: linear-gradient(145deg, #181d27, #0f131a) !important;
+    border: 1px solid #2563eb !important;
     border-radius: 10px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+    overflow: hidden !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stExpander"] summary,
-[data-testid="stSidebar"] [data-testid="stExpander"] summary * {
-    color: #f1f5f9 !important;
-    font-weight: 600 !important;
+[data-testid="stSidebar"] details summary,
+[data-testid="stSidebar"] .streamlit-expanderHeader,
+[data-testid="stSidebar"] summary[aria-expanded] {
+    background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%) !important; /* Rich Dark Blue */
+    color: #ffffff !important; /* Pure White */
+    border-bottom: 1px solid #2563eb !important;
+    padding: 10px 14px !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stExpander"] summary *,
+[data-testid="stSidebar"] details summary *,
+[data-testid="stSidebar"] .streamlit-expanderHeader *,
+[data-testid="stSidebar"] summary[aria-expanded] * {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stExpander"] summary svg,
+[data-testid="stSidebar"] details summary svg {
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stExpanderDetails"] {
-    background: transparent !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: #0f172a !important;
+    padding: 14px 16px !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stExpanderDetails"] * {
+    color: #e2e8f0 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stExpanderDetails"] strong {
+    color: #ffffff !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stExpanderDetails"] a {
+    color: #60a5fa !important;
+    text-decoration: underline !important;
 }
 
 /* Sidebar Buttons */

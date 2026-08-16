@@ -256,8 +256,8 @@ with st.sidebar:
     
     with st.expander("⚙️ AI Engine & Settings", expanded=True if not active_key else False):
         st.markdown("🔑 **Bring Your Own Key (BYOK)**")
-        st.caption("Each educator uses their own free Gemini API key to avoid consuming shared credits.")
-        st.markdown("[👉 Get a free Gemini API Key from Google AI Studio](https://aistudio.google.com/app/apikey)", unsafe_allow_html=True)
+        st.caption("You can obtain your Gemini API key from Google AI Studio. Your key is kept strictly in your local browser session and is never stored on the server.")
+        st.markdown("[👉 Get a Gemini API Key from Google AI Studio](https://aistudio.google.com/app/apikey)", unsafe_allow_html=True)
         
         api_key_input = st.text_input(
             "Gemini API Key",
