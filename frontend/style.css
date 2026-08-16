@@ -12,6 +12,83 @@ html, body, [class*="css"], .stApp {
 }
 
 /* ==============================================================================
+   TOP PADDING REMOVAL (FLUSH HERO BANNER & SIDEBAR TOP)
+   ============================================================================== */
+header[data-testid="stHeader"] {
+    background: transparent !important;
+    height: 0rem !important;
+    min-height: 0rem !important;
+    display: none !important;
+}
+
+[data-testid="stAppViewContainer"] > .main {
+    padding-top: 0rem !important;
+    margin-top: 0rem !important;
+}
+
+.block-container,
+[data-testid="stMainBlockContainer"],
+[data-testid="stMain"] .block-container,
+.main .block-container {
+    padding-top: 0.6rem !important;
+    padding-bottom: 3rem !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stSidebarContent"],
+[data-testid="stSidebar"] .block-container,
+[data-testid="stSidebar"] [data-testid="stSidebarHeader"],
+section[data-testid="stSidebar"] > div {
+    padding-top: 0rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
+    display: none !important;
+    height: 0rem !important;
+    padding: 0rem !important;
+}
+
+/* Remove margins above top image containers */
+[data-testid="stMain"] [data-testid="stImage"]:first-child {
+    margin-top: -0.2rem !important;
+    padding-top: 0rem !important;
+}
+
+/* Sidebar Banner Image Full Width (Edge-to-Edge) */
+[data-testid="stSidebar"] [data-testid="stImage"]:first-child,
+[data-testid="stSidebar"] [data-testid="stImage"] {
+    margin-top: 0rem !important;
+    margin-left: -0.75rem !important;
+    margin-right: -0.75rem !important;
+    width: calc(100% + 1.5rem) !important;
+    max-width: calc(100% + 1.5rem) !important;
+    padding: 0rem !important;
+    margin-bottom: 0px !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stImage"] img,
+[data-testid="stSidebar"] [data-testid="stImage"]:first-child img {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0px !important;
+    display: block !important;
+    object-fit: cover !important;
+}
+
+/* Compact sidebar widgets & spacing */
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    gap: 0.45rem !important;
+}
+
+[data-testid="stSidebar"] hr {
+    margin: 8px 0 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ==============================================================================
    2. LEFT PANEL (SIDEBAR) - BLACK & DARK GRAY METALLIC EFFECT
    ============================================================================== */
 section[data-testid="stSidebar"],
@@ -131,7 +208,7 @@ section.main,
     background-color: #f1f5f9 !important;
 }
 
-/* Force dark text in main panel */
+/* Force dark text in main panel except inside metallic dark hero header */
 [data-testid="stMain"] label,
 [data-testid="stMain"] label *,
 [data-testid="stMain"] label p,
@@ -145,15 +222,10 @@ section.main,
 [data-testid="stMain"] [data-testid="stRadio"] p,
 [data-testid="stMain"] [data-testid="stRadio"] span,
 [data-testid="stMain"] div[role="radiogroup"] label,
-[data-testid="stMain"] div[role="radiogroup"] label *,
-[data-testid="stMain"] [data-testid="stMarkdownContainer"] p,
-[data-testid="stMain"] [data-testid="stMarkdownContainer"] span,
-[data-testid="stMain"] [data-testid="stMarkdownContainer"] strong,
-[data-testid="stMain"] [data-testid="stMarkdownContainer"] em,
-[data-testid="stMain"] [data-testid="stMarkdownContainer"] li,
-[data-testid="stMain"] p:not(button *):not(button),
-[data-testid="stMain"] span:not(button *):not(button),
-[data-testid="stMain"] div:not(button *):not(button):not([data-testid="stButton"]),
+[data-testid="stMain"] [data-testid="stMarkdownContainer"]:not(button *):not(button) > p:not(.main-header *):not(.station-box-active *):not(button *):not(button),
+[data-testid="stMain"] p:not(button *):not(button):not(.main-header *):not(.main-header):not([data-baseweb="tag"] *):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble *):not(.marks-bracket *),
+[data-testid="stMain"] span:not(button *):not(button):not(.main-header *):not(.main-header):not([data-baseweb="tag"] *):not([data-baseweb="tag"]):not([data-baseweb="tag"] span):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble):not(.subtask-mark-bubble *):not(.marks-bracket):not(.marks-bracket *):not(.badge-pill):not(.badge-pill *):not(.badge-latex):not(.badge-latex *):not(.badge-gemini):not(.badge-fairness),
+[data-testid="stMain"] div:not(button *):not(button):not([data-testid="stButton"]):not(.main-header):not(.main-header *):not([data-baseweb="tag"]):not([data-baseweb="tag"] *):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble):not(.subtask-mark-bubble *):not(.marks-bracket):not(.marks-bracket *):not(.badge-pill):not(.badge-pill *):not(.badge-latex):not(.badge-gemini):not(.badge-fairness),
 [data-testid="stMain"] li:not(button *) {
     color: #0f172a !important;
 }
@@ -170,15 +242,15 @@ section.main,
 }
 
 /* ==============================================================================
-   4. HERO BANNER & H1 GRADIENT EFFECT
+   4. HERO BANNER (METALLIC DARK GRAY) & H1 GRADIENT EFFECT
    ============================================================================== */
 .main-header {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 40%, #edf2f7 70%, #ffffff 100%) !important;
-    border: 1px solid #cbd5e1 !important;
+    background: linear-gradient(150deg, #252830 0%, #1b1d23 45%, #111216 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
     border-radius: 16px !important;
     padding: 28px 34px !important;
     margin-bottom: 24px !important;
-    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.07), inset 0 1px 1px rgba(255, 255, 255, 1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.18) !important;
     position: relative !important;
     overflow: hidden !important;
 }
@@ -193,6 +265,20 @@ section.main,
     background: linear-gradient(90deg, #00f2fe, #0ea5e9, #0284c7, #06b6d4, #14b8a6) !important;
 }
 
+/* Ensure ALL text inside main-header is pure crisp white */
+.main-header,
+.main-header p,
+.main-header span,
+.main-header div,
+.main-header .main-tagline,
+[data-testid="stMain"] .main-header,
+[data-testid="stMain"] .main-header p,
+[data-testid="stMain"] .main-header span,
+[data-testid="stMain"] .main-header div,
+[data-testid="stMain"] .main-header .main-tagline {
+    color: #ffffff !important;
+}
+
 /* Stunning Larger H1 Text with Bluish Teal Effect & Radiant Glow */
 .main-title {
     font-size: 3.25rem !important;
@@ -203,12 +289,12 @@ section.main,
     background: linear-gradient(135deg, #00c6ff 0%, #0072ff 26%, #00f2fe 55%, #0ea5e9 75%, #10b981 100%) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
-    filter: drop-shadow(0 0 16px rgba(0, 198, 255, 0.45)) drop-shadow(0 0 32px rgba(6, 182, 212, 0.35)) drop-shadow(0 2px 6px rgba(2, 132, 199, 0.3)) !important;
+    filter: drop-shadow(0 0 16px rgba(0, 198, 255, 0.55)) drop-shadow(0 0 32px rgba(6, 182, 212, 0.4)) drop-shadow(0 2px 6px rgba(2, 132, 199, 0.3)) !important;
 }
 
 .main-tagline {
     font-size: 1.05rem !important;
-    color: #334155 !important;
+    color: #ffffff !important; /* Pure Crisp White */
     font-weight: 500 !important;
     line-height: 1.6 !important;
     max-width: 900px !important;
@@ -294,10 +380,54 @@ section.main,
 [data-testid="stMain"] [data-baseweb="select"] input {
     color: #0f172a !important;
     font-weight: 600 !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+    overflow: visible !important;
 }
 
 [data-testid="stMain"] [data-baseweb="select"] svg {
     fill: #0f172a !important;
+}
+
+[data-testid="stMain"] [data-baseweb="select"] {
+    min-width: 130px !important;
+}
+
+/* Multi-Select Topic Selection Bubbles / Tags */
+[data-baseweb="tag"],
+span[data-baseweb="tag"],
+div[data-baseweb="tag"],
+[data-testid="stMain"] [data-baseweb="tag"],
+[data-testid="stSidebar"] [data-baseweb="tag"] {
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%) !important;
+    border: 1px solid #60a5fa !important;
+    border-radius: 6px !important;
+    padding: 3px 8px !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
+}
+
+/* Ensure ALL text inside topic selection bubbles is pure crisp white */
+[data-baseweb="tag"] *,
+[data-baseweb="tag"] span,
+[data-baseweb="tag"] div,
+[data-baseweb="tag"] p,
+span[data-baseweb="tag"] span,
+div[data-baseweb="tag"] div,
+[data-testid="stMain"] [data-baseweb="tag"] *,
+[data-testid="stMain"] [data-baseweb="tag"] span,
+[data-testid="stMain"] [data-baseweb="tag"] div,
+[data-testid="stSidebar"] [data-baseweb="tag"] *,
+[data-testid="stSidebar"] [data-baseweb="tag"] span {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* Delete / Cross 'x' icon inside multiselect tag bubble */
+[data-baseweb="tag"] svg,
+[data-testid="stMain"] [data-baseweb="tag"] svg,
+[data-baseweb="tag"] svg path {
+    fill: #ffffff !important;
+    color: #ffffff !important;
 }
 
 /* Inline Code Badges in Main Panel */
@@ -370,32 +500,72 @@ section.main,
     box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3) !important;
 }
 
-/* Primary Action Buttons (Deep Blue Background + Vibrant Orange Text) */
+/* Primary Action Buttons (Deep Blue Background + Vibrant Orange Text + Large Gemini Logo) */
+/* Primary Action Buttons (Deep Blue Background + Vibrant Orange Text + Large Gemini Logo) */
+button[data-testid="baseButton-primary"],
 .stButton > button[kind="primary"],
 .stButton > button[type="primary"],
+[data-testid="stMain"] button[data-testid="baseButton-primary"],
 [data-testid="stMain"] .stButton > button[kind="primary"],
 [data-testid="stMain"] .stButton > button[type="primary"] {
     background-color: #1e40af !important; /* Deep Rich Blue Background */
     color: #fb923c !important; /* Vibrant Orange Text */
     border: 2px solid #60a5fa !important; /* Vibrant Sky Blue Border */
     font-weight: 850 !important;
-    font-size: 1.05rem !important;
+    font-size: 1.1rem !important;
     border-radius: 10px !important;
     padding: 10px 24px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     box-shadow: 0 4px 14px rgba(30, 64, 175, 0.4) !important;
     transition: all 0.2s ease-in-out !important;
 }
 
+button[data-testid="baseButton-primary"]::before,
+.stButton > button[kind="primary"]::before,
+.stButton > button[type="primary"]::before,
+[data-testid="stMain"] button[data-testid="baseButton-primary"]::before,
+[data-testid="stMain"] .stButton > button[kind="primary"]::before,
+[data-testid="stMain"] .stButton > button[type="primary"]::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 26px !important;
+    height: 26px !important;
+    margin-right: 12px !important;
+    flex-shrink: 0 !important;
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/1d/Google_Gemini_icon_2025.svg') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+button[data-testid="baseButton-primary"] *,
+button[data-testid="baseButton-primary"] p,
+button[data-testid="baseButton-primary"] span,
+button[data-testid="baseButton-primary"] div,
 .stButton > button[kind="primary"] *,
 .stButton > button[type="primary"] *,
 .stButton > button[kind="primary"] p,
 .stButton > button[type="primary"] p,
+.stButton > button[kind="primary"] span,
+.stButton > button[type="primary"] span,
+.stButton > button[kind="primary"] div,
+.stButton > button[type="primary"] div,
+[data-testid="stMain"] button[data-testid="baseButton-primary"] *,
+[data-testid="stMain"] button[data-testid="baseButton-primary"] p,
+[data-testid="stMain"] button[data-testid="baseButton-primary"] span,
+[data-testid="stMain"] .stButton > button[kind="primary"] *,
 [data-testid="stMain"] .stButton > button[kind="primary"] p,
-[data-testid="stMain"] .stButton > button[type="primary"] p {
+[data-testid="stMain"] .stButton > button[kind="primary"] span,
+[data-testid="stMain"] .stButton > button[type="primary"] *,
+[data-testid="stMain"] .stButton > button[type="primary"] p,
+[data-testid="stMain"] .stButton > button[type="primary"] span {
     color: #fb923c !important; /* Vibrant Orange Text */
     font-weight: 850 !important;
 }
 
+button[data-testid="baseButton-primary"]:hover,
 .stButton > button[kind="primary"]:hover,
 .stButton > button[type="primary"]:hover {
     background-color: #1d4ed8 !important;
@@ -405,6 +575,7 @@ section.main,
     transform: translateY(-1px) !important;
 }
 
+button[data-testid="baseButton-primary"]:hover *,
 .stButton > button[kind="primary"]:hover *,
 .stButton > button[type="primary"]:hover * {
     color: #fed7aa !important;
@@ -432,7 +603,7 @@ section.main,
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important;
 }
 
-/* Badge Pills */
+/* Badge Pills in Main Panel Cards */
 .badge-pill {
     display: inline-block !important;
     padding: 4px 12px !important;
@@ -440,23 +611,304 @@ section.main,
     font-size: 0.78rem !important;
     font-weight: 700 !important;
     margin-right: 8px !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
 }
 
+/* Badge Pills Inside Top Metallic Dark Box (Dark Backgrounds + Pure White Text) */
+.main-header .badge-pill,
+.main-header span.badge-pill,
+[data-testid="stMain"] .main-header .badge-pill,
+[data-testid="stMain"] .main-header span.badge-pill {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+.main-header .badge-gemini,
+[data-testid="stMain"] .main-header .badge-gemini {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #3b82f6 !important;
+}
+
+.main-header .badge-latex,
+[data-testid="stMain"] .main-header .badge-latex {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #10b981 !important;
+}
+
+.main-header .badge-fairness,
+[data-testid="stMain"] .main-header .badge-fairness {
+    background: linear-gradient(135deg, #3b0764 0%, #581c87 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #a855f7 !important;
+}
+
+/* General Card Badge Pills (Fallback) */
 .badge-gemini {
-    background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
-    color: #1d4ed8 !important;
-    border: 1px solid #93c5fd !important;
+    background: linear-gradient(135deg, #0f172a, #1e293b) !important;
+    color: #ffffff !important;
+    border: 1px solid #3b82f6 !important;
 }
 
-.badge-latex {
-    background: linear-gradient(135deg, #f0fdf4, #dcfce7) !important;
-    color: #15803d !important;
-    border: 1px solid #86efac !important;
+.badge-latex,
+.main-header .badge-latex,
+.ed-card .badge-latex {
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%) !important;
+    color: #ffffff !important; /* Crisp Pure White Text */
+    border: 1px solid #60a5fa !important;
+    font-weight: 800 !important;
+    padding: 3px 12px !important;
+    border-radius: 20px !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3) !important;
+}
+
+.badge-latex *,
+.main-header .badge-latex *,
+.ed-card .badge-latex * {
+    color: #ffffff !important;
 }
 
 .badge-fairness {
-    background: linear-gradient(135deg, #faf5ff, #f3e8ff) !important;
-    color: #7e22ce !important;
-    border: 1px solid #d8b4fe !important;
+    background: linear-gradient(135deg, #3b0764, #581c87) !important;
+    color: #ffffff !important;
+    border: 1px solid #a855f7 !important;
+}
+
+/* ==============================================================================
+   6. METALLIC SHEEN WAVE & AGENT ANIMATIONS
+   ============================================================================== */
+@keyframes metallicWave {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes activeStationPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4), 0 4px 14px rgba(37, 99, 235, 0.25);
+        transform: translateY(0);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 8px 24px rgba(37, 99, 235, 0.45);
+        transform: translateY(-2px);
+    }
+}
+
+@keyframes miniRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes goldWhiteShimmer {
+    0% {
+        color: #ffffff !important;
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 0 16px rgba(254, 240, 138, 0.6) !important;
+    }
+    50% {
+        color: #fde047 !important; /* Radiant Luminous Gold */
+        text-shadow: 0 0 12px rgba(251, 191, 36, 0.95), 0 0 24px rgba(245, 158, 11, 0.8) !important;
+    }
+    100% {
+        color: #ffffff !important;
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 0 16px rgba(254, 240, 138, 0.6) !important;
+    }
+}
+
+/* Active Station Card with Animated Dark Blue Background & Gold-White Shimmer Text */
+.station-box-active {
+    background: linear-gradient(110deg, #080f24 0%, #11224d 20%, #1e3a8a 45%, #2563eb 50%, #1e3a8a 55%, #11224d 80%, #080f24 100%) !important;
+    background-size: 250% 100% !important;
+    animation: metallicWave 2.5s infinite linear, activeStationPulse 2s infinite ease-in-out !important;
+    border: 2px solid #60a5fa !important;
+}
+
+.station-box-active,
+.station-box-active *,
+.station-box-active div,
+.station-box-active span,
+.station-box-active p,
+[data-testid="stMain"] .station-box-active,
+[data-testid="stMain"] .station-box-active *,
+[data-testid="stMain"] .station-box-active div {
+    animation: goldWhiteShimmer 2.2s infinite ease-in-out !important;
+    font-weight: 800 !important;
+}
+
+/* Animated Equalizer Wave Bars for Active Agent Station */
+.active-equalizer {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
+    gap: 3px !important;
+    height: 12px !important;
+    margin: 4px auto 2px auto !important;
+}
+
+.active-equalizer span {
+    display: inline-block !important;
+    width: 3px !important;
+    background: #fde047 !important;
+    border-radius: 2px !important;
+    animation: eqBounce 0.9s ease-in-out infinite alternate !important;
+    box-shadow: 0 0 6px rgba(253, 224, 71, 0.8) !important;
+}
+
+.active-equalizer span:nth-child(1) { height: 35% !important; animation-delay: 0.1s !important; }
+.active-equalizer span:nth-child(2) { height: 90% !important; animation-delay: 0.3s !important; }
+.active-equalizer span:nth-child(3) { height: 55% !important; animation-delay: 0.2s !important; }
+.active-equalizer span:nth-child(4) { height: 100% !important; animation-delay: 0.45s !important; }
+.active-equalizer span:nth-child(5) { height: 45% !important; animation-delay: 0.15s !important; }
+
+@keyframes eqBounce {
+    0% { height: 25%; transform: scaleY(0.4); opacity: 0.6; }
+    100% { height: 100%; transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes iconFloat {
+    0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 6px rgba(253, 224, 71, 0.8)); }
+    50% { transform: translateY(-3px) scale(1.2); filter: drop-shadow(0 0 14px rgba(251, 191, 36, 1)); }
+}
+
+.station-icon-active {
+    display: inline-block !important;
+    animation: iconFloat 1.4s infinite ease-in-out !important;
+}
+
+.station-box-done {
+    background: #ecfdf5 !important;
+    border: 2px solid #10b981 !important;
+    transition: all 0.3s ease !important;
+}
+
+.station-box-pending {
+    background: #f8fafc !important;
+    border: 2px solid #cbd5e1 !important;
+}
+
+/* Spinner at the description line */
+.inline-spinner {
+    display: inline-block !important;
+    width: 14px !important;
+    height: 14px !important;
+    border: 2.5px solid rgba(16, 185, 129, 0.25) !important;
+    border-top-color: #10b981 !important;
+    border-radius: 50% !important;
+    animation: miniRotate 0.75s linear infinite !important;
+    vertical-align: -2px !important;
+    margin-right: 8px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Subtask Marks Bubbles with Pure Crisp White Text */
+.subtask-mark-bubble,
+span.subtask-mark-bubble,
+.ed-card .subtask-mark-bubble,
+.marks-bracket,
+span.marks-bracket,
+div.marks-bracket {
+    display: inline-block !important;
+    background: linear-gradient(145deg, #1e293b, #0f172a) !important;
+    color: #ffffff !important; /* Pure Crisp White */
+    border: 1px solid #64748b !important;
+    padding: 2px 8px !important;
+    border-radius: 6px !important;
+    font-weight: 800 !important;
+    font-size: 0.82rem !important;
+    font-family: 'Montserrat', -apple-system, sans-serif !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35) !important;
+    vertical-align: 1px !important;
+}
+
+.subtask-mark-bubble *,
+span.subtask-mark-bubble *,
+.ed-card .subtask-mark-bubble *,
+.marks-bracket *,
+span.marks-bracket * {
+    color: #ffffff !important;
+}
+
+/* Monospace Courier New Code Snippets Across Preview */
+code, pre, .inline-code, span.inline-code {
+    font-family: 'Courier New', 'Fira Code', 'Lucida Console', monospace !important;
+}
+
+/* ==============================================================================
+   7. VIBRANT QUESTION BREAKDOWN & SUBTASK KEYPOINTS
+   ============================================================================== */
+.blueprint-card {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    padding: 18px 22px !important;
+    margin-bottom: 18px !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+    border: 1px solid #e2e8f0 !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+.blueprint-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.1) !important;
+}
+
+.subtask-keypoint-strip {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 8px !important;
+    gap: 12px !important;
+    transition: all 0.15s ease !important;
+}
+
+.subtask-keypoint-strip:hover {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+}
+
+.subtask-keypoint-badge {
+    display: inline-block !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    font-weight: 800 !important;
+    font-size: 0.82rem !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.subtask-keypoint-content {
+    flex: 1 !important;
+    font-size: 0.92rem !important;
+    color: #1e293b !important;
+    line-height: 1.45 !important;
+}
+
+.subtask-keypoint-content * {
+    color: #1e293b !important;
+}
+
+.subtask-keypoint-content strong {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
+.objective-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+    color: #1e40af !important;
+    border: 1px solid #93c5fd !important;
+    border-radius: 20px !important;
+    padding: 5px 14px !important;
+    margin: 4px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 5px rgba(30, 64, 175, 0.08) !important;
 }

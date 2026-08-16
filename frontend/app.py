@@ -11,6 +11,8 @@ import sys
 import io
 import time
 import base64
+import re
+import json
 from pathlib import Path
 
 # Explicitly ensure repository root is in sys.path across all deployment environments (Cloud Run, Docker, Local)
@@ -56,6 +58,9 @@ if "current_session" not in st.session_state:
 if "compilation_logs" not in st.session_state:
     st.session_state.compilation_logs = []
 
+if "last_generation_duration" not in st.session_state:
+    st.session_state.last_generation_duration = 14.8
+
 # Question-by-Question Studio Session State
 if "studio_questions" not in st.session_state:
     st.session_state.studio_questions = []
@@ -66,15 +71,186 @@ if "studio_current_draft" not in st.session_state:
 pref_learner: PreferenceLearner = st.session_state.orchestrator.preference_learner
 session_mgr: SessionManager = st.session_state.orchestrator.session_manager
 
+PIPELINE_STATIONS = [
+    ("Station 1: Memory & Style Agent", "🧠 Querying persistent educator profile in Cloud Firestore..."),
+    ("Station 2: RAG Grounding Agent", "📚 Scanning syllabus 9569 standards & indexing exam exemplars..."),
+    ("Station 3: Blueprint Architect Agent", "📐 Synthesizing learning objectives & mark allocations on Vertex AI..."),
+    ("Station 4: Demographic Synthesizer Agent", "⚖️ Generating 50/50 gender balanced datasets & SQL schemas..."),
+    ("Station 5: Golden TeX Authoring Agent", "✍️ Drafting Cambridge-compliant LaTeX exam paper & mark scheme..."),
+    ("Station 6: Self-Healing Sandbox Agent", "🔄 Executing pdflatex compilation & 3-pass Gemini self-healing..."),
+    ("Station 7: Artifact Packaging Agent", "📦 Persisting session state & bundling .zip download package...")
+]
+
+def build_pipeline_hud_html(current_station_idx: int, active_msg: str, is_done: bool = False, start_ms: int = 0, final_duration_str: str = "14.8s") -> str:
+    station_boxes = []
+    for idx, (s_name, s_desc) in enumerate(PIPELINE_STATIONS):
+        station_num = s_name.split(":")[0].strip()
+        station_role = s_name.split(":")[1].strip()
+
+        if is_done or idx < current_station_idx:
+            status_icon = "✅"
+            box_class = "station-box-done"
+            box_style = "background: #ecfdf5; border: 2px solid #10b981; border-radius: 8px; padding: 8px 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;"
+            title_color = "#065f46"
+            eq_html = ""
+        elif idx == current_station_idx:
+            status_icon = '<span class="station-icon-active">⚡</span>'
+            box_class = "station-box-active"
+            box_style = "border-radius: 8px; padding: 8px 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;"
+            title_color = "#ffffff"
+            eq_html = '<div class="active-equalizer"><span></span><span></span><span></span><span></span><span></span></div>'
+        else:
+            status_icon = "⏳"
+            box_class = "station-box-pending"
+            box_style = "background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 8px; padding: 8px 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;"
+            title_color = "#64748b"
+            eq_html = ""
+
+        box_html = f"""
+        <div class="{box_class}" style="{box_style}">
+            <div style="font-size: 1.1rem; line-height: 1;">{status_icon}</div>
+            {eq_html}
+            <div style="font-weight: 800; font-size: 0.76rem; color: {title_color}; margin-top: 3px; line-height: 1.15;">{station_num}</div>
+            <div style="font-size: 0.66rem; color: {title_color}; opacity: 0.95; line-height: 1.15; margin-top: 2px;">{station_role}</div>
+        </div>
+        """
+        station_boxes.append(box_html)
+
+    status_tag = "🎉 All 7 Stages Complete" if is_done else f"Station {min(current_station_idx + 1, 7)} of 7 Active"
+    action_text = "🎉 All 7 agents completed their tasks successfully! Exam package compiled & ready." if is_done else active_msg
+    spinner_html = "" if is_done else '<span class="inline-spinner"></span>'
+    stopwatch_init_text = f"⏱️ {final_duration_str}" if is_done else "⏱️ 00:00.0s"
+
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+* {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }}
+body {{ background: transparent; padding: 2px; }}
+@keyframes metallicWave {{
+    0% {{ background-position: -200% 0; }}
+    100% {{ background-position: 200% 0; }}
+}}
+@keyframes activeStationPulse {{
+    0%, 100% {{ box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4), 0 4px 14px rgba(37, 99, 235, 0.25); transform: translateY(0); }}
+    50% {{ box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 8px 24px rgba(37, 99, 235, 0.45); transform: translateY(-2px); }}
+}}
+@keyframes goldWhiteShimmer {{
+    0% {{ color: #ffffff !important; text-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 0 16px rgba(254, 240, 138, 0.6) !important; }}
+    50% {{ color: #fde047 !important; text-shadow: 0 0 12px rgba(251, 191, 36, 0.95), 0 0 24px rgba(245, 158, 11, 0.8) !important; }}
+    100% {{ color: #ffffff !important; text-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 0 16px rgba(254, 240, 138, 0.6) !important; }}
+}}
+@keyframes miniRotate {{
+    0% {{ transform: rotate(0deg); }}
+    100% {{ transform: rotate(360deg); }}
+}}
+@keyframes eqBounce {{
+    0% {{ height: 25%; transform: scaleY(0.4); opacity: 0.6; }}
+    100% {{ height: 100%; transform: scaleY(1); opacity: 1; }}
+}}
+@keyframes iconFloat {{
+    0%, 100% {{ transform: translateY(0) scale(1); filter: drop-shadow(0 0 6px rgba(253, 224, 71, 0.8)); }}
+    50% {{ transform: translateY(-3px) scale(1.2); filter: drop-shadow(0 0 14px rgba(251, 191, 36, 1)); }}
+}}
+.station-box-active {{
+    background: linear-gradient(110deg, #080f24 0%, #11224d 20%, #1e3a8a 45%, #2563eb 50%, #1e3a8a 55%, #11224d 80%, #080f24 100%) !important;
+    background-size: 250% 100% !important;
+    animation: metallicWave 2.5s infinite linear, activeStationPulse 2s infinite ease-in-out !important;
+    border: 2px solid #60a5fa !important;
+}}
+.station-box-active * {{
+    animation: goldWhiteShimmer 2.2s infinite ease-in-out !important;
+    font-weight: 800 !important;
+}}
+.active-equalizer {{
+    display: flex; justify-content: center; align-items: flex-end; gap: 3px; height: 10px; margin: 2px auto;
+}}
+.active-equalizer span {{
+    display: inline-block; width: 3px; background: #fde047; border-radius: 2px;
+    animation: eqBounce 0.9s ease-in-out infinite alternate; box-shadow: 0 0 6px rgba(253, 224, 71, 0.8);
+}}
+.active-equalizer span:nth-child(1) {{ height: 35%; animation-delay: 0.1s; }}
+.active-equalizer span:nth-child(2) {{ height: 90%; animation-delay: 0.3s; }}
+.active-equalizer span:nth-child(3) {{ height: 55%; animation-delay: 0.2s; }}
+.active-equalizer span:nth-child(4) {{ height: 100%; animation-delay: 0.45s; }}
+.active-equalizer span:nth-child(5) {{ height: 45%; animation-delay: 0.15s; }}
+.station-icon-active {{ display: inline-block; animation: iconFloat 1.4s infinite ease-in-out; }}
+.station-box-done {{ background: #ecfdf5; border: 2px solid #10b981; }}
+.station-box-pending {{ background: #f8fafc; border: 2px solid #cbd5e1; }}
+.inline-spinner {{
+    display: inline-block; width: 14px; height: 14px; border: 2.5px solid rgba(16, 185, 129, 0.25);
+    border-top-color: #10b981; border-radius: 50%; animation: miniRotate 0.75s linear infinite; vertical-align: -2px; margin-right: 8px; flex-shrink: 0;
+}}
+</style>
+</head>
+<body>
+    <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-weight: 800; font-size: 1rem; color: #0f172a; display: flex; align-items: center;">
+                🚂 Multi-Agent Co-Authoring Pipeline &nbsp;<span style="font-size: 0.76rem; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 12px; font-weight: 700;">{status_tag}</span>
+            </div>
+            <div id="live-stopwatch" style="font-family: 'Courier New', monospace; font-size: 0.92rem; background: linear-gradient(135deg, #0369a1, #0284c7); color: #ffffff; padding: 4px 14px; border-radius: 20px; border: 1px solid #38bdf8; font-weight: 800; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);">
+                {stopwatch_init_text}
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%;">
+            {''.join(station_boxes)}
+        </div>
+        <div style="margin-top: 10px; font-size: 0.84rem; color: #1e3a8a; background: #f0fdf4; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #10b981; display: flex; align-items: center; line-height: 1.35;">
+            {spinner_html} <strong>Current Action:</strong>&nbsp;<span style="margin-left: 4px;">{action_text}</span>
+        </div>
+    </div>
+    <script>
+    (function() {{
+        var startTime = {start_ms};
+        var isDone = {'true' if is_done else 'false'};
+        var el = document.getElementById('live-stopwatch');
+        function pad(n) {{ return (n < 10 ? '0' : '') + n; }}
+        function formatTime(elapsed) {{
+            var mins = Math.floor(elapsed / 60);
+            var secs = Math.floor(elapsed % 60);
+            var tenths = Math.floor((elapsed % 1) * 10);
+            return (mins > 0 ? pad(mins) + ':' : '') + (mins > 0 ? pad(secs) : secs) + '.' + tenths + 's';
+        }}
+        if (!isDone && startTime > 0) {{
+            function update() {{
+                var now = Date.now();
+                var elapsed = Math.max(0, (now - startTime) / 1000);
+                if (el) el.innerText = '⏱️ ' + formatTime(elapsed);
+            }}
+            var interval = setInterval(update, 100);
+            update();
+        }}
+    }})();
+    </script>
+</body>
+</html>"""
+
+GEMINI_ICON = '<img src="https://upload.wikimedia.org/wikipedia/commons/1/1d/Google_Gemini_icon_2025.svg" width="18" height="18" style="vertical-align: -3px; margin-right: 6px;"/>'
+GEMINI_ICON_SM = '<img src="https://upload.wikimedia.org/wikipedia/commons/1/1d/Google_Gemini_icon_2025.svg" width="15" height="15" style="vertical-align: -2px; margin-right: 4px;"/>'
+
 # ==============================================================================
 # SIDEBAR: AI Engine, Teacher Profile, Saved Drafts & Enhanced RAG Ingestion
 # ==============================================================================
 with st.sidebar:
-    st.markdown("## 🎓 ComputingScribe AI")
-    st.caption("Collaborative Partner for Technical Educators")
+    sidebar_img_path = BASE_DIR / "images" / "sidebar.jpg"
+    if sidebar_img_path.exists():
+        st.image(str(sidebar_img_path), use_container_width=True)
+    else:
+        st.markdown("## 🎓 ComputingScribe AI")
+        st.caption("Collaborative Partner for Technical Educators")
+    
+    st.markdown(
+        "<div style='text-align: center; color: #fbbf24; font-weight: 400; font-style: italic; font-size: 0.88rem; margin-top: -3px; margin-bottom: 3px; letter-spacing: 0.2px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);'>"
+        "☁️ Hosted on Google Cloud Platform"
+        "</div>",
+        unsafe_allow_html=True
+    )
     
     st.markdown("---")
-    st.markdown("🤖 **Model**: `Gemini 3.7 Flash`")
+    st.markdown(f"**Model**: {GEMINI_ICON} <span style='color: #ffffff; font-weight: 700;'>Gemini 3.7 Flash</span>", unsafe_allow_html=True)
     
     with st.expander("⚙️ AI Engine & Settings", expanded=False):
         st.caption("Infrastructure: 🟢 Serverless on Google Cloud Run")
@@ -183,21 +359,12 @@ with st.sidebar:
             st.markdown(card_html, unsafe_allow_html=True)
 
 # ==============================================================================
-# MAIN PANEL: Header & Hero
+# MAIN PANEL: Header Banner Image (Full Width)
 # ==============================================================================
-st.markdown("""
-<div class="main-header">
-    <div class="main-title">ComputingScribe AI</div>
-    <div class="main-tagline">
-        The adaptive co-authoring partner for technical educators: turning syllabus standards into compiled LaTeX papers, balanced synthetic datasets, and verified mark schemes.
-    </div>
-    <div style="margin-top: 14px;">
-        <span class="badge-pill badge-gemini">Gemini 3.7 Flash</span>
-        <span class="badge-pill badge-latex">pdflatex Self-Healing</span>
-        <span class="badge-pill badge-fairness">Demographic Fairness Guardrails</span>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+banner_img_path = BASE_DIR / "images" / "banner.jpg"
+if banner_img_path.exists():
+    st.image(str(banner_img_path), use_container_width=True)
+    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
 # Authoring Mode Selection
 col_m1, col_m2 = st.columns([1, 1])
@@ -208,16 +375,42 @@ with col_m1:
         horizontal=True
     )
 
-category_options = {
-    "sec1_linear_adts": "Section 1: Stacks, Circular Queues & Linked Lists",
-    "sec1_nonlinear_bst_hash": "Section 1: Binary Search Trees & Hash Tables",
-    "sec2_algorithms_sorting_searching": "Section 2: Quicksort, Merge Sort, Binary Search & Big-O",
-    "sec2_logic_decision_tables": "Section 2: Decision Tables & Logic Simplification",
-    "sec3_oop_hierarchies": "Section 3: OOP Classes, Inheritance & Polymorphism",
-    "sec3_sql_normalisation": "Section 3: Relational DBs (1NF-3NF) & SQL DDL/DML",
-    "sec3_web_networks_security": "Section 3: Web Apps (Flask/HTTP), OSI/TCP-IP, Subnetting & Security",
-    "sec4_ethics_ai_pdpa": "Section 4: PDPA, AI/ML Ethics & Cybersecurity"
-}
+PRACTICAL_TOPICS = [
+    "Data Representation and Character Encoding",
+    "Basic Python",
+    "Python File I/O",
+    "Modules: Random, Datetime",
+    "Data Validation",
+    "Recursion",
+    "Searching and Sorting Algorithms",
+    "OOP",
+    "Stacks and Queues",
+    "Hash Tables",
+    "BST",
+    "Linked Lists",
+    "Machine Learning with sklearn",
+    "SQLite Databases",
+    "HTML, CSS, Flask"
+]
+
+THEORY_TOPICS = [
+    "Data representation and character encoding",
+    "Algorithmic Representation",
+    "Data Validation and Verification",
+    "Recursion",
+    "Searching and Sorting Algorithms",
+    "Data Structures",
+    "OOP",
+    "Databases",
+    "Web development",
+    "Information and Cybersecurity",
+    "Computer Networks",
+    "AI and Machine Learning",
+    "Social, Ethical and Security Impact"
+]
+
+# Backward compatibility map
+category_options = {t: t for t in PRACTICAL_TOPICS + THEORY_TOPICS}
 
 # ==============================================================================
 # MODE A: FULL PAPER CO-AUTHORING (ALL-IN-ONE)
@@ -243,17 +436,43 @@ if "Full Paper" in author_mode:
             st.markdown("**Adaptive Educator Style:**")
             st.markdown(f"- **Depth & Context:** `{style.get('preferred_depth', 'long_contextual')}`")
             st.markdown(f"- **Rubrics:** `{style.get('rubric_style', 'granular_partial_credit')}`")
-            st.caption("✨ Calibrated across comprehensive 9569 syllabus sections.")
-            category = "comprehensive_syllabus"
+            st.caption("✨ Calibrated across selected syllabus topics.")
+
+        # Topics Multi-Select & Custom Topic Addition
+        available_topics = PRACTICAL_TOPICS if paper_type == "practical" else THEORY_TOPICS
+        col_top_sel, col_top_cust = st.columns([1.4, 1])
+        with col_top_sel:
+            selected_topics = st.multiselect(
+                "🎯 Syllabus Topics (Select multiple)",
+                options=available_topics,
+                default=[available_topics[8], available_topics[2]] if paper_type == "practical" else [available_topics[5], available_topics[4]],
+                help="Select one or more topics to assess in this exam paper."
+            )
+        with col_top_cust:
+            custom_topics_input = st.text_input(
+                "➕ Custom Topic(s) (Optional)",
+                placeholder="e.g. Trie ADT, A* Search, REST APIs",
+                help="Type custom topics separated by commas."
+            )
+        
+        # Combine all topics
+        all_chosen_topics = list(selected_topics)
+        if custom_topics_input.strip():
+            for ct in custom_topics_input.split(","):
+                clean_ct = ct.strip()
+                if clean_ct and clean_ct not in all_chosen_topics:
+                    all_chosen_topics.append(clean_ct)
+        category = ", ".join(all_chosen_topics) if all_chosen_topics else "Comprehensive 9569 Syllabus"
+        st.caption(f"📌 **Active Assessed Topics**: `{category}`")
 
         # Metadata Fields
-        col_inst, col_yr, col_ser = st.columns([2, 1, 1])
+        col_inst, col_yr, col_ser = st.columns([1.5, 0.8, 1.1])
         with col_inst:
             institution = st.text_input("Institution Name", value="HelloWorld Junior College", key="full_inst")
         with col_yr:
             exam_year = st.text_input("Exam Year", value="2027", key="full_yr")
         with col_ser:
-            exam_series = st.selectbox("Series", ["PRELIM", "SPECIMEN", "FINAL"], key="full_ser")
+            exam_series = st.selectbox("Series", options=["WA", "Promo", "Prelim"], index=2, key="full_ser")
 
         default_sample_prompt = (
             "Create a contextual H2 Computing Paper 2 practical task on implementing a Stack abstract data type in Python (push, pop, underflow check) and processing CANDIDATES.csv to calculate distinction metrics and generate a report."
@@ -270,11 +489,26 @@ if "Full Paper" in author_mode:
 
         col_btn, col_hint = st.columns([1, 2])
         with col_btn:
-            generate_btn = st.button("🚀 Author & Compile Exam Package", type="primary", use_container_width=True)
+            generate_btn = st.button("Author & Compile Exam Package", type="primary", use_container_width=True)
         with col_hint:
             st.caption("💡 *Tip: Adding the word `'contextual'` triggers extended real-world scenarios and step-by-step bulleted subtasks.*")
 
     if generate_btn:
+        # Smoothly scroll the page down to the pipeline container
+        components.html(
+            """
+            <script>
+            setTimeout(function() {
+                var mainEl = window.parent.document.querySelector('[data-testid="stMain"]');
+                if (mainEl) {
+                    mainEl.scrollTo({ top: 380, behavior: 'smooth' });
+                }
+            }, 60);
+            </script>
+            """,
+            height=0
+        )
+
         train_station_placeholder = st.empty()
         logs = []
         pipeline_start_time = time.time()
@@ -289,65 +523,21 @@ if "Full Paper" in author_mode:
             ("Station 7: Artifact Packaging Agent", "📦 Persisting session state & bundling .zip download package...")
         ]
 
-        def render_train_station(current_station_idx: int, active_msg: str):
-            total_elapsed = time.time() - pipeline_start_time
-            mins, secs = divmod(int(total_elapsed), 60)
-            ms = int((total_elapsed - int(total_elapsed)) * 10)
-            elapsed_fmt = f"{mins:02d}:{secs:02d}.{ms}s" if mins > 0 else f"{secs}.{ms}s"
-
-            station_boxes = []
-            for idx, (s_name, s_desc) in enumerate(stations):
-                if idx < current_station_idx:
-                    status_icon = "✅"
-                    bg_color = "#ecfdf5"
-                    border_color = "#10b981"
-                    text_color = "#065f46"
-                elif idx == current_station_idx:
-                    status_icon = "🚉 ⚡"
-                    bg_color = "#eff6ff"
-                    border_color = "#2563eb"
-                    text_color = "#1e3a8a"
-                else:
-                    status_icon = "⏳"
-                    bg_color = "#f8fafc"
-                    border_color = "#cbd5e1"
-                    text_color = "#64748b"
-
-                box_html = (
-                    f'<div style="flex: 1 1 120px; min-width: 120px; background: {bg_color}; '
-                    f'border: 2px solid {border_color}; border-radius: 8px; padding: 8px 10px; margin: 4px; text-align: center;">'
-                    f'<div style="font-size: 1.1rem;">{status_icon}</div>'
-                    f'<div style="font-weight: 700; font-size: 0.8rem; color: {text_color}; margin-top: 4px;">{s_name.split(":")[0]}</div>'
-                    f'<div style="font-size: 0.7rem; color: {text_color}; opacity: 0.9;">{s_name.split(":")[1]}</div>'
-                    f'</div>'
-                )
-                station_boxes.append(box_html)
-            
-            track_html = (
-                f'<div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin: 16px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">'
-                f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">'
-                f'<div style="font-weight: 800; font-size: 1.05rem; color: #0f172a;">'
-                f'🚂 Multi-Agent Co-Authoring Pipeline (Station {min(current_station_idx + 1, 7)} of 7 Active)'
-                f'</div>'
-                f'<div style="font-family: monospace; font-size: 0.95rem; background: #e0f2fe; color: #0369a1; padding: 4px 12px; border-radius: 20px; border: 1px solid #7dd3fc; font-weight: 700;">'
-                f'⏱️ Elapsed: {elapsed_fmt}'
-                f'</div>'
-                f'</div>'
-                f'<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;">'
-                f'{"".join(station_boxes)}'
-                f'</div>'
-                f'<div style="margin-top: 12px; font-size: 0.88rem; color: #1e3a8a; background: #f0fdf4; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #10b981; display: flex; justify-content: space-between; align-items: center;">'
-                f'<div><strong>Current Action:</strong> {active_msg}</div>'
-                f'<div style="font-family: monospace; font-size: 0.85rem; color: #059669; font-weight: 700;">⏱️ {elapsed_fmt}</div>'
-                f'</div>'
-                f'</div>'
+        def render_train_station(current_station_idx: int, active_msg: str, is_done: bool = False):
+            start_ms = int(pipeline_start_time * 1000)
+            full_html = build_pipeline_hud_html(
+                current_station_idx=current_station_idx,
+                active_msg=active_msg,
+                is_done=is_done,
+                start_ms=start_ms
             )
-            train_station_placeholder.markdown(track_html, unsafe_allow_html=True)
+            with train_station_placeholder.container():
+                components.html(full_html, height=220)
 
         def on_progress(step: str, msg: str):
             logs.append(f"**[{step}]** {msg}")
             current_idx = 0
-            for idx, (s_name, _) in enumerate(stations):
+            for idx, (s_name, _) in enumerate(PIPELINE_STATIONS):
                 if s_name.split(':')[0] in step:
                     current_idx = idx
                     break
@@ -369,7 +559,8 @@ if "Full Paper" in author_mode:
             st.session_state.current_session = session
             st.session_state.compilation_logs = logs
             total_dur = round(time.time() - pipeline_start_time, 1)
-            render_train_station(6, f"🎉 All 7 agents completed their tasks in {total_dur}s!")
+            st.session_state.last_generation_duration = total_dur
+            render_train_station(6, f"🎉 All 7 agents completed their tasks in {total_dur}s!", is_done=True)
             time.sleep(0.5)
             st.rerun()
         except Exception as gen_err:
@@ -398,12 +589,29 @@ else:
         with col_st_m:
             s_marks = st.number_input("Marks", min_value=5, max_value=50, value=25, step=5)
 
-        s_category = st.selectbox(
-            "Syllabus Category",
-            options=list(category_options.keys()),
-            format_func=lambda k: category_options[k],
-            key="studio_cat"
-        )
+        s_available_topics = PRACTICAL_TOPICS if s_paper_type == "practical" else THEORY_TOPICS
+        col_s_top, col_s_cust = st.columns([1.4, 1])
+        with col_s_top:
+            s_selected_topics = st.multiselect(
+                "Syllabus Topic(s)",
+                options=s_available_topics,
+                default=[s_available_topics[8]] if s_paper_type == "practical" else [s_available_topics[5]],
+                key="studio_multitopics"
+            )
+        with col_s_cust:
+            s_custom_topic = st.text_input(
+                "➕ Custom Topic (Optional)",
+                placeholder="e.g. Min-Heap Queue",
+                key="studio_cust_topic"
+            )
+        
+        s_all_topics = list(s_selected_topics)
+        if s_custom_topic.strip():
+            for ct in s_custom_topic.split(","):
+                clean_ct = ct.strip()
+                if clean_ct and clean_ct not in s_all_topics:
+                    s_all_topics.append(clean_ct)
+        s_category = ", ".join(s_all_topics) if s_all_topics else "General ADT & System Design"
 
         s_prompt = st.text_area(
             "Question Authoring Prompt",
@@ -538,6 +746,17 @@ curr_sess: ExamSession = st.session_state.current_session
 if curr_sess:
     st.markdown("---")
     
+    # Persistent Multi-Agent Pipeline (All 7 Stages Complete)
+    dur_val = st.session_state.get("last_generation_duration", 14.8)
+    dur_str = f"{dur_val:.1f}s" if isinstance(dur_val, (int, float)) else str(dur_val)
+    persisted_pipeline_html = build_pipeline_hud_html(
+        current_station_idx=6,
+        active_msg="All 7 multi-agent pipeline stages completed successfully! Artifact package compiled & ready.",
+        is_done=True,
+        final_duration_str=dur_str
+    )
+    components.html(persisted_pipeline_html, height=220)
+    
     # Top Action Bar & Metrics
     m1, m2, m3, m4, m5 = st.columns(5)
     with m1:
@@ -545,8 +764,9 @@ if curr_sess:
     with m2:
         st.markdown(f"<div class='metric-box'><div class='metric-value' style='color: #0f172a; font-weight: 800;'>{curr_sess.syllabus_code}/{curr_sess.paper_number}</div><div class='metric-label' style='color: #475569; font-weight: 600;'>Paper Code</div></div>", unsafe_allow_html=True)
     with m3:
-        total_m = curr_sess.blueprint.get("total_marks", 100) if isinstance(curr_sess.blueprint, dict) else 100
-        st.markdown(f"<div class='metric-box'><div class='metric-value' style='color: #0f172a; font-weight: 800;'>{total_m}</div><div class='metric-label' style='color: #475569; font-weight: 600;'>Total Marks</div></div>", unsafe_allow_html=True)
+        total_m = curr_sess.blueprint.get("total_marks", 94 if curr_sess.paper_type == "practical" else 100) if isinstance(curr_sess.blueprint, dict) else (94 if curr_sess.paper_type == "practical" else 100)
+        mark_label = "94m (+6m Style = 100m)" if curr_sess.paper_type == "practical" else "100m Total"
+        st.markdown(f"<div class='metric-box'><div class='metric-value' style='color: #0f172a; font-weight: 800;'>{total_m}</div><div class='metric-label' style='color: #475569; font-weight: 600;'>{mark_label}</div></div>", unsafe_allow_html=True)
     with m4:
         tasks_count = len(curr_sess.blueprint.get("sections", [])) if isinstance(curr_sess.blueprint, dict) else len(curr_sess.questions) or 4
         st.markdown(f"<div class='metric-box'><div class='metric-value' style='color: #0f172a; font-weight: 800;'>{tasks_count}</div><div class='metric-label' style='color: #475569; font-weight: 600;'>Tasks / Questions</div></div>", unsafe_allow_html=True)
@@ -576,36 +796,108 @@ if curr_sess:
     ])
 
     # --------------------------------------------------------------------------
-    # TAB 1: Blueprint & Objectives
+    # TAB 1: Blueprint & Objectives (Vibrant Keypoint Summary Cards)
     # --------------------------------------------------------------------------
     with tab1:
-        st.markdown("### 📋 Syllabus-Calibrated Exam Blueprint")
+        st.markdown("### 📋 Syllabus-Calibrated Exam Blueprint & Keypoints")
         bp = curr_sess.blueprint if isinstance(curr_sess.blueprint, dict) else {}
         
-        st.markdown("#### 🎯 Assessed Learning Objectives")
-        for obj in bp.get("learning_objectives", []):
-            st.markdown(f"- **{obj}**")
+        # 1. Learning Objectives Chips
+        learning_objs = bp.get("learning_objectives", [])
+        if learning_objs:
+            st.markdown("#### 🎯 Assessed Learning Objectives")
+            obj_chips_html = "".join([f"<div class='objective-chip'>🎯 {obj}</div>" for obj in learning_objs])
+            st.markdown(f"<div style='margin-bottom: 18px;'>{obj_chips_html}</div>", unsafe_allow_html=True)
 
-        st.markdown("#### 📑 Question Breakdown & Mark Allocations")
+        st.markdown("#### 📑 Question Breakdown & Subtask Keypoints")
+        
+        # Vibrant Task Theme Palettes (Border, Badge BG, Badge Text, Header Fill)
+        task_themes = [
+            {"border": "#2563eb", "badge_bg": "#dbeafe", "badge_text": "#1e40af", "topic_bg": "#eff6ff"}, # Cobalt Blue
+            {"border": "#059669", "badge_bg": "#d1fae5", "badge_text": "#065f46", "topic_bg": "#f0fdf4"}, # Emerald Green
+            {"border": "#d97706", "badge_bg": "#fef3c7", "badge_text": "#92400e", "topic_bg": "#fffbeb"}, # Amber / Gold
+            {"border": "#7c3aed", "badge_bg": "#ede9fe", "badge_text": "#5b21b6", "topic_bg": "#faf5ff"}, # Royal Violet
+            {"border": "#e11d48", "badge_bg": "#ffe4e6", "badge_text": "#9f1239", "topic_bg": "#fff1f2"}, # Crimson Rose
+        ]
+
         sections = bp.get("sections", [])
-        for sec in sections:
-            subparts_html = ""
+        total_paper_raw = curr_sess.blueprint.get("total_marks", 94 if curr_sess.paper_type == "practical" else 100) if isinstance(curr_sess.blueprint, dict) else 100
+        
+        for idx, sec in enumerate(sections):
+            theme = task_themes[idx % len(task_themes)]
+            sec_marks = sec.get("marks", 0)
+            weight_pct = round((sec_marks / total_paper_raw * 100), 1) if total_paper_raw > 0 else 0
+            
             subparts = sec.get("subparts", [])
+            subparts_html = ""
             if subparts:
-                items_str = "".join([f"<li style='margin-bottom: 4px; color: #1e293b;'><strong style='color: #0f172a;'>{sp.get('label', '')}</strong>: {sp.get('description', '')} <code style='background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #0f172a;'>[{sp.get('marks', '')}m]</code></li>" for sp in subparts])
-                subparts_html = f"<ul style='margin-top: 10px; margin-bottom: 0; padding-left: 20px;'>{items_str}</ul>"
+                items_list = []
+                for sp in subparts:
+                    raw_desc = sp.get('description', '')
+                    clean_desc = re.sub(r"`([^`\n]+)`", r"<code class='inline-code'>\1</code>", raw_desc)
+                    sub_label = sp.get('label', f'Task {idx+1}.1')
+                    sub_marks = sp.get('marks', '')
+                    
+                    items_list.append(
+                        f"<div class='subtask-keypoint-strip'>"
+                        f"<span class='subtask-keypoint-badge' style='background: {theme['badge_bg']}; color: {theme['badge_text']};'>{sub_label}</span>"
+                        f"<div class='subtask-keypoint-content'>{clean_desc}</div>"
+                        f"<span class='subtask-mark-bubble'>[{sub_marks}m]</span>"
+                        f"</div>"
+                    )
+                subparts_html = f"<div style='margin-top: 12px;'>{''.join(items_list)}</div>"
 
             card_html = (
-                f'<div class="ed-card">'
-                f'<div class="card-title">'
-                f'<span style="color: #0f172a; font-weight: 700;">{sec.get("title", "Task")}</span>'
-                f'<span class="badge-pill badge-latex">{sec.get("marks", 0)} Marks</span>'
+                f'<div class="blueprint-card" style="border-left: 5px solid {theme["border"]};">'
+                f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">'
+                f'<div>'
+                f'<div style="font-size: 1.15rem; font-weight: 800; color: #0f172a;">{sec.get("title", f"Task {idx+1}")}</div>'
+                f'<div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">'
+                f'<span style="background: {theme["topic_bg"]}; color: {theme["badge_text"]}; border: 1px solid {theme["badge_bg"]}; padding: 2px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700;">Topic: {sec.get("topic", "N/A")}</span>'
+                f'<span style="font-size: 0.76rem; color: #64748b; font-weight: 600;">{weight_pct}% of total exam</span>'
                 f'</div>'
-                f'<div class="card-subtitle" style="color: #475569;">Topic: {sec.get("topic", "N/A")}</div>'
+                f'</div>'
+                f'<div>'
+                f'<span class="badge-pill badge-latex" style="background: {theme["border"]} !important; color: #ffffff !important; font-size: 0.88rem; padding: 4px 12px;">{sec_marks} Marks</span>'
+                f'</div>'
+                f'</div>'
                 f'{subparts_html}'
                 f'</div>'
             )
             st.markdown(card_html, unsafe_allow_html=True)
+
+        if curr_sess.paper_type == "practical":
+            style_card_html = (
+                f'<div class="blueprint-card" style="border-left: 5px solid #2563eb; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">'
+                f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">'
+                f'<div>'
+                f'<div style="font-size: 1.15rem; font-weight: 800; color: #0f172a;">Code Quality & Programming Style Assessment</div>'
+                f'<div style="font-size: 0.8rem; color: #475569; margin-top: 2px;">Assessed holistically across candidate Python scripts in Jupyter Notebooks</div>'
+                f'</div>'
+                f'<div>'
+                f'<span class="badge-pill badge-gemini" style="background: linear-gradient(135deg, #1e3a8a, #2563eb) !important; color: #ffffff !important; font-size: 0.88rem; padding: 4px 12px;">6 Marks</span>'
+                f'</div>'
+                f'</div>'
+                f'<div style="margin-top: 12px;">'
+                f'<div class="subtask-keypoint-strip">'
+                f'<span class="subtask-keypoint-badge" style="background: #dbeafe; color: #1e40af;">Style 1</span>'
+                f'<div class="subtask-keypoint-content"><strong>Meaningful identifier names</strong>: Clear, intuitive descriptive conventions for variables, functions, and class definitions.</div>'
+                f'<span class="subtask-mark-bubble">[2m]</span>'
+                f'</div>'
+                f'<div class="subtask-keypoint-strip">'
+                f'<span class="subtask-keypoint-badge" style="background: #d1fae5; color: #065f46;">Style 2</span>'
+                f'<div class="subtask-keypoint-content"><strong>Appropriate comments</strong>: Concise, helpful docstrings and algorithmic comments explaining complex data structures and edge logic.</div>'
+                f'<span class="subtask-mark-bubble">[2m]</span>'
+                f'</div>'
+                f'<div class="subtask-keypoint-strip">'
+                f'<span class="subtask-keypoint-badge" style="background: #fef3c7; color: #92400e;">Style 3</span>'
+                f'<div class="subtask-keypoint-content"><strong>Good use of whitespaces</strong>: Standard PEP 8 indentation, logical blank line separation, and expression readability.</div>'
+                f'<span class="subtask-mark-bubble">[2m]</span>'
+                f'</div>'
+                f'</div>'
+                f'</div>'
+            )
+            st.markdown(style_card_html, unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
     # TAB 2: Exam Question Paper (Clean KaTeX Questions Preview & Copy LaTeX)
@@ -648,7 +940,7 @@ if curr_sess:
 
         st.markdown("---")
         st.markdown("### 💬 Conversational Paper Editor & Refinement Workbench")
-        st.caption("Prompt Gemini 3.7 Flash to refine, rephrase, add subtasks, adjust difficulty, or rewrite specific tasks across this working exam paper:")
+        st.markdown(f"<div style='color: #475569; margin-bottom: 10px; font-size: 0.95rem;'>Prompt {GEMINI_ICON_SM} <strong>Gemini 3.7 Flash</strong> to refine, rephrase, add subtasks, adjust difficulty, or rewrite specific tasks across this working exam paper:</div>", unsafe_allow_html=True)
         
         col_ref_in, col_ref_btn = st.columns([3.8, 1.2])
         with col_ref_in:
@@ -769,7 +1061,7 @@ if curr_sess:
     # TAB 5: Self-Healing Telemetry
     # --------------------------------------------------------------------------
     with tab5:
-        st.markdown("### 🔄 pdflatex Compilation & Gemini Self-Healing Logs")
+        st.markdown(f"### 🔄 pdflatex Compilation & {GEMINI_ICON_SM} Gemini Self-Healing Logs", unsafe_allow_html=True)
         if curr_sess.compilation_logs:
             st.text_area("Full Compilation Log & Stderr", value=curr_sess.compilation_logs, height=350)
         else:

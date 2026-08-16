@@ -38,11 +38,19 @@ class QuestionAuthor:
     ) -> ExamBlueprint:
         """
         Synthesizes an exam blueprint (objectives, mark distribution, tasks) for H2 Computing 2027 (9569).
+        Practical Paper 2: 94 marks for questions + 6 marks for Programming Style & Quality (100 total).
+        Theory Paper 1: 100 marks total.
         """
         teacher_style = teacher_style or {}
         is_contextual = "contextual" in prompt.lower() or teacher_style.get("preferred_depth") == "long_contextual"
         preferred_depth = "long_contextual" if is_contextual else teacher_style.get("preferred_depth", "long_contextual")
-        target_marks = teacher_style.get("total_marks", 100)
+        
+        # 94 marks for Practical (6 marks code style), 100 marks for Theory
+        default_paper_marks = 94 if paper_type == "practical" else 100
+        target_marks = teacher_style.get("total_marks", default_paper_marks)
+        if paper_type == "practical" and target_marks == 100:
+            target_marks = 94 # Enforce 94 question marks standard
+            
         task_count = teacher_style.get("task_count", 4 if paper_type == "practical" else 5)
 
         contextual_instructions = """
@@ -52,10 +60,12 @@ CONTEXTUAL DEPTH DIRECTIVES (ACTIVE):
   * Structure every subtask with CLEAR, STEP-BY-STEP BULLETED POINT INSTRUCTIONS.
   * Explicitly specify data types, method signatures, return values, exception handling, and expected console/Jupyter outputs.
   * Include realistic sample records and structured test tables.
+  * TOTAL QUESTION MARKS MUST SUM TO EXACTLY 94 MARKS (6 marks are reserved for Programming Style).
 
 - For THEORY (Paper 1):
   * Develop a RICH, MULTI-PARAGRAPH DOMAIN SCENARIO establishing entities, business rules, hardware/network architecture, and security constraints.
   * All question parts must tie directly into the scenario (e.g. applying 1NF-3NF normalisation to the scenario's functional dependencies, constructing trace tables for scenario algorithms, calculating subnets for the scenario branch offices, or evaluating PDPA/AI ethics for scenario data handling).
+  * TOTAL QUESTION MARKS MUST SUM TO EXACTLY 100 MARKS.
 """ if is_contextual else ""
 
         system_instruction = f"""
@@ -70,7 +80,7 @@ SYLLABUS CORE SECTIONS (H2 Computing 2027):
 
 Paper Selection: {paper_type.upper()} ({('Paper 2 Practical (9569/02)' if paper_type == 'practical' else 'Paper 1 Theory (9569/01)')})
 Category: {category}
-Target Total Marks: {target_marks}
+Target Total Question Marks: {target_marks} {('(Note: 94 marks for questions + 6 marks Programming Style = 100)' if paper_type == 'practical' else '')}
 Expected Tasks/Questions: {task_count}
 Educator Preference: {preferred_depth}
 
@@ -164,20 +174,20 @@ Return a valid JSON object matching this schema:
                         "number": 3,
                         "title": "Task 3: Object-Oriented Programming & Hierarchy",
                         "topic": "Section 3: System Design & Implementation (OOP & Polymorphism)",
-                        "marks": 25,
+                        "marks": 20,
                         "subparts": [
-                            {"label": "Task 3.1", "description": "Define superclass AssessmentItem with constructor and getters", "marks": 8},
-                            {"label": "Task 3.2", "description": "Define subclass PracticalAssessment overriding calculateScore()", "marks": 9},
-                            {"label": "Task 3.3", "description": "Instantiate polymorphically and verify method dispatch", "marks": 8}
+                            {"label": "Task 3.1", "description": "Define superclass AssessmentItem with constructor and getters", "marks": 6},
+                            {"label": "Task 3.2", "description": "Define subclass PracticalAssessment overriding calculateScore()", "marks": 8},
+                            {"label": "Task 3.3", "description": "Instantiate polymorphically and verify method dispatch", "marks": 6}
                         ]
                     },
                     {
                         "number": 4,
                         "title": "Task 4: Sorting, Searching & Algorithm Efficiency",
                         "topic": "Section 2: Algorithms & Complexity (Quicksort / Binary Search)",
-                        "marks": 25,
+                        "marks": 24,
                         "subparts": [
-                            {"label": "Task 4.1", "description": "Implement recursive Quicksort partitioning function", "marks": 13},
+                            {"label": "Task 4.1", "description": "Implement recursive Quicksort partitioning function", "marks": 12},
                             {"label": "Task 4.2", "description": "Execute test harness with normal, extreme, and abnormal inputs", "marks": 12}
                         ]
                     }

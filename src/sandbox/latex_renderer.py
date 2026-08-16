@@ -119,14 +119,26 @@ class LaTeXVisualRenderer:
         .marks-bracket {{
             float: right;
             font-weight: 700;
-            color: #1e40af;
-            background: #eff6ff;
+            color: #ffffff !important;
+            background: linear-gradient(145deg, #1e293b, #0f172a) !important;
             padding: 2px 9px;
             border-radius: 6px;
-            border: 1px solid #bfdbfe;
+            border: 1px solid #475569;
             margin-left: 14px;
             font-size: 0.92rem;
             letter-spacing: 0.2px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }}
+        
+        .inline-code, code {{
+            font-family: 'Courier New', 'Fira Code', 'Lucida Console', monospace !important;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.92em;
+            font-weight: 600;
         }}
         
         .jupyter-box {{
@@ -398,8 +410,12 @@ class LaTeXVisualRenderer:
 
     @staticmethod
     def _clean_inline(text: str) -> str:
-        """Cleans inline LaTeX commands into HTML tags while preserving math."""
-        text = re.sub(r"\\code\{([^}]+)\}", r"<code class='inline-code'>\1</code>", text)
+        """Cleans inline LaTeX commands and backticks into HTML tags while preserving math."""
+        # Convert backtick code snippets (e.g. `is_empty`) to styled code tags
+        text = re.sub(r"`([^`\n]+)`", r"<code class='inline-code'>\1</code>", text)
+        # Convert \code{...} and \texttt{...}
+        text = re.sub(r"\\(?:code|texttt)\{([^}]+)\}", r"<code class='inline-code'>\1</code>", text)
+        text = re.sub(r"\\(?:verb|lstinline)[\|!+^]([^\|!+^]+)[\|!+^]", r"<code class='inline-code'>\1</code>", text)
         text = re.sub(r"\\textbf\{([^}]+)\}", r"<strong>\1</strong>", text)
         text = re.sub(r"\\textit\{([^}]+)\}", r"<em>\1</em>", text)
         text = text.replace(r"\_", "_").replace(r"\#", "#").replace(r"\%", "%").replace(r"\&", "&")
