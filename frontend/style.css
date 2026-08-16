@@ -313,12 +313,12 @@ section[data-testid="stSidebar"],
     box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25) !important;
 }
 
-/* Sidebar File Uploader */
+/* Sidebar File Uploader & Browse/Upload Button */
 [data-testid="stSidebar"] [data-testid="stFileUploader"] {
     background-color: #1e293b !important;
-    border: 1px dashed #fbbf24 !important;
+    border: 1px dashed #38bdf8 !important;
     border-radius: 10px !important;
-    padding: 10px !important;
+    padding: 12px !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stFileUploader"] section {
@@ -326,11 +326,53 @@ section[data-testid="stSidebar"],
 }
 
 [data-testid="stSidebar"] [data-testid="stFileUploader"] section span,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] section small {
-    color: #e2e8f0 !important;
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section small,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] p,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] div {
+    color: #93c5fd !important; /* High-contrast Sky Blue */
+    font-weight: 500 !important;
 }
 
-/* Sidebar Buttons */
+/* Specific styling for the 'Browse files' / 'Upload' button inside file uploader */
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="baseButton-secondary"],
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section button {
+    background-color: #ffffff !important; /* Crisp White Background */
+    color: #1d4ed8 !important; /* Bold Royal Blue Text */
+    border: 2px solid #2563eb !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+    padding: 6px 16px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button:hover,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section button:hover {
+    background-color: #2563eb !important;
+    color: #ffffff !important; /* White text on blue hover */
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+}
+
+/* Sidebar AI Engine Section - Blue High-Contrast Text */
+[data-testid="stSidebar"] code {
+    background-color: #0f172a !important;
+    color: #38bdf8 !important; /* Electric Sky Blue Code Text */
+    border: 1px solid #1e40af !important;
+    padding: 2px 6px !important;
+    font-weight: 600 !important;
+    border-radius: 4px !important;
+}
+
+[data-testid="stSidebar"] .ai-engine-text,
+[data-testid="stSidebar"] .stCaption {
+    color: #60a5fa !important; /* Vivid Light Blue for AI Engine text */
+    font-weight: 600 !important;
+}
+
+/* Sidebar General Buttons */
 [data-testid="stSidebar"] .stButton > button {
     background-color: #1e293b !important;
     color: #fbbf24 !important; /* Gold Text */
