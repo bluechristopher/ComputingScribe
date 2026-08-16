@@ -1,4 +1,4 @@
-# 🎓 EduScribe AI (ComputingScribe)
+# 🎓 ComputingScribe AI
 
 > **The adaptive co-authoring agent for technical educators:** turning syllabus standards into compiled LaTeX papers, balanced synthetic datasets, and verified mark schemes.
 
@@ -19,7 +19,7 @@
 
 ### 📋 Requirements Compliance Matrix
 
-| Hackathon Requirement | EduScribe AI Implementation | Status |
+| Hackathon Requirement | ComputingScribe AI Implementation | Status |
 | :--- | :--- | :---: |
 | **Model** (Gemini 3.5 or newer) | **Gemini 3.7 Flash** (`gemini-3.7-flash`) powers blueprint synthesis, contextual scenario formulation, LaTeX self-healing compilation, and feedback extraction. | ✅ **Pass** |
 | **Google Agent Framework** | **Google GenAI SDK (`google-genai`)** with structured JSON Pydantic schemas, multi-modal grounding, and tool execution loops. | ✅ **Pass** |
@@ -56,11 +56,12 @@ Generic LLM chat interfaces suffer from persistent amnesia. They do not retain i
 
 ### 🎯 What I Hoped to Achieve: The Autonomous Collaborative Partner
 As a computing teacher, my goal was to build a true **Collaborative Pedagogical Partner**—an agent that acts as an expert co-examiner that:
-1. **Leads the authoring process step-by-step**: Formulates balanced exam blueprints and mark distributions before touching code.
-2. **Generates deep contextual problems on command**: Expands prompts into rich, real-world case scenarios with clear, step-by-step bulleted subtasks for practical papers, and well-developed domain narratives for theory papers when triggered by the word `'contextual'`.
+1. **Leads the authoring process step-by-step**: Formulates balanced exam blueprints and mark distributions before touching code, expands prompts into rich real-world contextual scenarios, and generates clear, step-by-step bulleted subtasks for practical papers.
+2. **Generates deep contextual problems on command**: Produces well-developed domain narratives for theory papers and activates contextual scenario generation when triggered by the word `'contextual'`.
 3. **Democratizes publication-grade LaTeX for all educators**: Completely eliminates the LaTeX learning curve. The agent writes authentic Cambridge TeX code, executes headless compilation inside a containerized sandbox, and self-heals broken syntax automatically using **Gemini 3.7 Flash** reflection loops.
-4. **Guarantees algorithmic fairness & demographic parity**: Automatically balances synthetic datasets with 50/50 gender splits and authentic multiracial Singapore naming distributions (Chinese, Malay, Indian, Eurasian, Caucasian).
+4. **Guarantees algorithmic fairness & demographic parity**: Automatically balances synthetic datasets with 50/50 gender splits and authentic multiracial Singapore naming distributions (Chinese, Malay, Indian, Eurasian, Caucasian), while generating companion demographic datasets.
 5. **Continuously learns the teacher's unique voice**: Remembers educator feedback and phrasing preferences across every syllabus module in **Google Cloud Firestore**, evolving into a tailored co-authoring partner for entire departments.
+6. **Renders on-screen typeset papers with zero LaTeX expertise required**: Lets educators preview authentic Cambridge A4 exam sheets with KaTeX math, Jupyter cells, pseudocode line numbers, and mark brackets, then export production-ready `.pdf` and `.tex` packages with a single click.
 
 ---
 
@@ -113,7 +114,7 @@ flowchart TD
 
 ## 🤝 4. How Google Cloud and AI Agents Work Together in Synergy
 
-EduScribe AI demonstrates deep architectural synergy between **Google Cloud infrastructure** and **agentic reasoning patterns**:
+ComputingScribe AI demonstrates deep architectural synergy between **Google Cloud infrastructure** and **agentic reasoning patterns**:
 
 | Google Cloud Service | Role in Agentic Workflow | Synergy Mechanism |
 | :--- | :--- | :--- |
@@ -194,7 +195,7 @@ EduScribe AI demonstrates deep architectural synergy between **Google Cloud infr
 
 ## ☁️ 7. Step-by-Step Guide: How to Host & Deploy to Google Cloud
 
-You can deploy EduScribe AI to Google Cloud Platform using either **Automated GitHub Actions CI/CD** (recommended) or **Google Cloud Shell CLI**.
+You can deploy ComputingScribe AI to Google Cloud Platform using either **Automated GitHub Actions CI/CD** (recommended) or **Google Cloud Shell CLI**.
 
 ---
 
