@@ -153,15 +153,15 @@ with st.sidebar:
                 icon_url = "https://upload.wikimedia.org/wikipedia/commons/9/9b/TeX_logo.svg"
                 badge_type = "LaTeX Source"
 
-            card_html = f"""
-            <div style="display: flex; align-items: center; background: #1e293b; border: 1px solid #3b82f6; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;">
-                <img src="{icon_url}" style="width: 42px; height: 42px; object-fit: contain; margin-right: 12px; flex-shrink: 0;" />
-                <div style="overflow: hidden; text-overflow: ellipsis; word-break: break-word;">
-                    <div style="font-weight: 700; font-size: 0.9rem; color: #f8fafc; line-height: 1.3;">{file_name}</div>
-                    <div style="font-size: 0.75rem; color: #93c5fd; margin-top: 2px;">{badge_type} • {file_size_kb} KB <span style="background: #065f46; color: #6ee7b7; padding: 1px 5px; border-radius: 4px; font-weight: bold; margin-left: 4px;">Indexed ✅</span></div>
-                </div>
-            </div>
-            """
+            card_html = (
+                f'<div style="display: flex; align-items: center; background: #1e293b; border: 1px solid #3b82f6; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;">'
+                f'<img src="{icon_url}" style="width: 42px; height: 42px; object-fit: contain; margin-right: 12px; flex-shrink: 0;" />'
+                f'<div style="overflow: hidden; text-overflow: ellipsis; word-break: break-word;">'
+                f'<div style="font-weight: 700; font-size: 0.9rem; color: #f8fafc; line-height: 1.3;">{file_name}</div>'
+                f'<div style="font-size: 0.75rem; color: #93c5fd; margin-top: 2px;">{badge_type} • {file_size_kb} KB <span style="background: #065f46; color: #6ee7b7; padding: 1px 5px; border-radius: 4px; font-weight: bold; margin-left: 4px;">Indexed ✅</span></div>'
+                f'</div>'
+                f'</div>'
+            )
             st.markdown(card_html, unsafe_allow_html=True)
 
 # ==============================================================================
@@ -291,27 +291,29 @@ if "Full Paper" in author_mode:
                     border_color = "#cbd5e1"
                     text_color = "#64748b"
 
-                station_boxes.append(f"""
-                <div style="flex: 1; min-width: 130px; background: {bg_color}; border: 2px solid {border_color}; border-radius: 8px; padding: 8px 10px; margin: 4px; text-align: center;">
-                    <div style="font-size: 1.1rem;">{status_icon}</div>
-                    <div style="font-weight: 700; font-size: 0.8rem; color: {text_color}; margin-top: 4px;">{s_name.split(':')[0]}</div>
-                    <div style="font-size: 0.7rem; color: {text_color}; opacity: 0.9;">{s_name.split(':')[1]}</div>
-                </div>
-                """)
+                box_html = (
+                    f'<div style="flex: 1 1 120px; min-width: 120px; background: {bg_color}; '
+                    f'border: 2px solid {border_color}; border-radius: 8px; padding: 8px 10px; margin: 4px; text-align: center;">'
+                    f'<div style="font-size: 1.1rem;">{status_icon}</div>'
+                    f'<div style="font-weight: 700; font-size: 0.8rem; color: {text_color}; margin-top: 4px;">{s_name.split(":")[0]}</div>'
+                    f'<div style="font-size: 0.7rem; color: {text_color}; opacity: 0.9;">{s_name.split(":")[1]}</div>'
+                    f'</div>'
+                )
+                station_boxes.append(box_html)
             
-            track_html = f"""
-            <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin: 16px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <div style="font-weight: 800; font-size: 1.05rem; color: #0f172a; margin-bottom: 10px;">
-                    🚂 Multi-Agent Co-Authoring Pipeline (Station {current_station_idx + 1} of 7 Active)
-                </div>
-                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;">
-                    {''.join(station_boxes)}
-                </div>
-                <div style="margin-top: 12px; font-size: 0.88rem; color: #1e3a8a; background: #f0fdf4; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #10b981;">
-                    <strong>Current Action:</strong> {active_msg}
-                </div>
-            </div>
-            """
+            track_html = (
+                f'<div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin: 16px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">'
+                f'<div style="font-weight: 800; font-size: 1.05rem; color: #0f172a; margin-bottom: 10px;">'
+                f'🚂 Multi-Agent Co-Authoring Pipeline (Station {current_station_idx + 1} of 7 Active)'
+                f'</div>'
+                f'<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;">'
+                f'{"".join(station_boxes)}'
+                f'</div>'
+                f'<div style="margin-top: 12px; font-size: 0.88rem; color: #1e3a8a; background: #f0fdf4; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #10b981;">'
+                f'<strong>Current Action:</strong> {active_msg}'
+                f'</div>'
+                f'</div>'
+            )
             train_station_placeholder.markdown(track_html, unsafe_allow_html=True)
 
         def on_progress(step: str, msg: str):
@@ -557,16 +559,16 @@ if curr_sess:
                 items_str = "".join([f"<li style='margin-bottom: 4px; color: #1e293b;'><strong style='color: #0f172a;'>{sp.get('label', '')}</strong>: {sp.get('description', '')} <code style='background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #0f172a;'>[{sp.get('marks', '')}m]</code></li>" for sp in subparts])
                 subparts_html = f"<ul style='margin-top: 10px; margin-bottom: 0; padding-left: 20px;'>{items_str}</ul>"
 
-            card_html = f"""
-            <div class="ed-card">
-                <div class="card-title">
-                    <span style="color: #0f172a; font-weight: 700;">{sec.get('title', 'Task')}</span>
-                    <span class="badge-pill badge-latex">{sec.get('marks', 0)} Marks</span>
-                </div>
-                <div class="card-subtitle" style="color: #475569;">Topic: {sec.get('topic', 'N/A')}</div>
-                {subparts_html}
-            </div>
-            """
+            card_html = (
+                f'<div class="ed-card">'
+                f'<div class="card-title">'
+                f'<span style="color: #0f172a; font-weight: 700;">{sec.get("title", "Task")}</span>'
+                f'<span class="badge-pill badge-latex">{sec.get("marks", 0)} Marks</span>'
+                f'</div>'
+                f'<div class="card-subtitle" style="color: #475569;">Topic: {sec.get("topic", "N/A")}</div>'
+                f'{subparts_html}'
+                f'</div>'
+            )
             st.markdown(card_html, unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
