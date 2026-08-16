@@ -280,6 +280,8 @@ if "Full Paper" in author_mode:
     if generate_btn:
         train_station_placeholder = st.empty()
         logs = []
+        pipeline_start_time = time.time()
+
         stations = [
             ("Station 1: Memory & Style Agent", "🧠 Querying persistent educator profile in Cloud Firestore..."),
             ("Station 2: RAG Grounding Agent", "📚 Scanning syllabus 9569 standards & indexing exam exemplars..."),
@@ -291,6 +293,11 @@ if "Full Paper" in author_mode:
         ]
 
         def render_train_station(current_station_idx: int, active_msg: str):
+            total_elapsed = time.time() - pipeline_start_time
+            mins, secs = divmod(int(total_elapsed), 60)
+            ms = int((total_elapsed - int(total_elapsed)) * 10)
+            elapsed_fmt = f"{mins:02d}:{secs:02d}.{ms}s" if mins > 0 else f"{secs}.{ms}s"
+
             station_boxes = []
             for idx, (s_name, s_desc) in enumerate(stations):
                 if idx < current_station_idx:
@@ -321,14 +328,20 @@ if "Full Paper" in author_mode:
             
             track_html = (
                 f'<div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin: 16px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">'
-                f'<div style="font-weight: 800; font-size: 1.05rem; color: #0f172a; margin-bottom: 10px;">'
-                f'🚂 Multi-Agent Co-Authoring Pipeline (Station {current_station_idx + 1} of 7 Active)'
+                f'<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">'
+                f'<div style="font-weight: 800; font-size: 1.05rem; color: #0f172a;">'
+                f'🚂 Multi-Agent Co-Authoring Pipeline (Station {min(current_station_idx + 1, 7)} of 7 Active)'
+                f'</div>'
+                f'<div style="font-family: monospace; font-size: 0.95rem; background: #e0f2fe; color: #0369a1; padding: 4px 12px; border-radius: 20px; border: 1px solid #7dd3fc; font-weight: 700;">'
+                f'⏱️ Elapsed: {elapsed_fmt}'
+                f'</div>'
                 f'</div>'
                 f'<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;">'
                 f'{"".join(station_boxes)}'
                 f'</div>'
-                f'<div style="margin-top: 12px; font-size: 0.88rem; color: #1e3a8a; background: #f0fdf4; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #10b981;">'
-                f'<strong>Current Action:</strong> {active_msg}'
+                f'<div style="margin-top: 12px; font-size: 0.88rem; color: #1e3a8a; background: #f0fdf4; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #10b981; display: flex; justify-content: space-between; align-items: center;">'
+                f'<div><strong>Current Action:</strong> {active_msg}</div>'
+                f'<div style="font-family: monospace; font-size: 0.85rem; color: #059669; font-weight: 700;">⏱️ {elapsed_fmt}</div>'
                 f'</div>'
                 f'</div>'
             )
@@ -358,7 +371,8 @@ if "Full Paper" in author_mode:
             )
             st.session_state.current_session = session
             st.session_state.compilation_logs = logs
-            render_train_station(6, "All 7 agents completed their tasks successfully!")
+            total_dur = round(time.time() - pipeline_start_time, 1)
+            render_train_station(6, f"🎉 All 7 agents completed their tasks in {total_dur}s!")
             time.sleep(0.5)
             st.rerun()
         except Exception as gen_err:
@@ -402,8 +416,10 @@ else:
             key="studio_task_prompt"
         )
 
-        if st.button("✨ Draft Single Question with Gemini", type="primary", use_container_width=True):
-            with st.spinner("Drafting single question with Gemini 3.7 Flash..."):
+        draft_btn = st.button("✨ Draft Single Question with Gemini", type="primary", use_container_width=True)
+        if draft_btn and s_prompt:
+            t0 = time.time()
+            with st.spinner("🤖 Gemini 3.7 Flash is drafting your question..."):
                 task_draft = st.session_state.orchestrator.author_single_task(
                     prompt=s_prompt,
                     paper_type=s_paper_type,
@@ -412,7 +428,8 @@ else:
                     total_marks=int(s_marks)
                 )
                 st.session_state.studio_current_draft = task_draft
-                st.success(f"Drafted Task {s_task_num} successfully!")
+                dur = round(time.time() - t0, 1)
+                st.success(f"✨ Task {s_task_num} authored in {dur}s! Inspect preview below.")
 
         # Display Current Single Task Draft & Refinement Area
         if st.session_state.studio_current_draft:
@@ -648,13 +665,15 @@ if curr_sess:
             refine_paper_btn = st.button("✨ Refine Paper with AI", type="primary", use_container_width=True)
             
         if refine_paper_btn and paper_refine_prompt:
+            t0 = time.time()
             with st.spinner("🤖 Gemini 3.7 Flash is refining your exam paper and updating mark schemes..."):
                 updated_sess = st.session_state.orchestrator.refine_full_paper(
                     session=curr_sess,
                     refinement_prompt=paper_refine_prompt
                 )
                 st.session_state.current_session = updated_sess
-                st.success("🎉 Exam paper and mark scheme refined successfully!")
+                dur = round(time.time() - t0, 1)
+                st.success(f"🎉 Exam paper and mark scheme refined in {dur}s!")
                 time.sleep(0.5)
                 st.rerun()
 
