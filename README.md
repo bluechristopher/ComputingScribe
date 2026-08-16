@@ -12,21 +12,44 @@
 
 ---
 
-## 🌟 1. The Real-World Pain Points Solved
+## 🏆 1. All Things Agentic Hackathon Submission Overview
 
-Setting rigorous technical examinations for subjects such as **Singapore-Cambridge GCE A-Level H2 Computing (9569 / 2027)** and **Cambridge AS/A-Level (9618)** is an exhausting, multi-hour ordeal for computing educators:
+**Category:** **Collaborative Partner**  
+*Build an agent that leads the way and takes notes. It should ask clarifying questions, guide the user step-by-step, and have a clear way to capture feedback, so it constantly adapts to the user's unique way of thinking.*
 
-1. **Contextual Problem Drafting Burden**: Authoring authentic, high-quality contextual scenarios (e.g. transport AFC systems, triage queues, normalized database schemas) that strictly align with syllabus learning objectives and command words takes days of drafting and refinement.
+### 📋 Requirements Compliance Matrix
+
+| Hackathon Requirement | EduScribe AI Implementation | Status |
+| :--- | :--- | :---: |
+| **Model** (Gemini 3.5 or newer) | **Gemini 3.7 Flash** (`gemini-3.7-flash`) powers blueprint synthesis, contextual scenario formulation, LaTeX self-healing compilation, and feedback extraction. | ✅ **Pass** |
+| **Google Agent Framework** | **Google GenAI SDK (`google-genai`)** with structured JSON Pydantic schemas, multi-modal grounding, and tool execution loops. | ✅ **Pass** |
+| **Google Cloud Infrastructure** | **Google Cloud Run** (serverless hosting), **Google Cloud Firestore** (persistent teacher memory), **Google Artifact Registry** (container management), and **Google Cloud Build** (CI/CD). | ✅ **Pass** |
+| **Collaborative Partner Behavior** | Proactively leads with structured blueprints, asks for clarifications, accepts natural feedback (Tab 6), and adapts to the teacher's evolving style in Firestore. | ✅ **Pass** |
+| **Public Code Repository** | [https://github.com/bluechristopher/ComputingScribe](https://github.com/bluechristopher/ComputingScribe) | ✅ **Pass** |
+| **Reproducibility** | Full Dockerfile with headless TeXLive, automated GitHub Actions CI/CD, and zero-configuration local execution. | ✅ **Pass** |
+
+---
+
+## 📖 2. The Teacher's Perspective: Real-World Pain Points Solved
+
+Setting national and institutional examinations for subjects like **Singapore-Cambridge GCE A-Level H2 Computing (Syllabus 9569 / 2027)** and **Cambridge AS/A-Level (9618)** is an exhausting, multi-hour ordeal for computing educators:
+
+1. **Contextual Problem Drafting Burden**: Authoring authentic, high-quality contextual scenarios (e.g. transport AFC gates, triage queues, normalized database schemas) that strictly align with syllabus learning objectives and command words takes days of drafting and refinement.
 2. **Typesetting Friction (Word vs LaTeX)**: 
    - **Microsoft Word** causes notorious formatting disasters—shifted code boxes, broken table borders, and misaligned margin mark brackets (`[4]`).
    - **LaTeX** produces publication-grade examination papers, but writing raw LaTeX requires steep technical expertise and extensive debugging. Many educators do not have the time or background to maintain raw TeX documents.
 3. **Synthetic Dataset Fabrication Burden**: Practical programming papers require balanced, clean companion datasets (CSV records, SQL schemas). Manually creating these often introduces subtle data bugs or demographic biases.
 
-**EduScribe AI** solves these challenges as an autonomous, persistent **Collaborative Partner** that leads the authoring process, learns the teacher's unique pedagogical style, auto-heals LaTeX syntax errors in a containerized sandbox, and delivers production-ready exam packages.
+### The Solution: EduScribe AI as Your Autonomous Collaborative Partner
+EduScribe AI acts as an autonomous co-authoring partner that:
+- **Leads the authoring process step-by-step**: Proposes structured exam blueprints, balances mark allotments, generates companion demographic datasets, and formats compilable LaTeX code with official Cambridge preambles.
+- **Constantly adapts to the teacher's unique pedagogical style**: Tracks preferences across specific syllabus modules (e.g., preference for concise prompts vs extended contextual scenarios, code box formats, and rubric granularity) and persists them in **Google Cloud Firestore**.
+- **Self-heals compilation errors**: Runs headless `pdflatex` compilation in a sandbox; if a broken macro occurs, **Gemini 3.7 Flash** diagnoses the error log and repairs the code automatically without requiring the teacher to debug TeX errors.
+- **Renders on-screen typeset papers with zero LaTeX expertise required**: Educators without TeX installed can instantly view authentic Cambridge A4 exam sheets (with KaTeX math, Jupyter cells, pseudocode line numbers, and mark brackets) and export production-ready `.pdf` and `.tex` packages with a single click.
 
 ---
 
-## 🏗️ 2. System Architecture Diagram
+## 🏗️ 3. System Architecture Diagram
 
 ```mermaid
 flowchart TD
@@ -73,7 +96,7 @@ flowchart TD
 
 ---
 
-## 🤝 3. How Google Cloud and AI Agents Work Together in Synergy
+## 🤝 4. How Google Cloud and AI Agents Work Together in Synergy
 
 EduScribe AI demonstrates deep architectural synergy between **Google Cloud infrastructure** and **agentic reasoning patterns**:
 
@@ -94,20 +117,27 @@ EduScribe AI demonstrates deep architectural synergy between **Google Cloud infr
 
 ---
 
-## ✨ 4. Key Features & Capabilities
+## ✨ 5. Key Features & Functionality
 
-- 🎯 **Dual Paper Support (H2 Computing 2027 / 9569)**:
-  - **Paper 2 (Practical)**: 4 Python programming tasks, Jupyter cells (`\jupytercell`), balanced CSV datasets, and starter skeleton code.
-  - **Paper 1 (Theory)**: Decision tables, structured pseudocode listings (`01`, `02`, ...), trace tables, SQL queries, and network subnetting calculations.
+- 🎯 **Full Dual Paper Support (H2 Computing 2027 / 9569 Standards)**:
+  - **Paper 2 (Lab-Based Practical)**: 4 Python programming tasks, Jupyter cells (`\jupytercell`), demographically balanced datasets (`CANDIDATES.csv`), SQL schema scripts (`SCHEMA.sql`), and starter files (`starter_task.py`).
+  - **Paper 1 (Written Theory)**: Structured questions, Cambridge pseudocode listings with two-digit line numbering (`01`, `02`, ...), decision tables with boundary conditions, trace tables, SQL queries, and networking calculations.
 - 💡 **`'contextual'` Trigger Engine**: Including the keyword `'contextual'` triggers extended real-world scenario preambles and step-by-step bulleted subtask specifications for Practical papers, and well-developed domain narratives for Theory papers.
 - ⚖️ **Demographic Fairness Guardrails**: Enforces **50/50 gender parity** and authentic multiracial regional naming distributions (Chinese, Malay, Indian, Eurasian, Caucasian) across synthetic CSV and SQL test datasets.
 - 📜 **On-Screen Typeset Exam Paper**: Instant in-browser rendering of authentic A4 Cambridge exam sheets (with KaTeX math, Jupyter cells, pseudocode line numbers, and mark brackets) with zero local LaTeX installation required.
-- 📦 **One-Click `.zip` Package Export**: Bundles `paper.pdf`, `paper.tex`, `mark_scheme.pdf`, `mark_scheme.tex`, `CANDIDATES.csv`, `SCHEMA.sql`, and `starter_task.py` into a single downloadable archive.
+- 🧠 **Continuous Feedback Loop (Tab 6)**: Teachers can input natural-language feedback after reviewing a draft (e.g. *"Make subtask instructions more granular with explicit return types"*). Gemini extracts structured rules and updates Firestore.
+- 📦 **One-Click Multi-Artifact Export Archive**: Packages a complete `.zip` containing `paper.pdf`, `paper.tex`, `mark_scheme.pdf`, `mark_scheme.tex`, `CANDIDATES.csv`, `SCHEMA.sql`, and `starter_task.py`.
 
 ---
 
-## 📚 5. Syllabus Standards & Styling References
+## 📚 6. Technologies, Curricula & Styling References
 
+### Technology Stack
+- **Google AI**: Gemini 3.7 Flash (`gemini-3.7-flash`), Google GenAI SDK (`google-genai`).
+- **Google Cloud Platform**: Google Cloud Run, Google Cloud Firestore, Google Cloud Build, Google Artifact Registry.
+- **Frontend & Typesetting**: Streamlit, KaTeX, TeXLive (`pdflatex`), FPDF2, Pydantic, PyPDF, Python-Docx.
+
+### Curricula & Styling References
 1. **Singapore-Cambridge GCE A-Level H2 Computing (Syllabus 9569 / 2027)**:
    - Section 1: Data and Data Structures (Linear & Non-Linear ADTs, BST, Hash Tables).
    - Section 2: Algorithms and Problem Solving (Quicksort, Merge sort, Decision tables, Big-O Complexity).
@@ -120,73 +150,86 @@ EduScribe AI demonstrates deep architectural synergy between **Google Cloud infr
 
 ---
 
-## 🚀 6. Step-by-Step Spin-Up & Reproducibility Guide
+## ☁️ 7. Step-by-Step Guide: How to Host & Deploy to Google Cloud
 
-### Prerequisites
-- Python 3.11+
-- Google Cloud account with Gemini API Key
-- Docker (optional, for containerized local execution)
+You can deploy EduScribe AI to Google Cloud Platform using either **Automated GitHub Actions CI/CD** (recommended) or **Google Cloud Shell CLI**.
 
 ---
 
-### Option A: Run via Docker (Recommended — Full TeXLive Included)
+### Method 1: Automated GitHub Actions CI/CD to Cloud Run (Recommended)
 
+Whenever you push to the `main` branch, the workflow in `.github/workflows/deploy.yml` will automatically build the container and deploy to Google Cloud Run.
+
+#### Step 1: Enable Google Cloud APIs
+In **[Google Cloud Shell](https://shell.cloud.google.com/)**, run:
 ```bash
-# 1. Clone repository
-git clone https://github.com/bluechristopher/ComputingScribe.git
-cd ComputingScribe
+gcloud config set project YOUR_PROJECT_ID
 
-# 2. Build Docker container
-docker build -t eduscribe-ai .
-
-# 3. Run container with your Gemini API Key
-docker run -p 8501:8501 -e GEMINI_API_KEY="YOUR_GEMINI_API_KEY" eduscribe-ai
-
-# 4. Open in your browser
-http://localhost:8501
+gcloud services enable \
+  run.googleapis.com \
+  artifactregistry.googleapis.com \
+  cloudbuild.googleapis.com \
+  firestore.googleapis.com
 ```
 
----
+#### Step 2: Create a Service Account for GitHub Actions
+In Google Cloud Shell:
+```bash
+# 1. Create service account
+gcloud iam service-accounts create github-deployer \
+  --description="GitHub Actions Deployer" \
+  --display-name="github-deployer"
 
-### Option B: Local Python Virtual Environment
+# 2. Grant required deployment roles
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/run.admin"
 
-```powershell
-# 1. Clone repository
-git clone https://github.com/bluechristopher/ComputingScribe.git
-cd ComputingScribe
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/artifactregistry.admin"
 
-# 2. Create and activate virtual environment
-python -m venv venv
-.\venv\Scripts\Activate.ps1   # On Linux/macOS: source venv/bin/activate
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/cloudbuild.builds.editor"
 
-# 3. Install dependencies
-pip install -r requirements.txt
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.admin"
 
-# 4. Set your Gemini API Key
-$env:GEMINI_API_KEY="YOUR_GEMINI_API_KEY"   # On Linux/macOS: export GEMINI_API_KEY="YOUR_KEY"
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountUser"
 
-# 5. Run automated test suite
-python -m unittest tests/test_pipeline.py
-
-# 6. Launch Streamlit application
-streamlit run frontend/app.py
+# 3. Generate Service Account JSON Key
+gcloud iam service-accounts keys create key.json \
+  --iam-account=github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com
 ```
 
+#### Step 3: Add Repository Secrets in GitHub
+1. Go to your GitHub repo: **Settings** > **Secrets and variables** > **Actions** > **New repository secret**.
+2. Add these 3 secrets:
+   - `GCP_PROJECT_ID`: Your Google Cloud Project ID.
+   - `GCP_SA_KEY`: Paste the entire contents of the `key.json` file.
+   - `GEMINI_API_KEY`: Your Google Gemini API Key.
+
+#### Step 4: Push to Main & Watch Live Deployment
+Push any commit to `main` (via GitHub Desktop or CLI). GitHub Actions will build the Docker container and deploy to **Cloud Run**, outputting your public HTTPS URL!
+
 ---
 
-### Option C: Deploy to Google Cloud Run (1-Click Cloud Shell)
+### Method 2: Direct 1-Click Deployment via Google Cloud Shell CLI
 
-Open **[Google Cloud Shell](https://shell.cloud.google.com/)** and run:
+If you prefer to deploy directly from the command line without GitHub Secrets:
 
+1. Open **[Google Cloud Shell](https://shell.cloud.google.com/)**.
+2. Run the following commands:
 ```bash
-# 1. Clone repository
+# 1. Clone the repository
 git clone https://github.com/bluechristopher/ComputingScribe.git
 cd ComputingScribe
 
-# 2. Enable Google Cloud APIs
-gcloud services enable run.googleapis.com cloudbuild.googleapis.com firestore.googleapis.com artifactregistry.googleapis.com
-
-# 3. Deploy directly to Cloud Run
+# 2. Deploy directly to Cloud Run using Cloud Build
 gcloud run deploy eduscribe-ai \
   --source . \
   --region=asia-southeast1 \
@@ -198,17 +241,60 @@ gcloud run deploy eduscribe-ai \
   --set-env-vars="GEMINI_API_KEY=YOUR_GEMINI_API_KEY"
 ```
 
+Once deployment completes, Cloud Run will print your live **Service URL** (e.g. `https://eduscribe-ai-xxxxxx-as.a.run.app`).
+
 ---
 
-## 🧪 6. Automated Testing & Verification
+### Method 3: Run Locally via Docker (Full TeXLive Included)
 
-The project includes an automated end-to-end test suite verifying preference learning, demographic dataset fairness, LaTeX templating, session persistence, and orchestrator execution:
+```bash
+# 1. Clone repository
+git clone https://github.com/bluechristopher/ComputingScribe.git
+cd ComputingScribe
+
+# 2. Build Docker container
+docker build -t eduscribe-ai .
+
+# 3. Run container
+docker run -p 8501:8501 -e GEMINI_API_KEY="YOUR_GEMINI_API_KEY" eduscribe-ai
+
+# 4. Open in browser
+http://localhost:8501
+```
+
+---
+
+### Method 4: Local Python Virtual Environment
+
+```powershell
+# 1. Create and activate virtual environment
+python -m venv venv
+.\venv\Scripts\Activate.ps1   # On Linux/macOS: source venv/bin/activate
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Set environment variable
+$env:GEMINI_API_KEY="YOUR_GEMINI_API_KEY"   # On Linux/macOS: export GEMINI_API_KEY="YOUR_KEY"
+
+# 4. Run automated test suite
+python -m unittest tests/test_pipeline.py
+
+# 5. Launch Streamlit application
+streamlit run frontend/app.py
+```
+
+---
+
+## 🧪 8. Automated Testing & Verification
+
+The repository includes a comprehensive automated test suite verifying all agentic modules:
 
 ```powershell
 python -m unittest tests/test_pipeline.py
 ```
 
-**Test Suite Coverage:**
+**Test Coverage Summary:**
 - `test_1_demographic_fairness_dataset`: Strictly verifies 50/50 gender balance and multiracial naming distributions.
 - `test_2_practical_paper_templating`: Verifies Practical paper blueprinting and LaTeX macro generation.
 - `test_3_theory_paper_templating`: Verifies Theory paper blueprinting, decision tables, pseudocode, and mark schemes.
@@ -217,7 +303,7 @@ python -m unittest tests/test_pipeline.py
 
 ---
 
-## 📂 7. Repository Structure
+## 📂 9. Repository Structure
 
 ```
 ComputingScribe/
@@ -252,9 +338,8 @@ ComputingScribe/
 │   └── test_pipeline.py             # Automated unit & integration test suite
 ├── Dockerfile                       # Production container with TeXLive and Python 3.11
 ├── requirements.txt                 # Pinned dependencies (google-genai, streamlit, etc.)
-├── DEPLOYMENT.md                    # Detailed deployment instructions
-├── HACKATHON_SUBMISSION.md          # Official Hackathon submission writeup
-└── README.md                        # Primary project documentation
+├── DEPLOYMENT.md                    # Detailed deployment documentation
+└── README.md                        # Master Project Documentation & Hackathon Submission
 ```
 
 ---
