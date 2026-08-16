@@ -44,12 +44,12 @@ class PreferenceLearner:
         if self.firestore_db:
             try:
                 doc_ref = self.firestore_db.collection("teacher_profiles").document(self.teacher_id)
-                doc = doc_ref.get()
+                doc = doc_ref.get(timeout=2.0)
                 if doc.exists:
                     data = doc.to_dict()
                     return data.get("learned_styles", {})
             except Exception as e:
-                print(f"[PreferenceLearner] Firestore fetch error: {e}")
+                print(f"[PreferenceLearner] Firestore fetch note: {e}")
 
         # Local fallback
         local_file = self._get_local_filepath()
@@ -99,9 +99,9 @@ class PreferenceLearner:
         if self.firestore_db:
             try:
                 doc_ref = self.firestore_db.collection("teacher_profiles").document(self.teacher_id)
-                doc_ref.set({"learned_styles": all_styles}, merge=True)
+                doc_ref.set({"learned_styles": all_styles}, merge=True, timeout=2.0)
             except Exception as e:
-                print(f"[PreferenceLearner] Error saving to Firestore: {e}")
+                print(f"[PreferenceLearner] Note saving to Firestore: {e}")
 
     def adapt_preferences_from_feedback(self, category: str, user_prompt: str, educator_feedback: str = ""):
         """

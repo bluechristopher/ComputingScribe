@@ -168,22 +168,22 @@ class SessionManager:
         # Sync with Firestore
         if self.firestore_db:
             try:
-                self.firestore_db.collection("exam_sessions").document(session.session_id).set(session.to_dict())
+                self.firestore_db.collection("exam_sessions").document(session.session_id).set(session.to_dict(), timeout=2.0)
             except Exception as e:
-                print(f"[SessionManager] Firestore save error: {e}")
+                print(f"[SessionManager] Firestore save note: {e}")
 
         return True
 
     def get_session(self, session_id: str) -> Optional[ExamSession]:
         """Loads a session from Firestore or local storage."""
-        # Try Firestore first
+        # Try Firestore first with strict timeout
         if self.firestore_db:
             try:
-                doc = self.firestore_db.collection("exam_sessions").document(session_id).get()
+                doc = self.firestore_db.collection("exam_sessions").document(session_id).get(timeout=2.0)
                 if doc.exists:
                     return ExamSession.from_dict(doc.to_dict())
             except Exception as e:
-                print(f"[SessionManager] Firestore get error: {e}")
+                print(f"[SessionManager] Firestore get note: {e}")
 
         # Local fallback
         meta_path = self._get_session_dir(session_id) / "session.json"
@@ -201,13 +201,13 @@ class SessionManager:
         """Lists all saved sessions with summary details."""
         sessions = []
 
-        # Try Firestore
+        # Try Firestore with strict 2-second timeout
         if self.firestore_db:
             try:
                 query = self.firestore_db.collection("exam_sessions")
                 if teacher_id:
                     query = query.where("teacher_id", "==", teacher_id)
-                docs = query.stream()
+                docs = query.limit(20).get(timeout=2.0)
                 for doc in docs:
                     d = doc.to_dict()
                     sessions.append({
@@ -222,7 +222,7 @@ class SessionManager:
                 if sessions:
                     return sorted(sessions, key=lambda x: x.get("updated_at", ""), reverse=True)
             except Exception as e:
-                print(f"[SessionManager] Firestore list error: {e}")
+                print(f"[SessionManager] Firestore list note: {e}")
 
         # Local directory scan fallback
         if LOCAL_SESSIONS_DIR.exists():

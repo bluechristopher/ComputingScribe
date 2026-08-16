@@ -90,7 +90,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 📂 Past Sessions & Recovery")
     
-    @st.cache_data(ttl=15)
+    @st.cache_data(ttl=60, show_spinner=False)
     def _fetch_cached_sessions(t_id: str):
         return session_mgr.list_sessions(teacher_id=t_id)
 
