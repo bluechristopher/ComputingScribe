@@ -60,7 +60,7 @@ flowchart TD
     CR -->|4. Propose Blueprint & Synthesize Exam Paper| Gemini
     CR -->|5. Generate Balanced Datasets & Skeleton Code| DataGen
     CR -->|6. Compile Raw LaTeX Source| TeXLive
-    TeXLive -- Stderr Error Log -->|7. Trigger Auto-Repair Loop| SelfHealing
+    TeXLive -->|7. Intercept Stderr & Trigger Auto-Repair| SelfHealing
     SelfHealing -->|8. Repaired TeX Code| Gemini
     CR -->|9. Persist Updated Style & Feedback| Firestore
     CR -->|10. Deliver Typeset Sheet, PDF & ZIP Archive| Renderer

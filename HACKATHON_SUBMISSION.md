@@ -140,7 +140,7 @@ flowchart TD
     CR -->|3. Query RAG Context| RAG
     CR -->|4. Propose Blueprint & Synthesize Code| Gemini
     CR -->|5. Headless pdflatex Compilation| TeXLive
-    TeXLive -- Error Logs -->|6. Intercept Stderr & Repair| SelfHealing
+    TeXLive -->|6. Intercept Stderr & Repair| SelfHealing
     SelfHealing -->|7. Repaired LaTeX Code| Gemini
     CR -->|8. Save Updated Preferences| Firestore
     CR -->|9. Render Typeset Sheet & Deliver PDF/ZIP| Renderer
