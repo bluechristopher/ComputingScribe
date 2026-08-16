@@ -191,8 +191,8 @@ st.markdown("""
     <div class="main-tagline">
         The adaptive co-authoring partner for technical educators: turning syllabus standards into compiled LaTeX papers, balanced synthetic datasets, and verified mark schemes.
     </div>
-    <div style="margin-top: 12px;">
-        <span class="badge-pill badge-gemini">Gemini on Vertex AI</span>
+    <div style="margin-top: 14px;">
+        <span class="badge-pill badge-gemini">Gemini 3.7 Flash</span>
         <span class="badge-pill badge-latex">pdflatex Self-Healing</span>
         <span class="badge-pill badge-fairness">Demographic Fairness Guardrails</span>
     </div>

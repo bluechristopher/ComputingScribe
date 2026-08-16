@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500&display=swap');
 
 /* ==============================================================================
    1. UNIVERSAL TYPOGRAPHY & APP ROOT
@@ -8,20 +8,130 @@ html, body, [class*="css"], .stApp {
 }
 
 .stApp {
-    background-color: #f8fafc !important;
+    background-color: #f1f5f9 !important;
 }
 
 /* ==============================================================================
-   2. MAIN (RIGHT PANEL) - FULL LIGHT THEME & 100% CONTRAST DARK TEXT
+   2. LEFT PANEL (SIDEBAR) - BLACK & DARK GRAY METALLIC EFFECT
+   ============================================================================== */
+section[data-testid="stSidebar"],
+[data-testid="stSidebar"],
+[data-testid="stSidebarContent"],
+.stSidebar {
+    background: linear-gradient(170deg, #1c1d22 0%, #141518 45%, #0c0d0f 100%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 6px 0 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Sidebar Headings, Labels, Paragraphs & Spans (Silver/Platinum High-Contrast) */
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4,
+[data-testid="stSidebar"] h5,
+[data-testid="stSidebar"] h6 {
+    color: #f8fafc !important;
+    font-weight: 700 !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"],
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] label,
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
+    color: #cbd5e1 !important;
+}
+
+[data-testid="stSidebar"] strong {
+    color: #ffffff !important;
+}
+
+[data-testid="stSidebar"] caption,
+[data-testid="stSidebar"] .stCaption,
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
+    color: #94a3b8 !important;
+}
+
+/* Sidebar Divider */
+[data-testid="stSidebar"] hr {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    margin: 16px 0 !important;
+}
+
+/* Sidebar Inputs & Controls - Dark Metallic Finish */
+[data-testid="stSidebar"] input,
+[data-testid="stSidebar"] textarea,
+[data-testid="stSidebar"] select,
+[data-testid="stSidebar"] [data-baseweb="select"] > div,
+[data-testid="stSidebar"] [data-baseweb="base-input"] {
+    background: linear-gradient(145deg, #242730, #18191e) !important;
+    color: #f8fafc !important;
+    border: 1px solid #475569 !important;
+    border-radius: 8px !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-testid="stSidebar"] [data-baseweb="select"] span,
+[data-testid="stSidebar"] [data-baseweb="select"] div,
+[data-testid="stSidebar"] [data-baseweb="select"] input {
+    color: #f8fafc !important;
+}
+
+[data-testid="stSidebar"] [data-baseweb="select"] svg {
+    fill: #cbd5e1 !important;
+}
+
+/* Sidebar Expanders - Metallic Dark Sheen */
+[data-testid="stSidebar"] [data-testid="stExpander"],
+[data-testid="stSidebar"] details {
+    background: linear-gradient(145deg, #202228, #141518) !important;
+    border: 1px solid #3b4252 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stExpander"] summary,
+[data-testid="stSidebar"] [data-testid="stExpander"] summary * {
+    color: #f1f5f9 !important;
+    font-weight: 600 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stExpanderDetails"] {
+    background: transparent !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Sidebar Buttons */
+[data-testid="stSidebar"] .stButton > button {
+    background: linear-gradient(145deg, #2e3440, #1f232b) !important;
+    color: #f8fafc !important;
+    border: 1px solid #4c566a !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: linear-gradient(145deg, #3b4252, #2e3440) !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 4px 14px rgba(96, 165, 250, 0.25) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ==============================================================================
+   3. MAIN (RIGHT PANEL) - METALLIC SHEEN LIGHT CARDS & 100% CONTRAST DARK TEXT
    ============================================================================== */
 section.main,
 [data-testid="stMain"],
 [data-testid="stMainBlockContainer"],
 .main {
-    background-color: #f8fafc !important;
+    background-color: #f1f5f9 !important;
 }
 
-/* Force dark color on all labels, radio options, paragraphs, spans in main panel */
+/* Force dark text in main panel */
 [data-testid="stMain"] label,
 [data-testid="stMain"] label *,
 [data-testid="stMain"] label p,
@@ -59,13 +169,99 @@ section.main,
     font-weight: 700 !important;
 }
 
-/* Expander in Main Panel */
+/* ==============================================================================
+   4. HERO BANNER & H1 GRADIENT EFFECT
+   ============================================================================== */
+.main-header {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 40%, #edf2f7 70%, #ffffff 100%) !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 16px !important;
+    padding: 28px 34px !important;
+    margin-bottom: 24px !important;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.07), inset 0 1px 1px rgba(255, 255, 255, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.main-header::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 4px !important;
+    background: linear-gradient(90deg, #0284c7, #2563eb, #7c3aed, #06b6d4) !important;
+}
+
+/* Stunning Larger H1 Text with Colour Gradient Effect */
+.main-title {
+    font-size: 3.1rem !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.035em !important;
+    line-height: 1.15 !important;
+    margin-bottom: 10px !important;
+    background: linear-gradient(135deg, #0284c7 0%, #2563eb 30%, #7c3aed 70%, #06b6d4 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    filter: drop-shadow(0 3px 12px rgba(37, 99, 235, 0.22)) !important;
+}
+
+.main-tagline {
+    font-size: 1.05rem !important;
+    color: #334155 !important;
+    font-weight: 500 !important;
+    line-height: 1.6 !important;
+    max-width: 900px !important;
+}
+
+/* ==============================================================================
+   5. RIGHT PANEL METALLIC SHEEN CARDS & EXPANDERS
+   ============================================================================== */
+/* Metallic Sheen Cards */
+.ed-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 40%, #edf2f7 70%, #ffffff 100%) !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 14px !important;
+    padding: 22px 24px !important;
+    margin-bottom: 18px !important;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.95) !important;
+    transition: all 0.25s ease-in-out !important;
+}
+
+.ed-card:hover {
+    box-shadow: 0 8px 26px rgba(15, 23, 42, 0.1), inset 0 1px 1px rgba(255, 255, 255, 1) !important;
+    border-color: #94a3b8 !important;
+    transform: translateY(-2px) !important;
+}
+
+.card-title {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin-bottom: 6px !important;
+}
+
+.card-subtitle {
+    font-size: 0.9rem !important;
+    color: #475569 !important;
+    font-weight: 500 !important;
+}
+
+/* Main Panel Expanders - Light Metallic Sheen */
 [data-testid="stMain"] [data-testid="stExpander"],
 [data-testid="stMain"] details {
-    background-color: #ffffff !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 45%, #edf2f7 80%, #ffffff 100%) !important;
     border: 1px solid #cbd5e1 !important;
-    border-radius: 12px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-testid="stMain"] [data-testid="stExpander"]:hover {
+    border-color: #94a3b8 !important;
+    box-shadow: 0 6px 22px rgba(15, 23, 42, 0.08), inset 0 1px 1px rgba(255, 255, 255, 1) !important;
 }
 
 [data-testid="stMain"] [data-testid="stExpander"] summary,
@@ -75,11 +271,13 @@ section.main,
 }
 
 [data-testid="stMain"] [data-testid="stExpanderDetails"] {
-    background-color: #ffffff !important;
-    border-top: 1px solid #f1f5f9 !important;
+    background: #ffffff !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-bottom-left-radius: 14px !important;
+    border-bottom-right-radius: 14px !important;
 }
 
-/* Main Panel Inputs, Textarea, and Selectbox Bars (Light Box + Dark Text) */
+/* Main Panel Inputs, Textarea & Selectbox Bars */
 [data-testid="stMain"] input,
 [data-testid="stMain"] textarea,
 [data-testid="stMain"] select,
@@ -88,6 +286,7 @@ section.main,
     color: #0f172a !important;
     border: 1px solid #94a3b8 !important;
     border-radius: 8px !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
 
 [data-testid="stMain"] [data-baseweb="select"] span,
@@ -103,412 +302,79 @@ section.main,
 
 /* Inline Code Badges in Main Panel */
 [data-testid="stMain"] code {
-    background-color: #f1f5f9 !important;
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;
     color: #0f172a !important;
-    padding: 2px 6px !important;
-    border-radius: 4px !important;
-    border: 1px solid #e2e8f0 !important;
+    padding: 3px 7px !important;
+    border-radius: 5px !important;
+    border: 1px solid #cbd5e1 !important;
     font-weight: 600 !important;
 }
 
-/* Header & Banner */
-.main-header {
-    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%) !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 16px !important;
-    padding: 24px 30px !important;
-    margin-bottom: 24px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+/* Primary Action Buttons */
+.stButton > button[kind="primary"],
+.stButton > button[type="primary"],
+[data-testid="stMain"] .stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #1d4ed8 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #3b82f6 !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    padding: 10px 22px !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    transition: all 0.25s ease !important;
 }
 
-.main-title {
-    font-size: 2.2rem !important;
-    font-weight: 800 !important;
+.stButton > button[kind="primary"]:hover,
+.stButton > button[type="primary"]:hover {
+    background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 50%, #1e40af 100%) !important;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Secondary Buttons */
+.stButton > button[kind="secondary"],
+[data-testid="stMain"] .stButton > button:not([kind="primary"]) {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%) !important;
     color: #0f172a !important;
-    letter-spacing: -0.5px !important;
-    margin-bottom: 6px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    transition: all 0.2s ease !important;
 }
 
-.main-tagline {
-    font-size: 1.05rem !important;
-    color: #334155 !important;
-    font-weight: 500 !important;
-    line-height: 1.5 !important;
+.stButton > button[kind="secondary"]:hover,
+[data-testid="stMain"] .stButton > button:not([kind="primary"]):hover {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%) !important;
+    border-color: #94a3b8 !important;
+    transform: translateY(-1px) !important;
 }
 
-/* Badges */
+/* Badge Pills */
 .badge-pill {
     display: inline-block !important;
     padding: 4px 12px !important;
-    border-radius: 9999px !important;
-    font-size: 0.8rem !important;
-    font-weight: 600 !important;
+    border-radius: 20px !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
     margin-right: 8px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
 }
 
 .badge-gemini {
-    background-color: #eff6ff !important;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
     color: #1d4ed8 !important;
-    border: 1px solid #bfdbfe !important;
+    border: 1px solid #93c5fd !important;
 }
 
 .badge-latex {
-    background-color: #f0fdf4 !important;
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7) !important;
     color: #15803d !important;
-    border: 1px solid #bbf7d0 !important;
+    border: 1px solid #86efac !important;
 }
 
 .badge-fairness {
-    background-color: #fef3c7 !important;
-    color: #b45309 !important;
-    border: 1px solid #fde68a !important;
+    background: linear-gradient(135deg, #faf5ff, #f3e8ff) !important;
+    color: #7e22ce !important;
+    border: 1px solid #d8b4fe !important;
 }
-
-/* Custom Cards */
-.ed-card {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 12px !important;
-    padding: 20px !important;
-    margin-bottom: 16px !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
-    color: #0f172a !important;
-}
-
-.ed-card * {
-    color: #0f172a !important;
-}
-
-.card-title {
-    font-size: 1.15rem !important;
-    font-weight: 700 !important;
-    color: #0f172a !important;
-    margin-bottom: 8px !important;
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-}
-
-.card-subtitle {
-    font-size: 0.9rem !important;
-    color: #475569 !important;
-    margin-bottom: 12px !important;
-    font-weight: 500 !important;
-}
-
-/* Metric Display */
-.metric-box {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 10px !important;
-    padding: 14px 16px !important;
-    text-align: center !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03) !important;
-}
-
-.metric-value {
-    font-size: 1.6rem !important;
-    font-weight: 800 !important;
-    color: #0f172a !important;
-}
-
-.metric-label {
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
-    color: #475569 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-}
-
-/* Main Panel Primary Buttons (Blue Background + Light Blue Text) */
-[data-testid="stMain"] .stButton > button[kind="primary"],
-[data-testid="stMain"] button[data-testid="baseButton-primary"],
-[data-testid="stMain"] button[kind="primaryFormSubmit"],
-.stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%) !important;
-    background-color: #1e40af !important;
-    color: #93c5fd !important; /* Crisp Light Blue Text */
-    border: 2px solid #60a5fa !important;
-    font-weight: 700 !important;
-    border-radius: 8px !important;
-    padding: 10px 22px !important;
-    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3) !important;
-    transition: all 0.2s ease-in-out !important;
-}
-
-[data-testid="stMain"] .stButton > button[kind="primary"] *,
-[data-testid="stMain"] button[data-testid="baseButton-primary"] *,
-[data-testid="stMain"] button[kind="primaryFormSubmit"] *,
-[data-testid="stMain"] .stButton > button[kind="primary"] p,
-[data-testid="stMain"] .stButton > button[kind="primary"] span,
-[data-testid="stMain"] .stButton > button[kind="primary"] div {
-    color: #93c5fd !important; /* Force Light Blue Text for all sub-elements */
-    font-weight: 700 !important;
-}
-
-[data-testid="stMain"] .stButton > button[kind="primary"]:hover,
-[data-testid="stMain"] button[data-testid="baseButton-primary"]:hover {
-    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
-    background-color: #1d4ed8 !important;
-    border-color: #bfdbfe !important;
-    color: #ffffff !important;
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45) !important;
-    transform: translateY(-1px) !important;
-}
-
-[data-testid="stMain"] .stButton > button[kind="primary"]:hover * {
-    color: #ffffff !important;
-}
-
-[data-testid="stMain"] .stButton > button {
-    font-family: 'Montserrat', sans-serif !important;
-    font-weight: 600 !important;
-    border-radius: 8px !important;
-    padding: 8px 20px !important;
-    transition: all 0.2s ease !important;
-}
-
-/* Tabs */
-button[data-baseweb="tab"] {
-    font-family: 'Montserrat', sans-serif !important;
-    font-weight: 600 !important;
-    color: #475569 !important;
-}
-
-button[data-baseweb="tab"][aria-selected="true"] {
-    color: #2563eb !important;
-    border-bottom: 2px solid #2563eb !important;
-}
-
-/* ==============================================================================
-   3. SIDEBAR (LEFT PANEL) - DARK THEME WITH GOLD & LIGHT SILVER
-   ============================================================================== */
-section[data-testid="stSidebar"],
-[data-testid="stSidebar"] {
-    background-color: #0f172a !important;
-    border-right: 1px solid #1e293b !important;
-}
-
-[data-testid="stSidebar"] hr {
-    border-color: #334155 !important;
-}
-
-/* Sidebar Headings in Gold */
-[data-testid="stSidebar"] h1, 
-[data-testid="stSidebar"] h2, 
-[data-testid="stSidebar"] h3, 
-[data-testid="stSidebar"] h4,
-[data-testid="stSidebar"] .stMarkdown h3 {
-    color: #fbbf24 !important; /* Gold */
-    font-weight: 700 !important;
-    letter-spacing: 0.3px !important;
-}
-
-/* Sidebar Paragraphs, Labels, and Lists in Light Silver */
-[data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
-[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] *,
-[data-testid="stSidebar"] p, 
-[data-testid="stSidebar"] span, 
-[data-testid="stSidebar"] label, 
-[data-testid="stSidebar"] li,
-[data-testid="stSidebar"] [data-testid="stWidgetLabel"] *,
-[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
-    color: #e2e8f0 !important; /* Light Silver */
-    font-weight: 500 !important;
-}
-
-/* Sidebar Captions in Warm Amber / Gold Tint */
-[data-testid="stSidebar"] .stCaption,
-[data-testid="stSidebar"] small {
-    color: #fcd34d !important; /* Soft Gold */
-    font-weight: 500 !important;
-}
-
-/* Sidebar Inputs & Selectbox Bars (Dark Box + Light Text) */
-[data-testid="stSidebar"] input, 
-[data-testid="stSidebar"] textarea, 
-[data-testid="stSidebar"] select,
-[data-testid="stSidebar"] [data-baseweb="select"],
-[data-testid="stSidebar"] [data-baseweb="select"] > div {
-    background-color: #1e293b !important;
-    color: #f8fafc !important;
-    border: 1px solid #475569 !important;
-    border-radius: 8px !important;
-}
-
-[data-testid="stSidebar"] [data-baseweb="select"] span,
-[data-testid="stSidebar"] [data-baseweb="select"] div,
-[data-testid="stSidebar"] [data-baseweb="select"] input {
-    color: #f8fafc !important;
-}
-
-[data-testid="stSidebar"] [data-baseweb="select"] svg {
-    fill: #fbbf24 !important; /* Gold arrow in sidebar */
-}
-
-[data-testid="stSidebar"] input:focus,
-[data-testid="stSidebar"] [data-baseweb="select"] > div:focus-within {
-    border-color: #fbbf24 !important;
-    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25) !important;
-}
-
-/* Sidebar File Uploader & Browse/Upload Button */
-[data-testid="stSidebar"] [data-testid="stFileUploader"] {
-    background-color: #1e293b !important;
-    border: 1px dashed #38bdf8 !important;
-    border-radius: 10px !important;
-    padding: 12px !important;
-}
-
-[data-testid="stSidebar"] [data-testid="stFileUploader"] section {
-    background-color: #1e293b !important;
-}
-
-[data-testid="stSidebar"] [data-testid="stFileUploader"] section span,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] section small,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] p,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] div {
-    color: #93c5fd !important; /* High-contrast Sky Blue */
-    font-weight: 500 !important;
-}
-
-/* Specific styling for the 'Browse files' / 'Upload' button inside file uploader */
-[data-testid="stSidebar"] [data-testid="stFileUploader"] button,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="baseButton-secondary"],
-[data-testid="stSidebar"] [data-testid="stFileUploader"] section button {
-    background-color: #ffffff !important; /* Crisp White Background */
-    color: #1d4ed8 !important; /* Bold Royal Blue Text */
-    border: 2px solid #2563eb !important;
-    font-weight: 700 !important;
-    font-size: 0.95rem !important;
-    border-radius: 8px !important;
-    padding: 6px 16px !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
-    transition: all 0.2s ease-in-out !important;
-}
-
-[data-testid="stSidebar"] [data-testid="stFileUploader"] button:hover,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] section button:hover {
-    background-color: #2563eb !important;
-    color: #ffffff !important; /* White text on blue hover */
-    border-color: #1d4ed8 !important;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
-}
-
-/* Sidebar AI Engine Section - Blue High-Contrast Text */
-[data-testid="stSidebar"] code {
-    background-color: #0f172a !important;
-    color: #38bdf8 !important; /* Electric Sky Blue Code Text */
-    border: 1px solid #1e40af !important;
-    padding: 2px 6px !important;
-    font-weight: 600 !important;
-    border-radius: 4px !important;
-}
-
-[data-testid="stSidebar"] .ai-engine-text,
-[data-testid="stSidebar"] .stCaption {
-    color: #60a5fa !important; /* Vivid Light Blue for AI Engine text */
-    font-weight: 600 !important;
-}
-
-/* Sidebar General Buttons */
-[data-testid="stSidebar"] .stButton > button {
-    background-color: #1e293b !important;
-    color: #fbbf24 !important; /* Gold Text */
-    border: 1px solid #fbbf24 !important; /* Gold Border */
-    font-weight: 600 !important;
-    border-radius: 8px !important;
-    transition: all 0.2s ease !important;
-}
-
-[data-testid="stSidebar"] .stButton > button:hover {
-    background-color: #fbbf24 !important;
-    color: #0f172a !important;
-    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3) !important;
-}
-
-/* ==============================================================================
-   4. DROPDOWN MENUS & POPOVER LISTS (GLOBAL OVERLAYS)
-   ============================================================================== */
-div[data-baseweb="popover"],
-div[data-baseweb="popover"] > div,
-ul[role="listbox"],
-div[data-baseweb="menu"] {
-    background-color: #0f172a !important; /* Elegant dark navy */
-    border: 1px solid #334155 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45) !important;
-    min-width: 540px !important; /* Ensures full syllabus topic visibility without truncation */
-    max-width: 95vw !important;
-    z-index: 999999 !important;
-}
-
-li[role="option"],
-div[data-baseweb="menu"] li,
-div[role="option"],
-ul[role="listbox"] li {
-    background-color: #0f172a !important;
-    color: #f8fafc !important; /* Crisp white */
-    font-weight: 500 !important;
-    font-size: 0.95rem !important;
-    padding: 13px 18px !important;
-    border-bottom: 1px solid #1e293b !important;
-    white-space: normal !important; /* Never truncate with ellipsis */
-    line-height: 1.45 !important;
-    word-break: normal !important;
-}
-
-li[role="option"] span,
-li[role="option"] div,
-ul[role="listbox"] li * {
-    color: #f8fafc !important;
-    white-space: normal !important;
-}
-
-li[role="option"]:hover,
-li[role="option"][aria-selected="true"],
-div[data-baseweb="menu"] li:hover,
-div[data-baseweb="menu"] li[aria-selected="true"] {
-    background-color: #1e293b !important;
-    color: #fbbf24 !important; /* Gold on hover/selection */
-}
-
-li[role="option"]:hover span,
-li[role="option"][aria-selected="true"] span,
-li[role="option"]:hover div,
-li[role="option"][aria-selected="true"] div {
-    color: #fbbf24 !important;
-    font-weight: 600 !important;
-}
-
-/* Code Listings */
-pre, code {
-    font-family: 'Fira Code', 'Courier New', monospace !important;
-}
-
-/* ==============================================================================
-   5. COMPILE & BUILD FINAL EXAM PACKAGE BUTTON (BLUE BG + LIGHT BLUE TEXT)
-   ============================================================================== */
-.stButton > button[data-testid="compile-build-btn"],
-div.compile-build-box button,
-button.compile-build-btn {
-    background-color: #1e40af !important; /* Deep Rich Blue Background */
-    color: #93c5fd !important; /* Crisp Light Blue Text */
-    border: 2px solid #60a5fa !important; /* Vibrant Sky Blue Border */
-    font-weight: 800 !important;
-    font-size: 1.05rem !important;
-    border-radius: 10px !important;
-    padding: 10px 24px !important;
-    box-shadow: 0 4px 14px rgba(30, 64, 175, 0.4) !important;
-    transition: all 0.2s ease-in-out !important;
-}
-
-div.compile-build-box button:hover,
-button.compile-build-btn:hover {
-    background-color: #1d4ed8 !important;
-    color: #ffffff !important;
-    border-color: #bfdbfe !important;
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
-    transform: translateY(-1px) !important;
-}
-
