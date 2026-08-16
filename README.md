@@ -200,18 +200,51 @@ ComputingScribe AI demonstrates deep architectural synergy between **Google Clou
 
 ---
 
-## ☁️ 7. Step-by-Step Guide: How to Host & Deploy to Google Cloud
+## 🔑 7. Bring Your Own Key (BYOK) Model & Deployment Guide
 
-You can deploy ComputingScribe AI to Google Cloud Platform using either **Automated GitHub Actions CI/CD** (recommended) or **Google Cloud Shell CLI**.
+ComputingScribe AI is built with a **Bring Your Own Key (BYOK)** architecture designed for technical educators:
+- **Zero Shared Credit Consumption**: When sharing the web application across departments or schools, each visiting educator provides their own free **Gemini API Key** from [Google AI Studio](https://aistudio.google.com/app/apikey) in the sidebar under **⚙️ AI Engine & Settings**.
+- **No Cloud Billing Leak**: The web server runs completely keyless and stateless; credentials are kept in the educator's browser session.
 
 ---
 
-### Method 1: Automated GitHub Actions CI/CD to Cloud Run (Recommended)
+### Quickstart 1: Run Locally in 3 Steps (Recommended for Teachers)
 
-Whenever you push to the `main` branch, the workflow in `.github/workflows/deploy.yml` will automatically build the container and deploy to Google Cloud Run.
+```bash
+# 1. Clone the repository
+git clone https://github.com/bluechristopher/ComputingScribe.git
+cd ComputingScribe
+
+# 2. Install Python dependencies
+pip install -r requirements.txt
+
+# 3. Launch the web application
+streamlit run frontend/app.py
+```
+> Open `http://localhost:8501`, enter your free Gemini API key in the sidebar under **⚙️ AI Engine & Settings**, and start authoring Cambridge exam packages!
+
+---
+
+### Quickstart 2: Run via Docker (Full TeXLive Sandbox Included)
+
+```bash
+# 1. Build the container
+docker build -t computingscribe-ai .
+
+# 2. Run container (locally on port 8501)
+docker run -p 8501:8501 computingscribe-ai
+
+# 3. Open in browser: http://localhost:8501
+```
+
+---
+
+### Quickstart 3: Deploy to Google Cloud Run (Serverless Web App)
+
+Whenever you push to the `main` branch, `.github/workflows/deploy.yml` builds and deploys to **Google Cloud Run**.
 
 #### Step 1: Enable Google Cloud APIs
-In **[Google Cloud Shell](https://shell.cloud.google.com/)**, run:
+In **[Google Cloud Shell](https://shell.cloud.google.com/)**:
 ```bash
 gcloud config set project YOUR_PROJECT_ID
 
@@ -219,19 +252,18 @@ gcloud services enable \
   run.googleapis.com \
   artifactregistry.googleapis.com \
   cloudbuild.googleapis.com \
-  firestore.googleapis.com \
-  aiplatform.googleapis.com
+  firestore.googleapis.com
 ```
 
-#### Step 2: Create a Service Account for GitHub Actions & Vertex AI
+#### Step 2: Create a Service Account for GitHub Actions Deployment
 In Google Cloud Shell:
 ```bash
-# 1. Create service account
+# 1. Create deployment service account
 gcloud iam service-accounts create github-deployer \
-  --description="GitHub Actions Deployer" \
+  --description="GitHub Actions Cloud Run Deployer" \
   --display-name="github-deployer"
 
-# 2. Grant required deployment & Vertex AI roles
+# 2. Grant required deployment roles
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/run.admin"
@@ -250,10 +282,6 @@ gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
 
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/aiplatform.user"
-
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/datastore.user"
 
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
@@ -265,59 +293,33 @@ gcloud iam service-accounts keys create key.json \
   --iam-account=github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com
 ```
 
-#### Step 3: Add Repository Secrets in GitHub (Zero API Keys Needed!)
+#### Step 3: Add Repository Secrets in GitHub
 1. Go to your GitHub repository: **Settings** > **Secrets and variables** > **Actions** > **New repository secret**.
 2. Add these 2 repository secrets:
    - `GCP_PROJECT_ID`: Your Google Cloud Project ID.
-   - `GCP_SA_KEY`: Paste the entire contents of the `key.json` file.
-   *(Note: No `GEMINI_API_KEY` is required—EduScribe AI authenticates natively to Vertex AI via Google Cloud IAM!)*
+   - `GCP_SA_KEY`: Paste the entire contents of `key.json`.
 
-#### Step 4: Push to Main & Watch Live Deployment
-Push any commit to `main` (via GitHub Desktop or CLI). GitHub Actions will automatically build the container and deploy to **Google Cloud Run**, outputting your public HTTPS URL!
+#### Step 4: Push to Main & Share URL
+Push your commit to `main`. GitHub Actions will deploy your serverless Cloud Run instance and output your public HTTPS URL for teachers to use!
 
 ---
 
-### Method 2: Direct 1-Click Deployment via Google Cloud Shell CLI
+### Direct 1-Click Deployment via Google Cloud Shell CLI
 
-If you prefer to deploy directly from the command line without GitHub Secrets:
-
-1. Open **[Google Cloud Shell](https://shell.cloud.google.com/)**.
-2. Run the following commands:
 ```bash
-# 1. Clone the repository
+# In Google Cloud Shell:
 git clone https://github.com/bluechristopher/ComputingScribe.git
 cd ComputingScribe
 
-# 2. Deploy directly to Cloud Run with Vertex AI
-gcloud run deploy eduscribe-ai \
+gcloud run deploy computingscribe-ai \
   --source . \
   --region=asia-southeast1 \
   --platform=managed \
   --allow-unauthenticated \
   --memory=2Gi \
   --cpu=2 \
-  --set-env-vars="GCP_PROJECT_ID=YOUR_PROJECT_ID,GCP_LOCATION=asia-southeast1,USE_VERTEX_AI=true"
+  --set-env-vars="GCP_PROJECT_ID=YOUR_PROJECT_ID,GCP_LOCATION=asia-southeast1"
 ```
-
-Once deployment completes, Cloud Run will print your live **Service URL** (e.g. `https://eduscribe-ai-xxxxxx-as.a.run.app`).
-
----
-
-### Method 3: Run Locally via Docker (Full TeXLive Included)
-
-```bash
-# 1. Clone repository
-git clone https://github.com/bluechristopher/ComputingScribe.git
-cd ComputingScribe
-
-# 2. Build Docker container
-docker build -t eduscribe-ai .
-
-# 3. Run container
-docker run -p 8501:8501 -e GEMINI_API_KEY="YOUR_GEMINI_API_KEY" eduscribe-ai
-
-# 4. Open in browser
-http://localhost:8501
 ```
 
 ---

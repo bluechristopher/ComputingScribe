@@ -55,7 +55,7 @@ Whenever you push to the `main` branch, the workflow in `.github/workflows/deplo
 2. Click **New repository secret** and add:
    - `GCP_PROJECT_ID`: Your Google Cloud Project ID (e.g. `my-eduscribe-project`).
    - `GCP_SA_KEY`: Paste the entire contents of the downloaded Service Account JSON key file.
-   - `GEMINI_API_KEY`: Your Gemini API key.
+   *(Note: No API key secret is needed on GitHub—the deployed app operates in BYOK mode where visiting teachers supply their own Gemini API key in the UI sidebar).*
 
 ### Step 3: Trigger Deployment
 Push any commit to `main`, or navigate to the **Actions** tab on GitHub and click **Run workflow**.

@@ -54,4 +54,4 @@ jobs:
             --allow-unauthenticated \
             --memory=2Gi \
             --cpu=2 \
-            --set-env-vars="GCP_PROJECT_ID=${{ env.PROJECT_ID }},GCP_LOCATION=${{ env.GAR_LOCATION }},USE_VERTEX_AI=true"
+            --set-env-vars="GCP_PROJECT_ID=${{ env.PROJECT_ID }},GCP_LOCATION=${{ env.GAR_LOCATION }}"

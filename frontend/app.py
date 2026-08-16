@@ -74,7 +74,7 @@ session_mgr: SessionManager = st.session_state.orchestrator.session_manager
 PIPELINE_STATIONS = [
     ("Station 1: Memory & Style Agent", "🧠 Querying persistent educator profile in Cloud Firestore..."),
     ("Station 2: RAG Grounding Agent", "📚 Scanning syllabus 9569 standards & indexing exam exemplars..."),
-    ("Station 3: Blueprint Architect Agent", "📐 Synthesizing learning objectives & mark allocations on Vertex AI..."),
+    ("Station 3: Blueprint Architect Agent", "📐 Synthesizing learning objectives & mark allocations on Gemini 3.7 Flash..."),
     ("Station 4: Demographic Synthesizer Agent", "⚖️ Generating 50/50 gender balanced datasets & SQL schemas..."),
     ("Station 5: Golden TeX Authoring Agent", "✍️ Drafting Cambridge-compliant LaTeX exam paper & mark scheme..."),
     ("Station 6: Self-Healing Sandbox Agent", "🔄 Executing pdflatex compilation & 3-pass Gemini self-healing..."),
@@ -252,20 +252,27 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(f"**Model**: {GEMINI_ICON} <span style='color: #ffffff; font-weight: 700;'>Gemini 3.7 Flash</span>", unsafe_allow_html=True)
     
-    with st.expander("⚙️ AI Engine & Settings", expanded=False):
-        st.caption("Infrastructure: 🟢 Serverless on Google Cloud Run")
-        active_key = st.session_state.get("gemini_api_key") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
+    active_key = st.session_state.get("gemini_api_key") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
+    
+    with st.expander("⚙️ AI Engine & Settings", expanded=True if not active_key else False):
+        st.markdown("🔑 **Bring Your Own Key (BYOK)**")
+        st.caption("Each educator uses their own free Gemini API key to avoid consuming shared credits.")
+        st.markdown("[👉 Get a free Gemini API Key from Google AI Studio](https://aistudio.google.com/app/apikey)", unsafe_allow_html=True)
+        
         api_key_input = st.text_input(
             "Gemini API Key",
             value=active_key,
             type="password",
             placeholder="AIzaSy...",
-            help="Paste your Gemini API key here."
+            help="Paste your Gemini API key from Google AI Studio here."
         )
         if api_key_input:
-            st.session_state["gemini_api_key"] = api_key_input.strip()
-            os.environ["GEMINI_API_KEY"] = api_key_input.strip()
-            st.success("API Key saved.")
+            clean_k = api_key_input.strip()
+            st.session_state["gemini_api_key"] = clean_k
+            os.environ["GEMINI_API_KEY"] = clean_k
+            st.success("✅ Gemini API Key connected!")
+        elif not active_key:
+            st.warning("⚠️ Please provide a Gemini API key to enable live exam generation.")
     
     st.markdown("---")
     st.markdown("### 👩‍🏫 Educator Profile")
