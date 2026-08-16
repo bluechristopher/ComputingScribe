@@ -1,8 +1,7 @@
 """
 ComputingScribe AI - GCP & Vertex AI Configuration Module
-Handles Vertex AI, Gemini 3.7 Flash, Firestore, and Cloud Storage configurations.
-Uses us-central1 regional endpoint for Vertex AI with zero API keys required in production,
-and multi-model fallback (gemini-3.7-flash -> gemini-2.5-flash -> gemini-2.0-flash -> gemini-1.5-flash).
+Handles Vertex AI, Gemini Models, Firestore, and Cloud Storage configurations.
+Sanitizes all project and location strings to guarantee valid gRPC metadata headers.
 """
 
 import os
@@ -26,12 +25,12 @@ LOCAL_PREFS_DIR.mkdir(parents=True, exist_ok=True)
 class VertexAIModelWrapper:
     """Unified wrapper providing generate_content interface across Vertex AI and GenAI SDK with multi-model fallback."""
     def __init__(self, model_name: str, client_type: str, raw_client: Any):
-        self.model_name = model_name
+        self.model_name = str(model_name).strip()
         self.client_type = client_type
         self.raw_client = raw_client
         # Candidate model names on Vertex AI in order of preference
         self.model_candidates = [
-            model_name,
+            self.model_name,
             "gemini-2.5-flash",
             "gemini-3.7-flash",
             "gemini-2.0-flash",
@@ -105,14 +104,16 @@ class UnifiedGeminiClient:
 
 class AppConfig:
     # Model Configuration
-    DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
     FALLBACK_MODEL = "gemini-1.5-flash"
     
     # GCP Credentials & Project (Vertex AI) - Automatically detect project in Cloud Run
-    GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT_ID") or os.getenv("GCP_PROJECT") or "eduscribe-505616"
-    # Vertex AI requires a valid regional location (us-central1 supports all Gemini models)
-    GCP_LOCATION = os.getenv("GCP_LOCATION", "us-central1")
-    GCS_BUCKET = os.getenv("GCS_BUCKET_NAME", "computingscribe-assets")
+    _raw_project = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT_ID") or os.getenv("GCP_PROJECT") or "eduscribe-505616"
+    GCP_PROJECT = _raw_project.strip()
+    
+    _raw_location = os.getenv("GCP_LOCATION", "us-central1")
+    GCP_LOCATION = _raw_location.strip()
+    GCS_BUCKET = os.getenv("GCS_BUCKET_NAME", "computingscribe-assets").strip()
     
     @classmethod
     def is_cloud_environment(cls) -> bool:
@@ -132,13 +133,15 @@ class AppConfig:
         In local dev, uses local ADC or fallback API Key if present.
         """
         # 1. In Google Cloud Production: Vertex AI via Google GenAI SDK
-        if cls.is_cloud_environment() and cls.GCP_PROJECT:
+        if cls.is_cloud_environment():
+            # A. Try ambient GenAI client (Cloud Run auto-detects project)
             try:
                 from google import genai
                 client = genai.Client(vertexai=True, project=cls.GCP_PROJECT, location=cls.GCP_LOCATION)
                 return UnifiedGeminiClient("GENAI_SDK", client)
             except Exception as e1:
                 try:
+                    # Fallback to pure vertexai.init with sanitized project
                     import vertexai
                     vertexai.init(project=cls.GCP_PROJECT, location=cls.GCP_LOCATION)
                     return UnifiedGeminiClient("VERTEX_AI", None)
@@ -150,7 +153,7 @@ class AppConfig:
         if api_key:
             try:
                 import google.generativeai as genai
-                genai.configure(api_key=api_key)
+                genai.configure(api_key=api_key.strip())
                 return UnifiedGeminiClient("GOOGLE_GENAI", genai)
             except Exception as e:
                 print(f"[AppConfig] Warning initializing google.generativeai: {e}")
