@@ -286,7 +286,7 @@ class LaTeXVisualRenderer:
 
         # 2. Handle Tables (\begin{tabular} ... \end{tabular} or \begin{tabularx} ... \end{tabularx})
         def replace_table(match):
-            table_body = match.group(2)
+            table_body = match.group(1)
             rows = table_body.split(r"\\")
             html_rows = []
             is_header = True
@@ -298,6 +298,8 @@ class LaTeXVisualRenderer:
                 col_tags = []
                 for c in cols:
                     cell_content = LaTeXVisualRenderer._clean_inline(c.strip())
+                    cell_content = cell_content.replace(r"\begin{itemize}", "<ul style='margin: 4px 0 4px 16px; padding: 0;'>").replace(r"\end{itemize}", "</ul>")
+                    cell_content = re.sub(r"\\item\s*", "<li>", cell_content)
                     if is_header:
                         col_tags.append(f"<th>{cell_content}</th>")
                     else:
@@ -306,7 +308,7 @@ class LaTeXVisualRenderer:
                 is_header = False
             return f"<table class='exam-table'>{''.join(html_rows)}</table>"
 
-        tex_text = re.sub(r"\\begin\{(?:tabular|tabularx)\}(?:\{[^}]*\})?(?:\{[^}]*\})?(.*?)\\end\{(?:tabular|tabularx)\}", replace_table, tex_text, flags=re.DOTALL)
+        tex_text = re.sub(r"\\begin\{(?:tabular|tabularx)\}[^\n]*?\n(.*?)\\end\{(?:tabular|tabularx)\}", replace_table, tex_text, flags=re.DOTALL)
 
         # 3. Handle Pseudocode Blocks
         def replace_pseudocode(match):
