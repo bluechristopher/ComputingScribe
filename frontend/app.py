@@ -74,11 +74,10 @@ with st.sidebar:
     st.caption("Collaborative Partner for Technical Educators")
     
     st.markdown("---")
-    st.markdown("### ⚡ AI Engine")
     st.markdown("🤖 **Model**: `Gemini 3.7 Flash`")
-    st.caption("Infrastructure: 🟢 Serverless on Google Cloud Run")
     
-    with st.expander("🔑 Configure Gemini API Key", expanded=False):
+    with st.expander("⚙️ AI Engine & Settings", expanded=False):
+        st.caption("Infrastructure: 🟢 Serverless on Google Cloud Run")
         active_key = st.session_state.get("gemini_api_key") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
         api_key_input = st.text_input(
             "Gemini API Key",
