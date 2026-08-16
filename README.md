@@ -1,4 +1,4 @@
-# 🎓 EduScribe AI (ComputingScribe)
+# 🎓 ComputingScribe AI
 
 > **The adaptive co-authoring agent for technical educators:** turning syllabus standards into compiled LaTeX papers, balanced synthetic datasets, and verified mark schemes.
 
@@ -19,7 +19,7 @@
 
 ### 📋 Requirements Compliance Matrix
 
-| Hackathon Requirement | EduScribe AI Implementation | Status |
+| Hackathon Requirement | ComputingScribe AI Implementation | Status |
 | :--- | :--- | :---: |
 | **Model** (Gemini 3.5 or newer) | **Gemini 3.7 Flash** (`gemini-3.7-flash`) powers blueprint synthesis, contextual scenario formulation, LaTeX self-healing compilation, and feedback extraction. | ✅ **Pass** |
 | **Google Agent Framework** | **Google GenAI SDK (`google-genai`)** with structured JSON Pydantic schemas, multi-modal grounding, and tool execution loops. | ✅ **Pass** |
@@ -40,8 +40,8 @@ Setting national and institutional examinations for subjects like **Singapore-Ca
    - **LaTeX** produces publication-grade examination papers, but writing raw LaTeX requires steep technical expertise and extensive debugging. Many educators do not have the time or background to maintain raw TeX documents.
 3. **Synthetic Dataset Fabrication Burden**: Practical programming papers require balanced, clean companion datasets (CSV records, SQL schemas). Manually creating these often introduces subtle data bugs or demographic biases.
 
-### The Solution: EduScribe AI as Your Autonomous Collaborative Partner
-EduScribe AI acts as an autonomous co-authoring partner that:
+### The Solution: ComputingScribe AI as Your Autonomous Collaborative Partner
+ComputingScribe AI acts as an autonomous co-authoring partner that:
 - **Leads the authoring process step-by-step**: Proposes structured exam blueprints, balances mark allotments, generates companion demographic datasets, and formats compilable LaTeX code with official Cambridge preambles.
 - **Constantly adapts to the teacher's unique pedagogical style**: Tracks preferences across specific syllabus modules (e.g., preference for concise prompts vs extended contextual scenarios, code box formats, and rubric granularity) and persists them in **Google Cloud Firestore**.
 - **Self-heals compilation errors**: Runs headless `pdflatex` compilation in a sandbox; if a broken macro occurs, **Gemini 3.7 Flash** diagnoses the error log and repairs the code automatically without requiring the teacher to debug TeX errors.
@@ -98,7 +98,7 @@ flowchart TD
 
 ## 🤝 4. How Google Cloud and AI Agents Work Together in Synergy
 
-EduScribe AI demonstrates deep architectural synergy between **Google Cloud infrastructure** and **agentic reasoning patterns**:
+ComputingScribe AI demonstrates deep architectural synergy between **Google Cloud infrastructure** and **agentic reasoning patterns**:
 
 | Google Cloud Service | Role in Agentic Workflow | Synergy Mechanism |
 | :--- | :--- | :--- |
@@ -152,7 +152,7 @@ EduScribe AI demonstrates deep architectural synergy between **Google Cloud infr
 
 ## ☁️ 7. Step-by-Step Guide: How to Host & Deploy to Google Cloud
 
-You can deploy EduScribe AI to Google Cloud Platform using either **Automated GitHub Actions CI/CD** (recommended) or **Google Cloud Shell CLI**.
+You can deploy ComputingScribe AI to Google Cloud Platform using either **Automated GitHub Actions CI/CD** (recommended) or **Google Cloud Shell CLI**.
 
 ---
 
