@@ -50,13 +50,14 @@ class VertexAIModelWrapper:
         if self.client_type in ["GENAI_SDK", "GENAI_SDK_KEY"] and self.raw_client:
             for m_candidate in self.model_candidates:
                 try:
-                    config_kwargs = {}
+                    from google.genai import types
+                    req_config = None
                     if "response_mime_type" in generation_config:
-                        config_kwargs["response_mime_type"] = generation_config["response_mime_type"]
+                        req_config = types.GenerateContentConfig(response_mime_type=generation_config["response_mime_type"])
                     res = self.raw_client.models.generate_content(
                         model=m_candidate,
                         contents=prompt,
-                        config=config_kwargs if config_kwargs else None
+                        config=req_config
                     )
                     if res and res.text:
                         return ResponseWrapper(res.text)
@@ -109,8 +110,7 @@ class AppConfig:
     DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
     FALLBACK_MODEL = "gemini-1.5-flash"
     
-    # GCP Credentials & Project (Vertex AI) - Automatically detect project in Cloud Run
-    _raw_project = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT_ID") or os.getenv("GCP_PROJECT") or "eduscribe-505616"
+    _raw_project = os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT") or "eduscribe-ai"
     GCP_PROJECT = _raw_project.strip()
     
     _raw_location = os.getenv("GCP_LOCATION", "us-central1")
