@@ -190,20 +190,20 @@ section.main,
     left: 0 !important;
     right: 0 !important;
     height: 4px !important;
-    background: linear-gradient(90deg, #0284c7, #2563eb, #7c3aed, #06b6d4) !important;
+    background: linear-gradient(90deg, #00f2fe, #0ea5e9, #0284c7, #06b6d4, #14b8a6) !important;
 }
 
-/* Stunning Larger H1 Text with Colour Gradient Effect */
+/* Stunning Larger H1 Text with Bluish Teal Effect & Radiant Glow */
 .main-title {
-    font-size: 3.1rem !important;
+    font-size: 3.25rem !important;
     font-weight: 900 !important;
     letter-spacing: -0.035em !important;
     line-height: 1.15 !important;
     margin-bottom: 10px !important;
-    background: linear-gradient(135deg, #0284c7 0%, #2563eb 30%, #7c3aed 70%, #06b6d4 100%) !important;
+    background: linear-gradient(135deg, #00c6ff 0%, #0072ff 26%, #00f2fe 55%, #0ea5e9 75%, #10b981 100%) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
-    filter: drop-shadow(0 3px 12px rgba(37, 99, 235, 0.22)) !important;
+    filter: drop-shadow(0 0 16px rgba(0, 198, 255, 0.45)) drop-shadow(0 0 32px rgba(6, 182, 212, 0.35)) drop-shadow(0 2px 6px rgba(2, 132, 199, 0.3)) !important;
 }
 
 .main-tagline {
@@ -310,44 +310,126 @@ section.main,
     font-weight: 600 !important;
 }
 
-/* Primary Action Buttons */
+/* Sidebar File Uploader & Browse/Upload Button */
+[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+    background: linear-gradient(145deg, #242730, #18191e) !important;
+    border: 1px dashed #38bdf8 !important;
+    border-radius: 10px !important;
+    padding: 12px !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section {
+    background: transparent !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section span,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section small,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] p,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] div {
+    color: #93c5fd !important;
+    font-weight: 500 !important;
+}
+
+/* Specific styling for the 'Browse files' / 'Upload' button inside file uploader */
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="baseButton-secondary"],
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section button {
+    background-color: #ffffff !important;
+    color: #1d4ed8 !important;
+    border: 2px solid #2563eb !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+    padding: 6px 16px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button:hover,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section button:hover {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+}
+
+/* Sidebar General Buttons (Gold Scheme Restored) */
+[data-testid="stSidebar"] .stButton > button {
+    background-color: #1e293b !important;
+    color: #fbbf24 !important; /* Gold Text */
+    border: 1px solid #fbbf24 !important; /* Gold Border */
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background-color: #fbbf24 !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3) !important;
+}
+
+/* Primary Action Buttons (Deep Blue Background + Vibrant Orange Text) */
 .stButton > button[kind="primary"],
 .stButton > button[type="primary"],
-[data-testid="stMain"] .stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #1d4ed8 100%) !important;
-    color: #ffffff !important;
-    border: 1px solid #3b82f6 !important;
+[data-testid="stMain"] .stButton > button[kind="primary"],
+[data-testid="stMain"] .stButton > button[type="primary"] {
+    background-color: #1e40af !important; /* Deep Rich Blue Background */
+    color: #fb923c !important; /* Vibrant Orange Text */
+    border: 2px solid #60a5fa !important; /* Vibrant Sky Blue Border */
+    font-weight: 850 !important;
+    font-size: 1.05rem !important;
     border-radius: 10px !important;
-    font-weight: 700 !important;
-    padding: 10px 22px !important;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
-    transition: all 0.25s ease !important;
+    padding: 10px 24px !important;
+    box-shadow: 0 4px 14px rgba(30, 64, 175, 0.4) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+.stButton > button[kind="primary"] *,
+.stButton > button[type="primary"] *,
+.stButton > button[kind="primary"] p,
+.stButton > button[type="primary"] p,
+[data-testid="stMain"] .stButton > button[kind="primary"] p,
+[data-testid="stMain"] .stButton > button[type="primary"] p {
+    color: #fb923c !important; /* Vibrant Orange Text */
+    font-weight: 850 !important;
 }
 
 .stButton > button[kind="primary"]:hover,
 .stButton > button[type="primary"]:hover {
-    background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 50%, #1e40af 100%) !important;
+    background-color: #1d4ed8 !important;
+    color: #fed7aa !important; /* Lighter Orange on hover */
+    border-color: #bfdbfe !important;
     box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
-    transform: translateY(-2px) !important;
+    transform: translateY(-1px) !important;
 }
 
-/* Secondary Buttons */
+.stButton > button[kind="primary"]:hover *,
+.stButton > button[type="primary"]:hover * {
+    color: #fed7aa !important;
+}
+
+/* Secondary & Download Buttons */
 .stButton > button[kind="secondary"],
-[data-testid="stMain"] .stButton > button:not([kind="primary"]) {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%) !important;
-    color: #0f172a !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+[data-testid="stMain"] .stButton > button:not([kind="primary"]),
+[data-testid="stDownloadButton"] > button {
+    background-color: #ffffff !important;
+    color: #1d4ed8 !important;
+    border: 1px solid #93c5fd !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
     transition: all 0.2s ease !important;
 }
 
 .stButton > button[kind="secondary"]:hover,
-[data-testid="stMain"] .stButton > button:not([kind="primary"]):hover {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%) !important;
-    border-color: #94a3b8 !important;
-    transform: translateY(-1px) !important;
+[data-testid="stMain"] .stButton > button:not([kind="primary"]):hover,
+[data-testid="stDownloadButton"] > button:hover {
+    background-color: #eff6ff !important;
+    color: #1e40af !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important;
 }
 
 /* Badge Pills */
