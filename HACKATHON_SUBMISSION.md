@@ -100,11 +100,9 @@ EduScribe AI is not a generic text generator; it is a **collaborative pedagogica
    - Section 3: System Design & Implementation (Python 3, OOP Polymorphism, 1NF-3NF Relational DBs, Flask, Networks & Subnetting).
    - Section 4: Ethics, Legislation & Emerging Tech (PDPA, AI Ethics, Cybersecurity).
 2. **Cambridge International AS & A Level Computer Science (9618)**:
-   - Standard command words, tabular mark scheme rubrics, and pseudocode specifications.
-3. **Anderson Serangoon Junior College (ASJC) & Singapore Schools Past Examinations**:
-   - Exemplar practical exam templates and theory decision table formatting conventions.
-4. **Singapore Department of Statistics (SingStat)**:
-   - Demographic cohort distributions for balanced synthetic dataset generation.
+   - Command word taxonomy, tabular mark scheme rubrics, and pseudocode standards.
+3. **Past Singapore-Cambridge A-Level Computing Papers & Marking Styling References**:
+   - Authentic typographic layouts, nested task structures (`Task 1.1`, `Task 1.2`), right-aligned mark brackets (`\hfill [3]`), code listing boxes, and standard marking guidance conventions.
 
 ---
 

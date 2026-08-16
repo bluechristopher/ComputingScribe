@@ -106,7 +106,21 @@ EduScribe AI demonstrates deep architectural synergy between **Google Cloud infr
 
 ---
 
-## 🚀 5. Step-by-Step Spin-Up & Reproducibility Guide
+## 📚 5. Syllabus Standards & Styling References
+
+1. **Singapore-Cambridge GCE A-Level H2 Computing (Syllabus 9569 / 2027)**:
+   - Section 1: Data and Data Structures (Linear & Non-Linear ADTs, BST, Hash Tables).
+   - Section 2: Algorithms and Problem Solving (Quicksort, Merge sort, Decision tables, Big-O Complexity).
+   - Section 3: System Design & Implementation (Python 3, OOP Polymorphism, 1NF-3NF Relational DBs, Flask, Networks & Subnetting).
+   - Section 4: Ethics, Legislation & Emerging Tech (PDPA, AI Ethics, Cybersecurity).
+2. **Cambridge International AS & A Level Computer Science (9618)**:
+   - Command word taxonomy, tabular mark scheme rubrics, and pseudocode standards.
+3. **Past Singapore-Cambridge A-Level Computing Papers & Marking Styling References**:
+   - Authentic typographic layouts, nested task structures (`Task 1.1`, `Task 1.2`), right-aligned mark brackets (`\hfill [3]`), code listing boxes, and standard marking guidance conventions.
+
+---
+
+## 🚀 6. Step-by-Step Spin-Up & Reproducibility Guide
 
 ### Prerequisites
 - Python 3.11+
