@@ -635,6 +635,32 @@ if curr_sess:
         rendered_html = LaTeXVisualRenderer.render_questions_only_html(curr_sess.latex_source, title=curr_sess.title)
         components.html(rendered_html, height=850, scrolling=True)
 
+        st.markdown("---")
+        st.markdown("### 💬 Conversational Paper Editor & Refinement Workbench")
+        st.caption("Prompt Gemini 3.7 Flash to refine, rephrase, add subtasks, adjust difficulty, or rewrite specific tasks across this working exam paper:")
+        
+        col_ref_in, col_ref_btn = st.columns([3.8, 1.2])
+        with col_ref_in:
+            paper_refine_prompt = st.text_input(
+                "Conversational Refinement Prompt",
+                placeholder="e.g. 'In Task 2, change the CSV column from Total_Marks to Percentage and add input validation.'",
+                label_visibility="collapsed",
+                key="paper_refine_prompt_input"
+            )
+        with col_ref_btn:
+            refine_paper_btn = st.button("✨ Refine Paper with AI", type="primary", use_container_width=True)
+            
+        if refine_paper_btn and paper_refine_prompt:
+            with st.spinner("🤖 Gemini 3.7 Flash is refining your exam paper and updating mark schemes..."):
+                updated_sess = st.session_state.orchestrator.refine_full_paper(
+                    session=curr_sess,
+                    refinement_prompt=paper_refine_prompt
+                )
+                st.session_state.current_session = updated_sess
+                st.success("🎉 Exam paper and mark scheme refined successfully!")
+                time.sleep(0.5)
+                st.rerun()
+
     # --------------------------------------------------------------------------
     # TAB 3: Mark Scheme & Rubrics (Clean KaTeX View & Copy LaTeX)
     # --------------------------------------------------------------------------

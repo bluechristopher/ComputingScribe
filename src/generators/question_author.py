@@ -622,7 +622,57 @@ Return a valid JSON object matching this schema with the updated code:
         ms = re.sub(rf"Q{old_num}\b", f"Q{new_number}", ms)
         updated["mark_scheme_code"] = ms
 
-        return updated
+    def refine_full_paper(
+        self,
+        latex_paper_source: str,
+        mark_scheme_source: str,
+        refinement_prompt: str,
+        paper_type: str = "practical"
+    ) -> Dict[str, str]:
+        """
+        Refines a full LaTeX paper and mark scheme based on educator's natural language conversational instructions.
+        """
+        prompt = f"""
+You are an expert Cambridge Computer Science examiner and LaTeX editor.
+The educator wishes to refine and edit the working examination paper and mark scheme.
+
+EDUCATOR'S REFINEMENT REQUEST:
+{refinement_prompt}
+
+CURRENT WORKING LATEX PAPER:
+{latex_paper_source}
+
+CURRENT WORKING MARK SCHEME:
+{mark_scheme_source}
+
+INSTRUCTIONS:
+1. Apply the requested changes precisely to both the question paper and matching mark scheme.
+2. Maintain authentic Cambridge formatting (\\maintask, \\subtask, \\jupytercell, \\Marks, etc. for practical; \\begin{{questions}}, \\item, \\begin{{parts}}, \\Marks for theory).
+3. Return a valid JSON object matching this schema:
+{{
+  "latex_source": "<complete updated LaTeX exam paper source>",
+  "mark_scheme_source": "<complete updated LaTeX mark scheme source>"
+}}
+"""
+        client = AppConfig.get_gemini_client()
+        if client and hasattr(client, "GenerativeModel"):
+            try:
+                model = client.GenerativeModel(AppConfig.DEFAULT_MODEL)
+                response = model.generate_content(
+                    prompt,
+                    generation_config={"response_mime_type": "application/json"}
+                )
+                data = json.loads(response.text)
+                if data.get("latex_source") and data.get("mark_scheme_source"):
+                    return data
+            except Exception as e:
+                print(f"[QuestionAuthor] refine_full_paper error: {e}")
+
+        # Fallback
+        return {
+            "latex_source": latex_paper_source,
+            "mark_scheme_source": mark_scheme_source
+        }
 
     def assemble_full_paper(
         self,

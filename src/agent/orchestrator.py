@@ -238,6 +238,34 @@ class EduScribeOrchestrator:
             paper_type=paper_type
         )
 
+    def refine_full_paper(
+        self,
+        session: ExamSession,
+        refinement_prompt: str
+    ) -> ExamSession:
+        """Applies conversational refinement across the entire working exam session."""
+        res = self.question_author.refine_full_paper(
+            latex_paper_source=session.latex_source,
+            mark_scheme_source=session.mark_scheme_source,
+            refinement_prompt=refinement_prompt,
+            paper_type=session.paper_type
+        )
+        session.latex_source = res.get("latex_source", session.latex_source)
+        session.mark_scheme_source = res.get("mark_scheme_source", session.mark_scheme_source)
+        
+        session_dir = LOCAL_SESSIONS_DIR / session.session_id
+        session_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Recompile PDF with updated changes
+        comp_res = self.latex_compiler.compile(
+            latex_source=session.latex_source,
+            working_dir=session_dir,
+            job_name="paper"
+        )
+        session.pdf_path = str(comp_res.pdf_path) if comp_res.pdf_path else None
+        self.session_manager.save_session(session)
+        return session
+
     def compile_assembled_session(
         self,
         tasks_list: List[Dict[str, Any]],
