@@ -38,9 +38,23 @@ class QuestionAuthor:
         Synthesizes an exam blueprint (objectives, mark distribution, tasks) for H2 Computing 2027 (9569).
         """
         teacher_style = teacher_style or {}
-        preferred_depth = teacher_style.get("preferred_depth", "long_contextual")
+        is_contextual = "contextual" in prompt.lower() or teacher_style.get("preferred_depth") == "long_contextual"
+        preferred_depth = "long_contextual" if is_contextual else teacher_style.get("preferred_depth", "long_contextual")
         target_marks = teacher_style.get("total_marks", 100)
         task_count = teacher_style.get("task_count", 4 if paper_type == "practical" else 5)
+
+        contextual_instructions = """
+CONTEXTUAL DEPTH DIRECTIVES (ACTIVE):
+- For PRACTICAL (Paper 2):
+  * Create an EXTENDED, REAL-WORLD SCENARIO (e.g. Singapore MRT Automated Fare Collection, Hospital Emergency Triage Queue, E-Commerce Warehouse Logistics, or Bank Transaction Ledger).
+  * Structure every subtask with CLEAR, STEP-BY-STEP BULLETED POINT INSTRUCTIONS.
+  * Explicitly specify data types, method signatures, return values, exception handling, and expected console/Jupyter outputs.
+  * Include realistic sample records and structured test tables.
+
+- For THEORY (Paper 1):
+  * Develop a RICH, MULTI-PARAGRAPH DOMAIN SCENARIO establishing entities, business rules, hardware/network architecture, and security constraints.
+  * All question parts must tie directly into the scenario (e.g. applying 1NF-3NF normalisation to the scenario's functional dependencies, constructing trace tables for scenario algorithms, calculating subnets for the scenario branch offices, or evaluating PDPA/AI ethics for scenario data handling).
+""" if is_contextual else ""
 
         system_instruction = f"""
 You are a Principal Examiner for Singapore-Cambridge GCE A-Level H2 Computing (Syllabus 9569 / 2027 examination standards).
@@ -59,6 +73,7 @@ Expected Tasks/Questions: {task_count}
 Educator Preference: {preferred_depth}
 
 User Prompt: {prompt}
+{contextual_instructions}
 Reference Syllabus Context: {retrieved_context}
 
 Return a valid JSON object matching this schema:
@@ -284,16 +299,19 @@ Blueprint:
 
 {dataset_info}
 
-CRITICAL FORMATTING RULES:
+CRITICAL FORMATTING & CONTEXTUAL RULES:
 1. For PRACTICAL papers:
+   - Provide an EXTENDED, REAL-WORLD SCENARIO preamble for each task (e.g. smart ticketing, banking, hospital patient records).
    - Use \\maintask{{1}}, \\maintask{{2}}, etc. for main tasks.
    - Use \\subtask{{1.1}}, \\subtask{{1.2}}, etc. for subtasks.
+   - Break down subtask instructions into CLEAR, STRUCTURED BULLETED POINTS (using \\begin{{itemize}} \\item ... \\end{{itemize}} or itemized steps).
    - Use \\jupytercell{{<in_num>}}{{\\#Task X.Y\\\\Program code}} for code starter boxes.
    - Use \\begin{{testcases}} \\item Test 1: ... \\end{{testcases}} for test cases.
    - ALWAYS use \\Marks{{<n>}} at the end of each question part for right-aligned bracketed marks.
    - Include \\newpage and \\TurnOver between major tasks.
 
 2. For THEORY papers:
+   - Begin questions with a WELL-DEVELOPED DOMAIN SCENARIO establishing background context, business rules, hardware specs, or database schema.
    - Wrap the questions in \\begin{{questions}} ... \\end{{questions}}.
    - Use \\item for main questions.
    - Use \\begin{{parts}} \\item ... \\end{{parts}} for question subparts.

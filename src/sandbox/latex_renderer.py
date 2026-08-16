@@ -314,6 +314,20 @@ class LaTeXVisualRenderer:
                     """)
                     continue
 
+            # Check for Lists
+            if r"\begin{itemize}" in line:
+                html_out.append("<ul style='margin: 8px 0 8px 24px; padding-left: 0;'>")
+                continue
+            if r"\end{itemize}" in line:
+                html_out.append("</ul>")
+                continue
+            if r"\begin{enumerate}" in line or r"\begin{parts}" in line:
+                html_out.append("<ol style='margin: 8px 0 8px 24px; padding-left: 0;'>")
+                continue
+            if r"\end{enumerate}" in line or r"\end{parts}" in line:
+                html_out.append("</ol>")
+                continue
+
             # Process inline formatting & Marks
             marks_html = ""
             marks_m = re.search(r"\\Marks\{([^}]+)\}", line)
@@ -327,7 +341,10 @@ class LaTeXVisualRenderer:
             line = line.replace(r"\_", "_").replace(r"\#", "#").replace(r"\%", "%").replace(r"\&", "&")
             line = re.sub(r"\\[a-zA-Z]+(\[[^\]]*\])?(\{([^}]*)\})?", r"\3", line)
 
-            if line.strip():
+            if line.startswith(r"\item") or line.startswith("item"):
+                clean_item = re.sub(r"^\\item\s*", "", line)
+                html_out.append(f"<li class='clearfix' style='margin: 4px 0;'>{clean_item} {marks_html}</li>")
+            elif line.strip():
                 html_out.append(f"<p class='clearfix' style='margin: 6px 0;'>{line} {marks_html}</p>")
 
         return "\n".join(html_out)
