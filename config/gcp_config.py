@@ -97,7 +97,7 @@ class AppConfig:
     FALLBACK_MODEL = "gemini-2.5-flash"
     
     # GCP Credentials & Project (Vertex AI)
-    GCP_PROJECT = os.getenv("GCP_PROJECT_ID", os.getenv("GCP_PROJECT", "eduscribe-505616"))
+    GCP_PROJECT = os.getenv("GCP_PROJECT_ID", os.getenv("GCP_PROJECT", "asr-comp"))
     GCP_LOCATION = os.getenv("GCP_LOCATION", "asia-southeast1")
     GCS_BUCKET = os.getenv("GCS_BUCKET_NAME", "eduscribe-exam-assets")
     
