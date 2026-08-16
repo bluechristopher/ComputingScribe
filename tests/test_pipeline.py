@@ -161,5 +161,55 @@ class TestEduScribePipeline(unittest.TestCase):
         self.assertEqual(session_t.syllabus_code, "9569")
         print(" [PASS] End-to-End Orchestrator Verified for Dual Paper Types.")
 
+    def test_6_single_question_studio_and_renumbering(self):
+        """Tests single question authoring, conversational refinement, auto-renumbering, and paper assembly."""
+        # 1. Author single task
+        task_1 = self.orchestrator.author_single_task(
+            prompt="Stack ADT implementation in Python",
+            paper_type="practical",
+            category="sec1_linear_adts",
+            task_number=1,
+            total_marks=25
+        )
+        self.assertEqual(task_1["task_number"], 1)
+        self.assertIn(r"\maintask{1}", task_1["latex_code"])
+        self.assertIn(r"\subtask{1.1}", task_1["latex_code"])
+
+        # 2. Refine single task
+        refined = self.orchestrator.refine_single_task(
+            current_task=task_1,
+            refinement_prompt="Require docstring type annotations",
+            paper_type="practical"
+        )
+        self.assertEqual(refined["task_number"], 1)
+
+        # 3. Renumber task from 3 to 1
+        task_3 = self.orchestrator.author_single_task(
+            prompt="OOP Class Hierarchy",
+            paper_type="practical",
+            category="sec3_oop_hierarchies",
+            task_number=3,
+            total_marks=25
+        )
+        self.assertIn(r"\maintask{3}", task_3["latex_code"])
+        
+        renumbered_task = self.orchestrator.renumber_task(task_3, new_number=1, paper_type="practical")
+        self.assertEqual(renumbered_task["task_number"], 1)
+        self.assertIn(r"\maintask{1}", renumbered_task["latex_code"])
+        self.assertIn(r"\subtask{1.1}", renumbered_task["latex_code"])
+
+        # 4. Assemble multiple tasks into unified paper
+        tasks_list = [task_1, renumbered_task]
+        assembled = self.question_author.assemble_full_paper(
+            tasks_list=tasks_list,
+            paper_type="practical",
+            syllabus_code="9569",
+            paper_number="02"
+        )
+        self.assertIn(r"\documentclass", assembled["latex_source"])
+        self.assertEqual(assembled["total_marks"], 50)
+        print(" [PASS] Question-by-Question Studio & Auto-Renumbering Verified.")
+
 if __name__ == "__main__":
     unittest.main()
+

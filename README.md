@@ -163,7 +163,14 @@ ComputingScribe AI demonstrates deep architectural synergy between **Google Clou
 - **Firestore Persistence**: Gemini extracts structured pedagogical rules and stores them under the educator's persistent profile (`teacher_profiles/{teacher_id}`) in **Google Cloud Firestore**. Future generations automatically adapt to the teacher's voice.
 - **RAG Past Paper Grounding**: Teachers can upload past prelim papers (`.pdf`, `.docx`, `.tex`) to ground the agent in their school's specific institutional tone.
 
-### 7. One-Click Multi-Artifact Export Bundle
+### 7. Interactive Question-by-Question Co-Authoring Studio & Auto-Renumbering
+- **Modular Single-Task Authoring**: Supports authoring isolated exam tasks one by one with targeted prompts and syllabus categories.
+- **Live Conversational Refinement**: Educators can prompt the agent to refine specific subtasks (e.g. *"Change part (b) to recursion"*, *"Increase marks to 30"*).
+- **Append & Reorder Queue**: Single questions can be appended to the paper draft and reordered (**⬆️ Move Up** / **⬇️ Move Down** / **🗑️ Delete**).
+- **Automatic Renumbering Engine**: Reordering questions automatically renumbers all `\maintask{X}`, `\subtask{X.y}`, `In [X]:` Jupyter cells, and mark scheme rows across the entire paper!
+- **1-Click Full Assembly & Compilation**: Compiles the assembled question queue into a unified `paper.pdf`, `mark_scheme.pdf`, and `.zip` download.
+
+### 8. One-Click Multi-Artifact Export Bundle
 - Instantly packages a production-ready `.zip` archive containing:
   - `paper.pdf` & `paper.tex` (Exam Question Paper)
   - `mark_scheme.pdf` & `mark_scheme.tex` (Official Cambridge Mark Scheme)

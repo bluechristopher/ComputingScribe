@@ -446,3 +446,30 @@ li[role="option"][aria-selected="true"] div {
 pre, code {
     font-family: 'Fira Code', 'Courier New', monospace !important;
 }
+
+/* ==============================================================================
+   5. COMPILE & BUILD FINAL EXAM PACKAGE BUTTON (BLUE BG + LIGHT BLUE TEXT)
+   ============================================================================== */
+.stButton > button[data-testid="compile-build-btn"],
+div.compile-build-box button,
+button.compile-build-btn {
+    background-color: #1e40af !important; /* Deep Rich Blue Background */
+    color: #93c5fd !important; /* Crisp Light Blue Text */
+    border: 2px solid #60a5fa !important; /* Vibrant Sky Blue Border */
+    font-weight: 800 !important;
+    font-size: 1.05rem !important;
+    border-radius: 10px !important;
+    padding: 10px 24px !important;
+    box-shadow: 0 4px 14px rgba(30, 64, 175, 0.4) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+div.compile-build-box button:hover,
+button.compile-build-btn:hover {
+    background-color: #1d4ed8 !important;
+    color: #ffffff !important;
+    border-color: #bfdbfe !important;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
+    transform: translateY(-1px) !important;
+}
+

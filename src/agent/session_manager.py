@@ -31,6 +31,7 @@ class ExamSession:
         mark_scheme_source: str = "",
         generated_datasets: Optional[List[Dict[str, str]]] = None,
         starter_files: Optional[List[Dict[str, str]]] = None,
+        questions: Optional[List[Dict[str, Any]]] = None,
         status: str = "draft",
         compilation_logs: str = "",
         pdf_path: Optional[str] = None
@@ -50,6 +51,7 @@ class ExamSession:
         self.mark_scheme_source = mark_scheme_source
         self.generated_datasets = generated_datasets or []
         self.starter_files = starter_files or []
+        self.questions = questions or []
         self.status = status
         self.compilation_logs = compilation_logs
         self.pdf_path = pdf_path
@@ -72,6 +74,7 @@ class ExamSession:
             "mark_scheme_source": self.mark_scheme_source,
             "generated_datasets": self.generated_datasets,
             "starter_files": self.starter_files,
+            "questions": self.questions,
             "status": self.status,
             "compilation_logs": self.compilation_logs,
             "pdf_path": self.pdf_path,
@@ -85,17 +88,18 @@ class ExamSession:
             title=data.get("title", "Untitled Session"),
             teacher_id=data.get("teacher_id", "default_teacher"),
             paper_type=data.get("paper_type", "practical"),
-            category=data.get("category", "practical_python"),
-            syllabus_code=data.get("syllabus_code", "9618"),
+            category=data.get("category", "sec1_linear_adts"),
+            syllabus_code=data.get("syllabus_code", "9569"),
             paper_number=data.get("paper_number", "02"),
-            institution=data.get("institution", "Cambridge International Center"),
-            exam_year=data.get("exam_year", "2026"),
-            exam_series=data.get("exam_series", "SPECIMEN"),
+            institution=data.get("institution", "Anderson Serangoon Junior College"),
+            exam_year=data.get("exam_year", "2027"),
+            exam_series=data.get("exam_series", "PRELIM"),
             blueprint=data.get("blueprint", {}),
             latex_source=data.get("latex_source", ""),
             mark_scheme_source=data.get("mark_scheme_source", ""),
             generated_datasets=data.get("generated_datasets", []),
             starter_files=data.get("starter_files", []),
+            questions=data.get("questions", []),
             status=data.get("status", "draft"),
             compilation_logs=data.get("compilation_logs", ""),
             pdf_path=data.get("pdf_path")

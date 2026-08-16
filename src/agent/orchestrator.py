@@ -192,3 +192,151 @@ class EduScribeOrchestrator:
         self.session_manager.save_session(session)
         prog.notify("Complete", "Exam package generated and ready for inspection/export.")
         return session
+
+    def author_single_task(
+        self,
+        prompt: str,
+        paper_type: str = "practical",
+        category: str = "sec1_linear_adts",
+        task_number: int = 1,
+        total_marks: int = 25
+    ) -> Dict[str, Any]:
+        """Authors a single isolated task/question."""
+        teacher_style = self.preference_learner.get_style_for_category(category)
+        return self.question_author.author_single_task(
+            prompt=prompt,
+            paper_type=paper_type,
+            category=category,
+            task_number=task_number,
+            total_marks=total_marks,
+            teacher_style=teacher_style
+        )
+
+    def refine_single_task(
+        self,
+        current_task: Dict[str, Any],
+        refinement_prompt: str,
+        paper_type: str = "practical"
+    ) -> Dict[str, Any]:
+        """Refines a single task based on conversational feedback."""
+        return self.question_author.refine_single_task(
+            current_task=current_task,
+            refinement_prompt=refinement_prompt,
+            paper_type=paper_type
+        )
+
+    def renumber_task(
+        self,
+        task_dict: Dict[str, Any],
+        new_number: int,
+        paper_type: str = "practical"
+    ) -> Dict[str, Any]:
+        """Renumbers a single task's macros and labels."""
+        return self.question_author.renumber_task(
+            task_dict=task_dict,
+            new_number=new_number,
+            paper_type=paper_type
+        )
+
+    def compile_assembled_session(
+        self,
+        tasks_list: List[Dict[str, Any]],
+        paper_type: str = "practical",
+        syllabus_code: str = "9569",
+        paper_number: str = "02",
+        institution: str = "Anderson Serangoon Junior College",
+        exam_year: str = "2027",
+        exam_series: str = "PRELIM",
+        session_id: Optional[str] = None
+    ) -> ExamSession:
+        """Assembles a list of authored tasks into a unified, compilable ExamSession."""
+        sess_id = session_id or f"sess_{uuid.uuid4().hex[:8]}"
+        session_dir = LOCAL_SESSIONS_DIR / sess_id
+        session_dir.mkdir(parents=True, exist_ok=True)
+
+        assembled = self.question_author.assemble_full_paper(
+            tasks_list=tasks_list,
+            paper_type=paper_type,
+            syllabus_code=syllabus_code,
+            paper_number=paper_number,
+            institution=institution,
+            exam_year=exam_year,
+            exam_series=exam_series
+        )
+
+        latex_paper_source = assembled["latex_source"]
+        mark_scheme_source = assembled["mark_scheme_source"]
+        total_marks = assembled["total_marks"]
+
+        # Synthesize companion dataset if practical
+        generated_datasets = []
+        starter_files = []
+        if paper_type == "practical":
+            companion_dataset = self.dataset_generator.generate_dataset(
+                domain_topic="Practical Assessment Tasks",
+                record_count=12,
+                preferred_format="csv"
+            )
+            generated_datasets.append({
+                "filename": companion_dataset.filename,
+                "content": companion_dataset.csv_content
+            })
+            if companion_dataset.sql_schema_content:
+                generated_datasets.append({
+                    "filename": "SCHEMA.sql",
+                    "content": companion_dataset.sql_schema_content
+                })
+            if companion_dataset.starter_python_code:
+                starter_files.append({
+                    "filename": "starter_task.py",
+                    "content": companion_dataset.starter_python_code
+                })
+
+        # Compile in sandbox
+        comp_res = self.latex_compiler.compile(latex_paper_source, session_dir, job_name="paper")
+        ms_res = self.latex_compiler.compile(mark_scheme_source, session_dir, job_name="mark_scheme")
+
+        # Build blueprint summary
+        blueprint_data = {
+            "title": f"Singapore-Cambridge GCE A-Level H2 Computing ({'Paper 2 Practical' if paper_type == 'practical' else 'Paper 1 Written'})",
+            "paper_type": paper_type,
+            "syllabus_code": syllabus_code,
+            "paper_number": paper_number,
+            "total_marks": total_marks,
+            "learning_objectives": [t.get("title", f"Task {idx+1}") for idx, t in enumerate(tasks_list)],
+            "sections": [
+                {
+                    "number": t.get("task_number", idx + 1),
+                    "title": t.get("title", f"Task {idx+1}"),
+                    "topic": t.get("topic", "Syllabus Module"),
+                    "marks": t.get("marks", 25),
+                    "subparts": []
+                }
+                for idx, t in enumerate(tasks_list)
+            ]
+        }
+
+        session = ExamSession(
+            session_id=sess_id,
+            title=f"Assembled H2 Computing {paper_type.capitalize()} Paper ({len(tasks_list)} Tasks)",
+            teacher_id=self.teacher_id,
+            paper_type=paper_type,
+            category="assembled_paper",
+            syllabus_code=syllabus_code,
+            paper_number=paper_number,
+            institution=institution,
+            exam_year=exam_year,
+            exam_series=exam_series,
+            blueprint=blueprint_data,
+            latex_source=comp_res.repaired_source or latex_paper_source,
+            mark_scheme_source=ms_res.repaired_source or mark_scheme_source,
+            generated_datasets=generated_datasets,
+            starter_files=starter_files,
+            questions=tasks_list,
+            status="completed" if comp_res.success else "draft",
+            compilation_logs=comp_res.compilation_log,
+            pdf_path=str(comp_res.pdf_path) if comp_res.pdf_path else None
+        )
+
+        self.session_manager.save_session(session)
+        return session

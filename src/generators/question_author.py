@@ -412,6 +412,290 @@ Output ONLY the LaTeX body to replace % __AGENT_BODY_SLOT__.
 
         return full_ms
 
+    def author_single_task(
+        self,
+        prompt: str,
+        paper_type: str = "practical",
+        category: str = "sec1_linear_adts",
+        task_number: int = 1,
+        total_marks: int = 25,
+        companion_dataset: Optional[Any] = None,
+        teacher_style: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Authors a single standalone task/question with corresponding mark scheme.
+        Supports iterative single-question co-authoring.
+        """
+        is_contextual = "contextual" in prompt.lower()
+        contextual_note = "Provide an extended, realistic real-world scenario with structured step-by-step bulleted subtasks." if is_contextual else ""
+
+        single_prompt = f"""
+You are a Principal Cambridge H2 Computing (9569) Examiner.
+Author a SINGLE STANDALONE {'PRACTICAL TASK' if paper_type == 'practical' else 'THEORY QUESTION'} for an exam paper.
+
+Task Number: {task_number}
+Category: {category}
+Total Marks for this task: {total_marks}
+User Prompt: {prompt}
+{contextual_note}
+
+OUTPUT FORMAT:
+Return a JSON object matching this schema:
+{{
+  "task_number": {task_number},
+  "title": "Task {task_number}: <Title describing the technical challenge>",
+  "topic": "{category}",
+  "marks": {total_marks},
+  "latex_code": "<LaTeX body for this single task using \\maintask{{{task_number}}} or \\item, \\subtask{{{task_number}.x}} or \\begin{{parts}}...\\end{{parts}}, \\jupytercell{{{task_number}}}{{...}}, \\Marks{{<n>}}>",
+  "mark_scheme_code": "<LaTeX tabularx rows for this task's mark scheme table>"
+}}
+"""
+        client = AppConfig.get_gemini_client()
+        if client and hasattr(client, "GenerativeModel"):
+            try:
+                model = client.GenerativeModel(AppConfig.DEFAULT_MODEL)
+                response = model.generate_content(
+                    single_prompt,
+                    generation_config={"response_mime_type": "application/json"}
+                )
+                data = json.loads(response.text)
+                return data
+            except Exception as e:
+                print(f"[QuestionAuthor] Gemini single task authoring failed: {e}")
+
+        # Fallback single task
+        if paper_type == "practical":
+            fb_latex = f"""
+\\maintask{{{task_number}}}
+
+Name your Jupyter Notebook as: \\code{{TASK{task_number}\\_<your name>\\_<centre number>\\_<index number>.ipynb}}
+
+A linear data structure problem requires storing and manipulating customer records using Python.
+
+\\jupytercell{{{task_number}}}{{\\# Task {task_number}.1\\\\Program code}}
+
+\\subtask{{{task_number}.1}}
+
+Write program code to initialise the data structure and implement the insertion function with bounds checking. \\Marks{{6}}
+
+\\subtask{{{task_number}.2}}
+
+Write program code to search and retrieve items from the data structure, handling empty or missing items. \\Marks{{6}}
+
+\\subtask{{{task_number}.3}}
+
+Write driver program code to execute the system with sample test data and display summary metrics. \\Marks{{{total_marks - 12}}}
+"""
+            fb_ms = f"""
+\\textbf{{Task {task_number}.1}} & Implement insertion with bounds checking & \\textbf{{6}} & 1 mark per valid point (bounds check, assignment, pointer update) \\\\
+\\hline
+\\textbf{{Task {task_number}.2}} & Implement search and retrieval logic & \\textbf{{6}} & 1 mark for loop, 1 mark for equality check, 1 mark for empty handling \\\\
+\\hline
+\\textbf{{Task {task_number}.3}} & Driver execution and boundary test verification & \\textbf{{{total_marks - 12}}} & Full execution with output display \\\\
+\\hline
+"""
+        else:
+            fb_latex = f"""
+\\item An algorithm performs data processing and analysis.
+
+\\begin{{parts}}
+  \\item State two advantages of this data structure compared to an array. \\Marks{{4}}
+  \\item Construct a decision table or trace table showing the step-by-step state changes for this algorithm. \\Marks{{8}}
+  \\item Evaluate the Big-O time and space complexity of the algorithm, justifying your answer. \\Marks{{{total_marks - 12}}}
+\\end{{parts}}
+"""
+            fb_ms = f"""
+\\textbf{{Q{task_number}(a)}} & 2 distinct advantages explained & \\textbf{{4}} & 2 marks per advantage \\\\
+\\hline
+\\textbf{{Q{task_number}(b)}} & Correct decision / trace table construction & \\textbf{{8}} & 1 mark per correct row/column \\\\
+\\hline
+\\textbf{{Q{task_number}(c)}} & Big-O complexity justification & \\textbf{{{total_marks - 12}}} & O(n log n) with valid justification \\\\
+\\hline
+"""
+
+        return {
+            "task_number": task_number,
+            "title": f"Task {task_number}: Technical Challenge ({category})",
+            "topic": category,
+            "marks": total_marks,
+            "latex_code": fb_latex.strip(),
+            "mark_scheme_code": fb_ms.strip(),
+            "paper_type": paper_type
+        }
+
+    def refine_single_task(
+        self,
+        current_task: Dict[str, Any],
+        refinement_prompt: str,
+        paper_type: str = "practical"
+    ) -> Dict[str, Any]:
+        """
+        Refines an existing single task using conversational prompting.
+        """
+        refine_instruction = f"""
+You are a Principal Cambridge Examiner.
+Refine and update this specific exam task based on the educator's feedback:
+
+CURRENT TASK:
+Title: {current_task.get('title')}
+Marks: {current_task.get('marks')}
+LaTeX Code:
+{current_task.get('latex_code')}
+
+Mark Scheme Code:
+{current_task.get('mark_scheme_code')}
+
+EDUCATOR REFINEMENT INSTRUCTIONS:
+{refinement_prompt}
+
+OUTPUT FORMAT:
+Return a valid JSON object matching this schema with the updated code:
+{{
+  "task_number": {current_task.get('task_number', 1)},
+  "title": "{current_task.get('title', 'Refined Task')}",
+  "topic": "{current_task.get('topic', 'Topic')}",
+  "marks": {current_task.get('marks', 25)},
+  "latex_code": "<Refined LaTeX code>",
+  "mark_scheme_code": "<Refined LaTeX mark scheme tabular rows>"
+}}
+"""
+        client = AppConfig.get_gemini_client()
+        if client and hasattr(client, "GenerativeModel"):
+            try:
+                model = client.GenerativeModel(AppConfig.DEFAULT_MODEL)
+                response = model.generate_content(
+                    refine_instruction,
+                    generation_config={"response_mime_type": "application/json"}
+                )
+                data = json.loads(response.text)
+                return data
+            except Exception as e:
+                print(f"[QuestionAuthor] Task refinement failed: {e}")
+
+        # Fallback refinement: append refinement note comment
+        updated = dict(current_task)
+        updated["latex_code"] = current_task.get("latex_code", "") + f"\n% Refined with: {refinement_prompt}\n"
+        return updated
+
+    def renumber_task(
+        self,
+        task_dict: Dict[str, Any],
+        new_number: int,
+        paper_type: str = "practical"
+    ) -> Dict[str, Any]:
+        """
+        Renumbers a task's LaTeX macros and labels to a new index (e.g. Task 3 -> Task 1).
+        """
+        old_num = task_dict.get("task_number", 1)
+        if old_num == new_number:
+            return task_dict
+
+        updated = dict(task_dict)
+        updated["task_number"] = new_number
+        
+        # Update title
+        title = updated.get("title", f"Task {old_num}")
+        title = re.sub(rf"Task\s+{old_num}\b", f"Task {new_number}", title, flags=re.IGNORECASE)
+        title = re.sub(rf"Question\s+{old_num}\b", f"Question {new_number}", title, flags=re.IGNORECASE)
+        updated["title"] = title
+
+        # Renumber LaTeX Code
+        latex = updated.get("latex_code", "")
+        # \maintask{X} -> \maintask{new}
+        latex = re.sub(rf"\\maintask\{{{old_num}\}}", f"\\\\maintask{{{new_number}}}", latex)
+        # \subtask{X.y} -> \subtask{new.y}
+        latex = re.sub(rf"\\subtask\{{{old_num}\.([0-9]+)\}}", rf"\\subtask{{{new_number}.\1}}", latex)
+        # \jupytercell{X} -> \jupytercell{new}
+        latex = re.sub(rf"\\jupytercell\{{{old_num}\}}", f"\\\\jupytercell{{{new_number}}}", latex)
+        # TASKX_ -> TASK<new>_
+        latex = re.sub(rf"TASK{old_num}\\_", f"TASK{new_number}\\_", latex)
+        latex = re.sub(rf"Task\s+{old_num}\.([0-9]+)", rf"Task {new_number}.\1", latex)
+        latex = re.sub(rf"Task\s+{old_num}\b", f"Task {new_number}", latex)
+        updated["latex_code"] = latex
+
+        # Renumber Mark Scheme Code
+        ms = updated.get("mark_scheme_code", "")
+        ms = re.sub(rf"Task\s+{old_num}\.([0-9]+)", rf"Task {new_number}.\1", ms)
+        ms = re.sub(rf"Task\s+{old_num}\b", f"Task {new_number}", ms)
+        ms = re.sub(rf"Q{old_num}\b", f"Q{new_number}", ms)
+        updated["mark_scheme_code"] = ms
+
+        return updated
+
+    def assemble_full_paper(
+        self,
+        tasks_list: List[Dict[str, Any]],
+        paper_type: str = "practical",
+        syllabus_code: str = "9569",
+        paper_number: str = "02",
+        institution: str = "Anderson Serangoon Junior College",
+        exam_year: str = "2027",
+        exam_series: str = "PRELIM"
+    ) -> Dict[str, str]:
+        """
+        Assembles a list of individual task dictionaries into full compilable LaTeX paper and mark scheme.
+        """
+        template_name = "cambridge_practical_template.tex" if paper_type == "practical" else "cambridge_theory_template.tex"
+        template_path = TEMPLATES_DIR / template_name
+        with open(template_path, "r", encoding="utf-8") as f:
+            paper_template = f.read()
+
+        ms_template_path = TEMPLATES_DIR / "mark_scheme_template.tex"
+        with open(ms_template_path, "r", encoding="utf-8") as f:
+            ms_template = f.read()
+
+        # Combine LaTeX bodies with page breaks
+        body_parts = []
+        for t in tasks_list:
+            body_parts.append(t.get("latex_code", "").strip())
+
+        separator = "\n\n\\newpage\n\\TurnOver\n\n"
+        if paper_type == "theory":
+            combined_body = "\\begin{questions}\n\n" + separator.join(body_parts) + "\n\n\\end{questions}"
+        else:
+            combined_body = separator.join(body_parts)
+
+        # Build Full LaTeX Paper
+        full_paper = paper_template
+        full_paper = full_paper.replace("((INSTITUTION))", institution)
+        full_paper = full_paper.replace("((EXAM_YEAR))", exam_year)
+        full_paper = full_paper.replace("((EXAM_YEAR_SHORT))", exam_year[-2:] if len(exam_year) >= 2 else "26")
+        full_paper = full_paper.replace("((SYLLABUS_CODE))", syllabus_code)
+        full_paper = full_paper.replace("((PAPER_NUMBER))", paper_number)
+        full_paper = full_paper.replace("((EXAM_SERIES))", exam_series)
+        full_paper = full_paper.replace("% __AGENT_BODY_SLOT__", combined_body)
+
+        # Build Full Mark Scheme
+        ms_rows = []
+        for t in tasks_list:
+            ms_rows.append(t.get("mark_scheme_code", "").strip())
+        
+        combined_ms_table = f"""
+\\begin{{tabularx}}{{\\linewidth}}{{|p{{2.5cm}}|X|c|p{{4.5cm}}|}}
+\\hline
+\\textbf{{Question}} & \\textbf{{Answer / Indicative Content}} & \\textbf{{Marks}} & \\textbf{{Guidance / Partial Credit}} \\\\
+\\hline
+{chr(10).join(ms_rows)}
+\\hline
+\\end{{tabularx}}
+"""
+        total_marks = sum(t.get("marks", 25) for t in tasks_list)
+        full_ms = ms_template
+        full_ms = full_ms.replace("((INSTITUTION))", institution)
+        full_ms = full_ms.replace("((EXAM_YEAR))", exam_year)
+        full_ms = full_ms.replace("((EXAM_YEAR_SHORT))", exam_year[-2:] if len(exam_year) >= 2 else "26")
+        full_ms = full_ms.replace("((SYLLABUS_CODE))", syllabus_code)
+        full_ms = full_ms.replace("((PAPER_NUMBER))", paper_number)
+        full_ms = full_ms.replace("((EXAM_SERIES))", exam_series)
+        full_ms = full_ms.replace("((TOTAL_MARKS))", str(total_marks))
+        full_ms = full_ms.replace("% __AGENT_BODY_SLOT__", combined_ms_table)
+
+        return {
+            "latex_source": full_paper,
+            "mark_scheme_source": full_ms,
+            "total_marks": total_marks
+        }
+
     def _generate_fallback_latex_body(self, blueprint: ExamBlueprint, companion_dataset: Optional[Any]) -> str:
         """Fallback LaTeX body generator."""
         if blueprint.paper_type == "practical":
