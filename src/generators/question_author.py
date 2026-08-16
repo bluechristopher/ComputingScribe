@@ -632,6 +632,8 @@ Return a valid JSON object matching this schema with the updated code:
         ms = re.sub(rf"Q{old_num}\b", f"Q{new_number}", ms)
         updated["mark_scheme_code"] = ms
 
+        return updated
+
     def refine_full_paper(
         self,
         latex_paper_source: str,
