@@ -7,13 +7,20 @@ Renders KaTeX question previews, multi-agent train station progress, and dual au
 """
 
 import os
+import sys
 import io
 import time
 import base64
+from pathlib import Path
+
+# Explicitly ensure repository root is in sys.path across all deployment environments (Cloud Run, Docker, Local)
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-from pathlib import Path
 
 from config.gcp_config import AppConfig, BASE_DIR
 from src.agent.orchestrator import EduScribeOrchestrator, ExamGenerationProgress

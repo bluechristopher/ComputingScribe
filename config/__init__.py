@@ -1,0 +1,1 @@
+"""EduScribe AI Configuration Package"""

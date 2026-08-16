@@ -3,6 +3,7 @@ FROM python:3.11-slim
 # Prevent interactive prompts during apt-get
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH="/app"
 ENV PORT=8501
 
 # Install essential system dependencies and lightweight TeXLive for rapid cloud building
