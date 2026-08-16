@@ -30,22 +30,37 @@
 
 ---
 
-## 📖 2. The Teacher's Perspective: Real-World Pain Points Solved
+## 📖 2. The Teacher's Perspective: Real-World Pain Points & Vision
 
-Setting national and institutional examinations for subjects like **Singapore-Cambridge GCE A-Level H2 Computing (Syllabus 9569 / 2027)** and **Cambridge AS/A-Level (9618)** is an exhausting, multi-hour ordeal for computing educators:
+### 🔍 The Core Problem: The Exhausting Reality of Authoring Technical Examinations
+Setting national and institutional examinations for technical subjects like **Singapore-Cambridge GCE A-Level H2 Computing (Syllabus 9569 / 2027)** and **Cambridge AS/A-Level (9618)** is an exhausting, multi-day cognitive ordeal for computing educators. Even with generic AI chat assistants, setting a high-stakes exam paper suffers from four critical friction points:
 
-1. **Contextual Problem Drafting Burden**: Authoring authentic, high-quality contextual scenarios (e.g. transport AFC gates, triage queues, normalized database schemas) that strictly align with syllabus learning objectives and command words takes days of drafting and refinement.
-2. **Typesetting Friction (Word vs LaTeX)**: 
-   - **Microsoft Word** causes notorious formatting disasters—shifted code boxes, broken table borders, and misaligned margin mark brackets (`[4]`).
-   - **LaTeX** produces publication-grade examination papers, but writing raw LaTeX requires steep technical expertise and extensive debugging. Many educators do not have the time or background to maintain raw TeX documents.
-3. **Synthetic Dataset Fabrication Burden**: Practical programming papers require balanced, clean companion datasets (CSV records, SQL schemas). Manually creating these often introduces subtle data bugs or demographic biases.
+#### 1. The Contextual Scenario Drafting Burden & Syllabus Calibration
+Exam boards mandate that programming and computational questions must not be isolated abstract puzzles; they must be embedded within **realistic, rich contextual domains** (e.g. automated transit fare collection gates, hospital emergency room triage priority queues, parcel logistics fulfillment centers, or banking transaction audit ledgers).  
+- Designing a plausible real-world scenario from scratch, inventing consistent domain entities, structuring companion database attributes, and ensuring that every nested subtask precisely maps to specific syllabus learning objectives and Cambridge Assessment Objectives (AO1 Knowledge, AO2 Application, AO3 Evaluation) takes days of solitary drafting and refinement.
 
-### The Solution: EduScribe AI as Your Autonomous Collaborative Partner
-EduScribe AI acts as an autonomous co-authoring partner that:
-- **Leads the authoring process step-by-step**: Proposes structured exam blueprints, balances mark allotments, generates companion demographic datasets, and formats compilable LaTeX code with official Cambridge preambles.
-- **Constantly adapts to the teacher's unique pedagogical style**: Tracks preferences across specific syllabus modules (e.g., preference for concise prompts vs extended contextual scenarios, code box formats, and rubric granularity) and persists them in **Google Cloud Firestore**.
-- **Self-heals compilation errors**: Runs headless `pdflatex` compilation in a sandbox; if a broken macro occurs, **Gemini 3.7 Flash** diagnoses the error log and repairs the code automatically without requiring the teacher to debug TeX errors.
-- **Renders on-screen typeset papers with zero LaTeX expertise required**: Educators without TeX installed can instantly view authentic Cambridge A4 exam sheets (with KaTeX math, Jupyter cells, pseudocode line numbers, and mark brackets) and export production-ready `.pdf` and `.tex` packages with a single click.
+#### 2. The Typesetting Dilemma: Microsoft Word Alignment Hell vs. LaTeX Technical Barrier
+Every computing educator faces a frustrating typesetting trade-off:
+- **The Microsoft Word Trap**: Word processors are fundamentally unsuitable for technical papers. Indented Python code listings lose precise indentation, monospace fonts break across pagination boundaries, tabular decision matrices and trace tables distort when columns wrap, and right-aligned mark brackets (`\hfill [4]`) shift unpredictably whenever an earlier sentence is edited.
+- **The LaTeX Friction Barrier**: LaTeX is the worldwide gold standard for rigorous examination typography, clean code listing boxes, and formal headers. However, authoring in raw LaTeX requires extensive specialized knowledge. TeX syntax is notoriously unforgiving—a single unescaped underscore in a variable name (`candidate_id`), an unescaped percentage sign (`%`), or a mismatched bracket locks the compiler with cryptic errors. Colleagues without TeX expertise cannot contribute to or maintain exam repositories.
+
+#### 3. The Synthetic Dataset Fabrication & Demographic Integrity Burden
+Lab-based practical programming examinations require authentic companion test datasets (e.g. `CANDIDATES.csv`, sensor streams, relational SQL schemas) for candidate file-processing tasks.  
+- Handcrafting realistic test records with varied boundary values (valid, extreme, abnormal cases) is tedious and error-prone.
+- Crucially, manually generated datasets frequently introduce unintended demographic biases, stereotypical roles, or culturally skewed naming pools.
+
+#### 4. The Amnesiac Chatbot Dilemma (Lack of Pedagogical Memory)
+Generic LLM chat interfaces suffer from persistent amnesia. They do not retain institutional formatting conventions, cannot remember an educator's preferred rubric granularity, and fail to track evolving pedagogical preferences across different syllabus modules. Teachers find themselves re-prompting, re-explaining, and manually cleaning up AI outputs on every attempt.
+
+---
+
+### 🎯 What I Hoped to Achieve: The Autonomous Collaborative Partner
+As a computing teacher, my goal was to build a true **Collaborative Pedagogical Partner**—an agent that acts as an expert co-examiner that:
+1. **Leads the authoring process step-by-step**: Formulates balanced exam blueprints and mark distributions before touching code.
+2. **Generates deep contextual problems on command**: Expands prompts into rich, real-world case scenarios with clear, step-by-step bulleted subtasks for practical papers, and well-developed domain narratives for theory papers when triggered by the word `'contextual'`.
+3. **Democratizes publication-grade LaTeX for all educators**: Completely eliminates the LaTeX learning curve. The agent writes authentic Cambridge TeX code, executes headless compilation inside a containerized sandbox, and self-heals broken syntax automatically using **Gemini 3.7 Flash** reflection loops.
+4. **Guarantees algorithmic fairness & demographic parity**: Automatically balances synthetic datasets with 50/50 gender splits and authentic multiracial Singapore naming distributions (Chinese, Malay, Indian, Eurasian, Caucasian).
+5. **Continuously learns the teacher's unique voice**: Remembers educator feedback and phrasing preferences across every syllabus module in **Google Cloud Firestore**, evolving into a tailored co-authoring partner for entire departments.
 
 ---
 
@@ -117,16 +132,43 @@ EduScribe AI demonstrates deep architectural synergy between **Google Cloud infr
 
 ---
 
-## ✨ 5. Key Features & Functionality
+## ✨ 5. Deep Feature Breakdown & Capabilities
 
-- 🎯 **Full Dual Paper Support (H2 Computing 2027 / 9569 Standards)**:
-  - **Paper 2 (Lab-Based Practical)**: 4 Python programming tasks, Jupyter cells (`\jupytercell`), demographically balanced datasets (`CANDIDATES.csv`), SQL schema scripts (`SCHEMA.sql`), and starter files (`starter_task.py`).
-  - **Paper 1 (Written Theory)**: Structured questions, Cambridge pseudocode listings with two-digit line numbering (`01`, `02`, ...), decision tables with boundary conditions, trace tables, SQL queries, and networking calculations.
-- 💡 **`'contextual'` Trigger Engine**: Including the keyword `'contextual'` triggers extended real-world scenario preambles and step-by-step bulleted subtask specifications for Practical papers, and well-developed domain narratives for Theory papers.
-- ⚖️ **Demographic Fairness Guardrails**: Enforces **50/50 gender parity** and authentic multiracial regional naming distributions (Chinese, Malay, Indian, Eurasian, Caucasian) across synthetic CSV and SQL test datasets.
-- 📜 **On-Screen Typeset Exam Paper**: Instant in-browser rendering of authentic A4 Cambridge exam sheets (with KaTeX math, Jupyter cells, pseudocode line numbers, and mark brackets) with zero local LaTeX installation required.
-- 🧠 **Continuous Feedback Loop (Tab 6)**: Teachers can input natural-language feedback after reviewing a draft (e.g. *"Make subtask instructions more granular with explicit return types"*). Gemini extracts structured rules and updates Firestore.
-- 📦 **One-Click Multi-Artifact Export Archive**: Packages a complete `.zip` containing `paper.pdf`, `paper.tex`, `mark_scheme.pdf`, `mark_scheme.tex`, `CANDIDATES.csv`, `SCHEMA.sql`, and `starter_task.py`.
+### 1. Collaborative Blueprint Authoring & Syllabus Calibration
+- **Structured Pre-Authoring Phase**: Before generating raw LaTeX or code, EduScribe AI formulates a structured **Exam Blueprint** (learning objectives, Assessment Objective weighting, task breakdowns, mark schemes).
+- **Interactive Verification**: Teachers review and adjust mark allocations and question distributions before committing to compilation.
+
+### 2. The `'contextual'` Deep Scenario Engine
+- **Intelligent Keyword Trigger**: Simply including the word `'contextual'` in any prompt instructs the agent to elevate the depth of the generated assessment:
+  - **For Practical Papers (Paper 2)**: Builds an authentic, extended domain scenario (e.g. MRT automated fare gates, hospital patient triage queues, e-commerce warehouse robotics) and breaks subtasks down into **clear, structured bulleted point instructions** with explicit method signatures, parameter types, boundary conditions, and sample console executions.
+  - **For Theory Papers (Paper 1)**: Constructs a **multi-paragraph domain narrative** establishing business rules, relational schemas, network packet routes, and data protection constraints that ground all subsequent question parts.
+
+### 3. Full Dual Paper Support (H2 Computing 2027 / 9569 Standards)
+- **Paper 2 (Lab-Based Practical — 100 Marks)**: Generates 4 Python programming tasks (`\maintask{1}` to `\maintask{4}`), Jupyter input cells (`\jupytercell`), demographically balanced test datasets (`CANDIDATES.csv`), SQL schema scripts (`SCHEMA.sql`), and starter skeleton code (`starter_task.py`).
+- **Paper 1 (Written Theory — 100 Marks)**: Generates structured questions, Cambridge pseudocode listings with two-digit line numbering (`01`, `02`, ...), decision tables with boundary conditions, trace tables, SQL queries, network subnetting calculations, and ethical analysis questions.
+
+### 4. Demographic Fairness & Synthetic Data Synthesizer
+- **Automated Demographic Guardrails**: Eliminates the risk of cultural or gender bias in companion datasets:
+  - **Strict 50/50 Gender Parity** across synthetic candidate rosters.
+  - **Multiracial Regional Representation**: Balanced sampling across Chinese, Malay, Indian, Eurasian, and Caucasian naming pools representative of Singapore and Southeast Asian student cohorts.
+  - **Telemetry Dashboard**: Visual telemetry cards verify balanced cohort metrics in real time.
+
+### 5. Self-Healing pdflatex Compilation Sandbox & Live Typeset A4 Sheets
+- **3-Pass Diagnostic Auto-Repair Loop**: Headless `pdflatex` compiles LaTeX code inside the Docker container. If compilation errors occur (unescaped symbols, syntax locks), Gemini 3.7 Flash captures the stderr log, diagnoses the exact error, repairs the TeX code, and retries automatically.
+- **In-Browser Publication-Grade Typeset Sheet**: For educators without TeX installed locally, EduScribe AI renders an authentic Cambridge A4 exam sheet directly in the browser using KaTeX, complete with running headers, page numbers, Jupyter code frames, and right-aligned mark brackets (`\hfill [4]`).
+
+### 6. Continuous Pedagogical Memory & Phrasing Refinement (Tab 6)
+- **Direct Educator Feedback Loop**: Teachers can input natural-language feedback after reviewing a draft (e.g. *"Make subtask instructions more granular with explicit return types"* or *"Always include docstring requirements in OOP tasks"*).
+- **Firestore Persistence**: Gemini extracts structured pedagogical rules and stores them under the educator's persistent profile (`teacher_profiles/{teacher_id}`) in **Google Cloud Firestore**. Future generations automatically adapt to the teacher's voice.
+- **RAG Past Paper Grounding**: Teachers can upload past prelim papers (`.pdf`, `.docx`, `.tex`) to ground the agent in their school's specific institutional tone.
+
+### 7. One-Click Multi-Artifact Export Bundle
+- Instantly packages a production-ready `.zip` archive containing:
+  - `paper.pdf` & `paper.tex` (Exam Question Paper)
+  - `mark_scheme.pdf` & `mark_scheme.tex` (Official Cambridge Mark Scheme)
+  - `CANDIDATES.csv` & `SCHEMA.sql` (Companion Test Datasets)
+  - `starter_task.py` (Candidate Skeleton Code)
+  - `blueprint.json` (Structured Assessment Metadata)
 
 ---
 
