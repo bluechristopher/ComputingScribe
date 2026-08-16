@@ -1,7 +1,7 @@
 """
 ComputingScribe AI - GCP & Vertex AI Configuration Module
 Handles Vertex AI, Gemini 3.7 Flash, Firestore, and Cloud Storage configurations.
-Uses global region for Gemini 3.7 Flash on Vertex AI with zero API keys required in production,
+Uses us-central1 regional endpoint for Vertex AI with zero API keys required in production,
 and multi-model fallback (gemini-3.7-flash -> gemini-2.5-flash -> gemini-2.0-flash -> gemini-1.5-flash).
 """
 
@@ -32,8 +32,8 @@ class VertexAIModelWrapper:
         # Candidate model names on Vertex AI in order of preference
         self.model_candidates = [
             model_name,
-            "gemini-3.7-flash",
             "gemini-2.5-flash",
+            "gemini-3.7-flash",
             "gemini-2.0-flash",
             "gemini-1.5-flash"
         ]
@@ -99,19 +99,19 @@ class UnifiedGeminiClient:
         self.client_type = client_type
         self.raw_client = raw_client
 
-    def GenerativeModel(self, model_name: str = "gemini-3.7-flash") -> VertexAIModelWrapper:
+    def GenerativeModel(self, model_name: str = "gemini-2.5-flash") -> VertexAIModelWrapper:
         return VertexAIModelWrapper(model_name, self.client_type, self.raw_client)
 
 
 class AppConfig:
     # Model Configuration
-    DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
-    FALLBACK_MODEL = "gemini-2.5-flash"
+    DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    FALLBACK_MODEL = "gemini-1.5-flash"
     
-    # GCP Credentials & Project (Vertex AI)
-    GCP_PROJECT = os.getenv("GCP_PROJECT_ID", os.getenv("GCP_PROJECT", "asr-comp"))
-    # For Gemini 3.7 Flash on Vertex AI, use global region
-    GCP_LOCATION = os.getenv("GCP_LOCATION", "global")
+    # GCP Credentials & Project (Vertex AI) - Automatically detect project in Cloud Run
+    GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT_ID") or os.getenv("GCP_PROJECT") or "eduscribe-505616"
+    # Vertex AI requires a valid regional location (us-central1 supports all Gemini models)
+    GCP_LOCATION = os.getenv("GCP_LOCATION", "us-central1")
     GCS_BUCKET = os.getenv("GCS_BUCKET_NAME", "computingscribe-assets")
     
     @classmethod
@@ -120,31 +120,30 @@ class AppConfig:
         return bool(
             os.getenv("K_SERVICE") or
             os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or
-            os.getenv("GCP_SA_KEY")
+            os.getenv("GCP_SA_KEY") or
+            os.getenv("GOOGLE_CLOUD_PROJECT")
         )
 
     @classmethod
     def get_gemini_client(cls) -> Optional[UnifiedGeminiClient]:
         """
         Initializes and returns the Gemini client.
-        In Google Cloud (Cloud Run), uses native Vertex AI on global endpoint via IAM roles.
+        In Google Cloud (Cloud Run), uses native Vertex AI on us-central1 endpoint via IAM roles.
         In local dev, uses local ADC or fallback API Key if present.
         """
         # 1. In Google Cloud Production: Vertex AI via Google GenAI SDK
         if cls.is_cloud_environment() and cls.GCP_PROJECT:
-            # Try global location first for Gemini 3.7 Flash, then us-central1
-            for loc in [cls.GCP_LOCATION, "global", "us-central1"]:
+            try:
+                from google import genai
+                client = genai.Client(vertexai=True, project=cls.GCP_PROJECT, location=cls.GCP_LOCATION)
+                return UnifiedGeminiClient("GENAI_SDK", client)
+            except Exception as e1:
                 try:
-                    from google import genai
-                    client = genai.Client(vertexai=True, project=cls.GCP_PROJECT, location=loc)
-                    return UnifiedGeminiClient("GENAI_SDK", client)
-                except Exception as e1:
-                    try:
-                        import vertexai
-                        vertexai.init(project=cls.GCP_PROJECT, location=loc)
-                        return UnifiedGeminiClient("VERTEX_AI", None)
-                    except Exception as e2:
-                        print(f"[AppConfig] Vertex AI initialization note on {loc}: {e1} / {e2}")
+                    import vertexai
+                    vertexai.init(project=cls.GCP_PROJECT, location=cls.GCP_LOCATION)
+                    return UnifiedGeminiClient("VERTEX_AI", None)
+                except Exception as e2:
+                    print(f"[AppConfig] Vertex AI initialization note on {cls.GCP_LOCATION}: {e1} / {e2}")
 
         # 2. Local fallback if API Key exists
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
@@ -158,13 +157,12 @@ class AppConfig:
 
         # 3. Try Vertex AI client as last resort
         if cls.GCP_PROJECT:
-            for loc in [cls.GCP_LOCATION, "global", "us-central1"]:
-                try:
-                    from google import genai
-                    client = genai.Client(vertexai=True, project=cls.GCP_PROJECT, location=loc)
-                    return UnifiedGeminiClient("GENAI_SDK", client)
-                except Exception:
-                    pass
+            try:
+                from google import genai
+                client = genai.Client(vertexai=True, project=cls.GCP_PROJECT, location=cls.GCP_LOCATION)
+                return UnifiedGeminiClient("GENAI_SDK", client)
+            except Exception:
+                pass
                 
         return None
 
