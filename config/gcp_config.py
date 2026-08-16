@@ -130,15 +130,29 @@ class AppConfig:
     @classmethod
     def get_gemini_client(cls) -> Optional[UnifiedGeminiClient]:
         """
-        Initializes and returns the Gemini client with seamless fallback:
-        Tier 1: Native Vertex AI via IAM.
-        Tier 2: Secure Secret Manager GEMINI_API_KEY via Google GenAI SDK.
-        Tier 3: Local/Legacy SDK.
+        Initializes and returns the Gemini client with priority hierarchy:
+        Option 1 (Primary): Secure Secret Manager / Environment GEMINI_API_KEY via Google GenAI SDK.
+        Option 2 (Secondary Fallback): Native Vertex AI on us-central1 via IAM.
+        Option 3 (Tertiary Fallback): Legacy SDK.
         """
         api_key = (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or "").strip()
 
-        # 1. Tier 1: In Google Cloud Production - Native Vertex AI via Google GenAI SDK
-        if cls.is_cloud_environment() and not api_key:
+        # 1. Option 1 (PRIMARY): Secure Secret Manager API Key via Google GenAI SDK
+        if api_key:
+            try:
+                from google import genai
+                client = genai.Client(api_key=api_key)
+                return UnifiedGeminiClient("GENAI_SDK_KEY", client)
+            except Exception as e:
+                try:
+                    import google.generativeai as legacy_genai
+                    legacy_genai.configure(api_key=api_key)
+                    return UnifiedGeminiClient("GOOGLE_GENAI", legacy_genai)
+                except Exception as e2:
+                    print(f"[AppConfig] Note initializing GenAI API Key: {e} / {e2}")
+
+        # 2. Option 2 (SECONDARY FALLBACK): Native Vertex AI via Google GenAI SDK / IAM
+        if cls.is_cloud_environment() or cls.GCP_PROJECT:
             try:
                 from google import genai
                 client = genai.Client(vertexai=True, project=cls.GCP_PROJECT, location=cls.GCP_LOCATION)
@@ -151,29 +165,6 @@ class AppConfig:
                 except Exception as e2:
                     print(f"[AppConfig] Vertex AI initialization note on {cls.GCP_LOCATION}: {e1} / {e2}")
 
-        # 2. Tier 2: Secure Secret Manager / Environment API Key via new Google GenAI SDK
-        if api_key:
-            try:
-                from google import genai
-                client = genai.Client(api_key=api_key)
-                return UnifiedGeminiClient("GENAI_SDK_KEY", client)
-            except Exception as e:
-                try:
-                    import google.generativeai as legacy_genai
-                    legacy_genai.configure(api_key=api_key)
-                    return UnifiedGeminiClient("GOOGLE_GENAI", legacy_genai)
-                except Exception as e2:
-                    print(f"[AppConfig] Warning initializing GenAI API Key: {e} / {e2}")
-
-        # 3. Tier 3: Try Vertex AI client as last resort
-        if cls.GCP_PROJECT:
-            try:
-                from google import genai
-                client = genai.Client(vertexai=True, project=cls.GCP_PROJECT, location=cls.GCP_LOCATION)
-                return UnifiedGeminiClient("GENAI_SDK", client)
-            except Exception:
-                pass
-                
         return None
 
     @classmethod
