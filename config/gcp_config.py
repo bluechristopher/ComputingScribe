@@ -1,7 +1,9 @@
 """
 ComputingScribe AI - GCP & Vertex AI Configuration Module
 Handles Vertex AI, Gemini Models, Firestore, and Cloud Storage configurations.
-Sanitizes all project and location strings to guarantee valid gRPC metadata headers.
+Supports dual enterprise tiers:
+- Tier 1: Native Vertex AI via Google Cloud IAM (zero keys).
+- Tier 2 (Secure Fallback): Google Cloud Secret Manager injected GEMINI_API_KEY via Google GenAI SDK.
 """
 
 import os
@@ -23,12 +25,12 @@ LOCAL_PREFS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class VertexAIModelWrapper:
-    """Unified wrapper providing generate_content interface across Vertex AI and GenAI SDK with multi-model fallback."""
+    """Unified wrapper providing generate_content interface across Vertex AI, GenAI API Key, and SDKs."""
     def __init__(self, model_name: str, client_type: str, raw_client: Any):
         self.model_name = str(model_name).strip()
         self.client_type = client_type
         self.raw_client = raw_client
-        # Candidate model names on Vertex AI in order of preference
+        # Candidate model names in order of speed and capability
         self.model_candidates = [
             self.model_name,
             "gemini-2.5-flash",
@@ -44,8 +46,8 @@ class VertexAIModelWrapper:
 
         generation_config = generation_config or {}
 
-        # 1. Google GenAI SDK (Vertex AI mode)
-        if self.client_type == "GENAI_SDK" and self.raw_client:
+        # 1. Google GenAI SDK (Vertex AI mode or Secure API Key mode)
+        if self.client_type in ["GENAI_SDK", "GENAI_SDK_KEY"] and self.raw_client:
             for m_candidate in self.model_candidates:
                 try:
                     config_kwargs = {}
@@ -78,7 +80,7 @@ class VertexAIModelWrapper:
                     print(f"[VertexAIWrapper] vertexai SDK error on model {m_candidate}: {e}")
                     continue
 
-        # 3. google.generativeai fallback (API key mode)
+        # 3. google.generativeai fallback (Legacy API key mode)
         elif self.client_type == "GOOGLE_GENAI" and self.raw_client:
             for m_candidate in self.model_candidates:
                 try:
@@ -128,37 +130,42 @@ class AppConfig:
     @classmethod
     def get_gemini_client(cls) -> Optional[UnifiedGeminiClient]:
         """
-        Initializes and returns the Gemini client.
-        In Google Cloud (Cloud Run), uses native Vertex AI on us-central1 endpoint via IAM roles.
-        In local dev, uses local ADC or fallback API Key if present.
+        Initializes and returns the Gemini client with seamless fallback:
+        Tier 1: Native Vertex AI via IAM.
+        Tier 2: Secure Secret Manager GEMINI_API_KEY via Google GenAI SDK.
+        Tier 3: Local/Legacy SDK.
         """
-        # 1. In Google Cloud Production: Vertex AI via Google GenAI SDK
-        if cls.is_cloud_environment():
-            # A. Try ambient GenAI client (Cloud Run auto-detects project)
+        api_key = (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or "").strip()
+
+        # 1. Tier 1: In Google Cloud Production - Native Vertex AI via Google GenAI SDK
+        if cls.is_cloud_environment() and not api_key:
             try:
                 from google import genai
                 client = genai.Client(vertexai=True, project=cls.GCP_PROJECT, location=cls.GCP_LOCATION)
                 return UnifiedGeminiClient("GENAI_SDK", client)
             except Exception as e1:
                 try:
-                    # Fallback to pure vertexai.init with sanitized project
                     import vertexai
                     vertexai.init(project=cls.GCP_PROJECT, location=cls.GCP_LOCATION)
                     return UnifiedGeminiClient("VERTEX_AI", None)
                 except Exception as e2:
                     print(f"[AppConfig] Vertex AI initialization note on {cls.GCP_LOCATION}: {e1} / {e2}")
 
-        # 2. Local fallback if API Key exists
-        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        # 2. Tier 2: Secure Secret Manager / Environment API Key via new Google GenAI SDK
         if api_key:
             try:
-                import google.generativeai as genai
-                genai.configure(api_key=api_key.strip())
-                return UnifiedGeminiClient("GOOGLE_GENAI", genai)
+                from google import genai
+                client = genai.Client(api_key=api_key)
+                return UnifiedGeminiClient("GENAI_SDK_KEY", client)
             except Exception as e:
-                print(f"[AppConfig] Warning initializing google.generativeai: {e}")
+                try:
+                    import google.generativeai as legacy_genai
+                    legacy_genai.configure(api_key=api_key)
+                    return UnifiedGeminiClient("GOOGLE_GENAI", legacy_genai)
+                except Exception as e2:
+                    print(f"[AppConfig] Warning initializing GenAI API Key: {e} / {e2}")
 
-        # 3. Try Vertex AI client as last resort
+        # 3. Tier 3: Try Vertex AI client as last resort
         if cls.GCP_PROJECT:
             try:
                 from google import genai
