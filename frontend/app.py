@@ -1,77 +1,75 @@
 """
-EduScribe AI - Web Application
-The adaptive co-authoring agent for technical educators.
+EduScribe AI - Streamlit Web Application
+Collaborative Co-Authoring Partner for Singapore-Cambridge GCE A-Level H2 Computing (9569).
+Renders KaTeX question previews, multi-agent train station progress, and self-healing LaTeX packages.
 """
 
 import os
-import sys
 import io
+import time
+import base64
+import pandas as pd
+import streamlit as st
+import streamlit.components.v1 as components
 from pathlib import Path
 
-# Add project root to sys.path
-BASE_DIR = Path(__file__).resolve().parent.parent
-if str(BASE_DIR) not in sys.path:
-    sys.path.insert(0, str(BASE_DIR))
-
-import streamlit as st
-import pandas as pd
-
-from config.gcp_config import AppConfig
+from config.gcp_config import AppConfig, BASE_DIR
 from src.agent.orchestrator import EduScribeOrchestrator, ExamGenerationProgress
-from src.agent.session_manager import SessionManager, ExamSession
 from src.agent.preference_learner import PreferenceLearner
+from src.agent.session_manager import SessionManager, ExamSession
 from src.sandbox.code_executor import CodeExecutor
+from src.sandbox.latex_renderer import LaTeXVisualRenderer
 
 # Page Configuration
 st.set_page_config(
-    page_title="EduScribe AI | Cambridge Exam Authoring Agent",
-    page_icon="📝",
+    page_title="EduScribe AI | H2 Computing Co-Authoring Partner",
+    page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Load Custom Montserrat CSS
-css_path = BASE_DIR / "frontend" / "style.css"
-if css_path.exists():
-    with open(css_path, "r", encoding="utf-8") as f:
+# Load Custom CSS
+css_file = Path(__file__).resolve().parent / "style.css"
+if css_file.exists():
+    with open(css_file, "r", encoding="utf-8") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Session State Initialization
+# Initialize Session State
+if "teacher_id" not in st.session_state:
+    st.session_state.teacher_id = "default_educator"
+
 if "orchestrator" not in st.session_state:
-    st.session_state.orchestrator = EduScribeOrchestrator()
+    st.session_state.orchestrator = EduScribeOrchestrator(teacher_id=st.session_state.teacher_id)
+
 if "current_session" not in st.session_state:
     st.session_state.current_session = None
+
 if "compilation_logs" not in st.session_state:
     st.session_state.compilation_logs = []
-if "teacher_id" not in st.session_state:
-    st.session_state.teacher_id = "default_teacher"
 
-session_mgr = SessionManager()
-pref_learner = PreferenceLearner(st.session_state.teacher_id)
+pref_learner: PreferenceLearner = st.session_state.orchestrator.preference_learner
+session_mgr: SessionManager = st.session_state.orchestrator.session_manager
 
 # ==============================================================================
-# SIDEBAR: Teacher Profile, GCP Config & Session Management
+# SIDEBAR: AI Engine, Teacher Profile, Saved Drafts & Enhanced RAG Ingestion
 # ==============================================================================
 with st.sidebar:
-    st.markdown("### 👩‍🏫 Educator Profile")
-    teacher_id_input = st.text_input(
-        "Teacher ID / Profile",
-        value=st.session_state.teacher_id,
-        help="Loads category preferences and historical exam drafts."
-    )
-    if teacher_id_input != st.session_state.teacher_id:
-        st.session_state.teacher_id = teacher_id_input
-        st.session_state.orchestrator.set_teacher_id(teacher_id_input)
-        st.rerun()
-
+    st.markdown("## 🎓 EduScribe AI")
+    st.caption("Collaborative Partner for Technical Educators")
+    
     st.markdown("---")
     st.markdown("### ⚡ AI Engine & Security")
-    AppConfig.DEFAULT_MODEL = "gemini-3.7-flash"
-    st.markdown("🤖 **Core Model**: `Gemini 3.7 Flash` *(Default)*")
-    st.markdown("🔒 **Security**: Credentials Secured Server-Side")
+    st.markdown("🤖 **Core Model**: `Gemini 3.7 Flash` *(Vertex AI)*")
+    st.markdown("🔒 **Security**: Google Cloud IAM Secured *(No API Key in Client)*")
+    st.caption("Infrastructure: 🟢 Serverless on Google Cloud Run")
     
-    gcp_status = "🟢 Google Cloud Run & Vertex AI Active" if AppConfig.is_gcp_active() else "🟢 Cloud Engine Active"
-    st.caption(f"Infrastructure: {gcp_status}")
+    st.markdown("---")
+    st.markdown("### 👩‍🏫 Educator Profile")
+    teacher_name = st.text_input("Teacher ID / Handle", value=st.session_state.teacher_id)
+    if teacher_name != st.session_state.teacher_id:
+        st.session_state.teacher_id = teacher_name
+        st.session_state.orchestrator.set_teacher_id(teacher_name)
+        st.success(f"Loaded memory profile for: {teacher_name}")
 
     st.markdown("---")
     st.markdown("### 📂 Past Sessions & Recovery")
@@ -105,16 +103,49 @@ with st.sidebar:
     else:
         st.caption("No historical sessions found.")
 
+    # --------------------------------------------------------------------------
+    # Enhanced RAG Ingestion Section with High-Res PDF & MS Word Icons
+    # --------------------------------------------------------------------------
     st.markdown("---")
     st.markdown("### 📚 Ingest Past Papers (RAG)")
+    st.caption("Upload school prelims or past papers to ground phrasing style.")
+    
     uploaded_files = st.file_uploader(
-        "Upload scanned .pdf or Word .docx past papers",
+        "Upload reference papers",
         type=["pdf", "docx", "txt", "tex"],
         accept_multiple_files=True
     )
+    
     if uploaded_files:
         count = st.session_state.orchestrator.ingest_past_papers(uploaded_files)
-        st.success(f"Indexed {count} reference documents for style grounding!")
+        st.success(f"Indexed {count} reference document(s) for style grounding!")
+        
+        st.markdown("#### 📑 Grounded Reference Papers:")
+        for uf in uploaded_files:
+            file_name = uf.name
+            file_size_kb = round(len(uf.getvalue()) / 1024, 1)
+            
+            # Select High-Res Official Icon
+            if file_name.lower().endswith(".pdf"):
+                icon_url = "https://upload.wikimedia.org/wikipedia/commons/1/1a/Adobe_Reader_XI_icon.png"
+                badge_type = "PDF Document"
+            elif file_name.lower().endswith(".docx"):
+                icon_url = "https://upload.wikimedia.org/wikipedia/commons/e/e8/Microsoft_Office_Word_%282025%E2%80%93present%29.svg"
+                badge_type = "MS Word Document"
+            else:
+                icon_url = "https://upload.wikimedia.org/wikipedia/commons/9/9b/TeX_logo.svg"
+                badge_type = "LaTeX Source"
+
+            card_html = f"""
+            <div style="display: flex; align-items: center; background: #1e293b; border: 1px solid #3b82f6; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;">
+                <img src="{icon_url}" style="width: 42px; height: 42px; object-fit: contain; margin-right: 12px; flex-shrink: 0;" />
+                <div style="overflow: hidden; text-overflow: ellipsis; word-break: break-word;">
+                    <div style="font-weight: 700; font-size: 0.9rem; color: #f8fafc; line-height: 1.3;">{file_name}</div>
+                    <div style="font-size: 0.75rem; color: #93c5fd; margin-top: 2px;">{badge_type} • {file_size_kb} KB <span style="background: #065f46; color: #6ee7b7; padding: 1px 5px; border-radius: 4px; font-weight: bold; margin-left: 4px;">Indexed ✅</span></div>
+                </div>
+            </div>
+            """
+            st.markdown(card_html, unsafe_allow_html=True)
 
 # ==============================================================================
 # MAIN PANEL: Header & Hero
@@ -123,10 +154,10 @@ st.markdown("""
 <div class="main-header">
     <div class="main-title">EduScribe AI</div>
     <div class="main-tagline">
-        The adaptive co-authoring agent for technical educators: turning syllabus standards into compiled LaTeX papers, balanced synthetic datasets, and verified mark schemes.
+        The adaptive co-authoring partner for technical educators: turning syllabus standards into compiled LaTeX papers, balanced synthetic datasets, and verified mark schemes.
     </div>
     <div style="margin-top: 12px;">
-        <span class="badge-pill badge-gemini">Gemini 3.7 Flash</span>
+        <span class="badge-pill badge-gemini">Gemini 3.7 Flash on Vertex AI</span>
         <span class="badge-pill badge-latex">pdflatex Self-Healing</span>
         <span class="badge-pill badge-fairness">Demographic Fairness Guardrails</span>
     </div>
@@ -135,7 +166,7 @@ st.markdown("""
 
 # Paper Creation Form
 with st.expander("🛠️ Exam Specifications & Co-Authoring Prompt", expanded=True if not st.session_state.current_session else False):
-    # Row 1: Paper Type & Syllabus Topic Selector (Wide Columns)
+    # Row 1: Paper Type & Syllabus Topic Selector
     col_paper, col_topic = st.columns([1, 1.5])
     
     with col_paper:
@@ -160,7 +191,6 @@ with st.expander("🛠️ Exam Specifications & Co-Authoring Prompt", expanded=T
             "sec3_web_networks_security": "Section 3: Web Apps (Flask/HTTP), OSI/TCP-IP, Subnetting & Security",
             "sec4_ethics_ai_pdpa": "Section 4: PDPA, AI/ML Ethics & Cybersecurity"
         }
-        default_cat = "sec1_linear_adts" if paper_type == "practical" else "sec2_logic_decision_tables"
         category = st.selectbox(
             "2027 Syllabus Section / Core Topic",
             options=list(category_options.keys()),
@@ -183,52 +213,115 @@ with st.expander("🛠️ Exam Specifications & Co-Authoring Prompt", expanded=T
 
     # Authoring Prompt
     default_sample_prompt = (
-        "Create an H2 Computing Paper 2 practical task on implementing a Stack abstract data type in Python (push, pop, underflow check) and processing CANDIDATES.csv to calculate distinction metrics and generate a report."
+        "Create a contextual H2 Computing Paper 2 practical task on implementing a Stack abstract data type in Python (push, pop, underflow check) and processing CANDIDATES.csv to calculate distinction metrics and generate a report."
         if paper_type == "practical" else
-        "Create an H2 Computing Paper 1 section featuring an inventory stock decision table with boundary conditions, a recursive Mystery() function trace table with Big-O complexity analysis, and 3NF database normalisation questions."
+        "Create a contextual H2 Computing Paper 1 section featuring an inventory stock decision table with boundary conditions, a recursive Mystery() function trace table with Big-O complexity analysis, and 3NF database normalisation questions."
     )
     user_prompt = st.text_area(
         "Exam Authoring Prompt & Learning Objectives",
         value=default_sample_prompt,
         height=110,
-        help="Specify the algorithms, data structures, scenarios, or syllabus objectives you want the co-authoring agent to construct."
+        help="Specify the algorithms, data structures, scenarios, or syllabus objectives you want the co-authoring agent to construct. Add 'contextual' for rich scenarios."
     )
 
-    col_btn, col_chk = st.columns([1, 2])
+    col_btn, col_hint = st.columns([1, 2])
     with col_btn:
         generate_btn = st.button("🚀 Author & Compile Exam Package", type="primary", use_container_width=True)
+    with col_hint:
+        st.caption("💡 *Tip: Adding the word `'contextual'` triggers extended real-world scenarios and step-by-step bulleted subtasks.*")
 
-# Handle Generation
+# ==============================================================================
+# MULTI-AGENT TRAIN STATION PROGRESS VISUALIZER
+# ==============================================================================
 if generate_btn:
-    progress_placeholder = st.empty()
-    status_container = st.container()
+    train_station_placeholder = st.empty()
+    log_placeholder = st.empty()
     
     logs = []
+    stations = [
+        ("Station 1: Memory & Style Agent", "🧠 Querying persistent educator profile in Cloud Firestore..."),
+        ("Station 2: RAG Grounding Agent", "📚 Scanning syllabus 9569 standards & indexing exam exemplars..."),
+        ("Station 3: Blueprint Architect Agent", "📐 Synthesizing learning objectives & mark allocations on Vertex AI..."),
+        ("Station 4: Demographic Synthesizer Agent", "⚖️ Generating 50/50 gender balanced datasets & SQL schemas..."),
+        ("Station 5: Golden TeX Authoring Agent", "✍️ Drafting Cambridge-compliant LaTeX exam paper & mark scheme..."),
+        ("Station 6: Self-Healing Sandbox Agent", "🔄 Executing pdflatex compilation & 3-pass Gemini self-healing..."),
+        ("Station 7: Artifact Packaging Agent", "📦 Persisting session state & bundling .zip download package...")
+    ]
+
+    def render_train_station(current_station_idx: int, active_msg: str):
+        station_boxes = []
+        for idx, (s_name, s_desc) in enumerate(stations):
+            if idx < current_station_idx:
+                status_icon = "✅"
+                bg_color = "#ecfdf5"
+                border_color = "#10b981"
+                text_color = "#065f46"
+            elif idx == current_station_idx:
+                status_icon = "🚉 ⚡"
+                bg_color = "#eff6ff"
+                border_color = "#2563eb"
+                text_color = "#1e3a8a"
+            else:
+                status_icon = "⏳"
+                bg_color = "#f8fafc"
+                border_color = "#cbd5e1"
+                text_color = "#64748b"
+
+            station_boxes.append(f"""
+            <div style="flex: 1; min-width: 130px; background: {bg_color}; border: 2px solid {border_color}; border-radius: 8px; padding: 8px 10px; margin: 4px; text-align: center;">
+                <div style="font-size: 1.1rem;">{status_icon}</div>
+                <div style="font-weight: 700; font-size: 0.8rem; color: {text_color}; margin-top: 4px;">{s_name.split(':')[0]}</div>
+                <div style="font-size: 0.7rem; color: {text_color}; opacity: 0.9;">{s_name.split(':')[1]}</div>
+            </div>
+            """)
+        
+        track_html = f"""
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin: 16px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="font-weight: 800; font-size: 1.05rem; color: #0f172a; margin-bottom: 10px;">
+                🚂 Multi-Agent Co-Authoring Pipeline (Station {current_station_idx + 1} of 7 Active)
+            </div>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+                {''.join(station_boxes)}
+            </div>
+            <div style="margin-top: 12px; font-size: 0.88rem; color: #1e3a8a; background: #f0fdf4; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #10b981;">
+                <strong>Current Action:</strong> {active_msg}
+            </div>
+        </div>
+        """
+        train_station_placeholder.markdown(track_html, unsafe_allow_html=True)
+
     def on_progress(step: str, msg: str):
         logs.append(f"**[{step}]** {msg}")
-        progress_placeholder.info(f"🔄 **{step}**: {msg}")
+        current_idx = 0
+        for idx, (s_name, _) in enumerate(stations):
+            if s_name.split(':')[0] in step:
+                current_idx = idx
+                break
+        render_train_station(current_idx, msg)
 
     progress_handler = ExamGenerationProgress(log_callback=on_progress)
     
-    with st.spinner("EduScribe AI is orchestrating blueprint, dataset synthesis, and LaTeX compilation..."):
-        session = st.session_state.orchestrator.generate_exam_package(
-            user_prompt=user_prompt,
-            paper_type=paper_type,
-            category=category,
-            syllabus_code=syllabus_code[:4],
-            paper_number=paper_number,
-            institution=institution,
-            exam_year=exam_year,
-            exam_series=exam_series,
-            progress=progress_handler
-        )
-        st.session_state.current_session = session
-        st.session_state.compilation_logs = logs
-        progress_placeholder.success("✅ Examination package synthesized, compiled, and verified successfully!")
-        st.rerun()
+    render_train_station(0, "Initiating multi-agent pipeline on Google Cloud Run...")
+    
+    session = st.session_state.orchestrator.generate_exam_package(
+        user_prompt=user_prompt,
+        paper_type=paper_type,
+        category=category,
+        syllabus_code=syllabus_code[:4],
+        paper_number=paper_number,
+        institution=institution,
+        exam_year=exam_year,
+        exam_series=exam_series,
+        progress=progress_handler
+    )
+    st.session_state.current_session = session
+    st.session_state.compilation_logs = logs
+    render_train_station(6, "All 7 agents completed their tasks successfully!")
+    time.sleep(0.8)
+    st.rerun()
 
 # ==============================================================================
-# DISPLAY ARTEFACTS & RESULTS
+# DISPLAY ARTIFACTS & RESULTS
 # ==============================================================================
 curr_sess: ExamSession = st.session_state.current_session
 
@@ -242,40 +335,44 @@ if curr_sess:
     with m2:
         st.markdown(f"<div class='metric-box'><div class='metric-value' style='color: #0f172a; font-weight: 800;'>{curr_sess.syllabus_code}/{curr_sess.paper_number}</div><div class='metric-label' style='color: #475569; font-weight: 600;'>Paper Code</div></div>", unsafe_allow_html=True)
     with m3:
-        total_m = curr_sess.blueprint.get("total_marks", 75) if isinstance(curr_sess.blueprint, dict) else 75
+        total_m = curr_sess.blueprint.get("total_marks", 100) if isinstance(curr_sess.blueprint, dict) else 100
         st.markdown(f"<div class='metric-box'><div class='metric-value' style='color: #0f172a; font-weight: 800;'>{total_m}</div><div class='metric-label' style='color: #475569; font-weight: 600;'>Total Marks</div></div>", unsafe_allow_html=True)
     with m4:
         tasks_count = len(curr_sess.blueprint.get("sections", [])) if isinstance(curr_sess.blueprint, dict) else 4
         st.markdown(f"<div class='metric-box'><div class='metric-value' style='color: #0f172a; font-weight: 800;'>{tasks_count}</div><div class='metric-label' style='color: #475569; font-weight: 600;'>Tasks / Questions</div></div>", unsafe_allow_html=True)
     with m5:
-        zip_bytes = session_mgr.export_bundle_zip(curr_sess.session_id)
-        if zip_bytes:
+        # Download Complete .ZIP Archive Button
+        zip_path = BASE_DIR / "data_store" / "sessions" / curr_sess.session_id / f"{curr_sess.session_id}_package.zip"
+        if zip_path.exists():
             st.download_button(
-                label="📦 Download .ZIP Bundle",
-                data=zip_bytes,
-                file_name=f"{curr_sess.syllabus_code}_{curr_sess.paper_number}_{curr_sess.session_id}_package.zip",
+                "📦 Download .ZIP Bundle",
+                data=zip_path.read_bytes(),
+                file_name=f"{curr_sess.syllabus_code}_{curr_sess.paper_number}_complete_package.zip",
                 mime="application/zip",
+                type="primary",
                 use_container_width=True
             )
 
-    # Multi-Artefact Tab Navigation
+    # --------------------------------------------------------------------------
+    # NAVIGATION TABS
+    # --------------------------------------------------------------------------
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "📋 Blueprint & Structure",
+        "📋 Exam Blueprint",
         "📄 Exam Question Paper",
-        "✅ Mark Scheme & Rubrics",
-        "📊 Demographic Datasets & Code",
-        "⚙️ Self-Healing Telemetry",
-        "💡 Style Adaptation Feedback"
+        "📝 Cambridge Mark Scheme",
+        "📊 Companion Datasets",
+        "🔄 Self-Healing Telemetry",
+        "🧠 Style Adaptation Feedback"
     ])
 
     # --------------------------------------------------------------------------
-    # TAB 1: Blueprint & Structure
+    # TAB 1: Blueprint & Objectives
     # --------------------------------------------------------------------------
     with tab1:
-        st.markdown(f"### {curr_sess.title}")
-        bp = curr_sess.blueprint or {}
+        st.markdown("### 📋 Syllabus-Calibrated Exam Blueprint")
+        bp = curr_sess.blueprint if isinstance(curr_sess.blueprint, dict) else {}
         
-        st.markdown("#### 🎯 Targeted Learning Objectives")
+        st.markdown("#### 🎯 Assessed Learning Objectives")
         for obj in bp.get("learning_objectives", []):
             st.markdown(f"- **{obj}**")
 
@@ -300,26 +397,19 @@ if curr_sess:
             """
             st.markdown(card_html, unsafe_allow_html=True)
 
-    from src.sandbox.latex_renderer import LaTeXVisualRenderer
-
     # --------------------------------------------------------------------------
-    # TAB 2: Exam Question Paper (Typeset View, PDF, and .tex)
+    # TAB 2: Exam Question Paper (Clean KaTeX Questions Preview & Copy LaTeX)
     # --------------------------------------------------------------------------
     with tab2:
-        col_hdr, col_btn_down = st.columns([1.6, 1])
+        col_hdr, col_btn_down = st.columns([1.5, 1])
         with col_hdr:
-            view_mode = st.radio(
-                "Paper View Mode",
-                options=["📜 Typeset Exam Paper (Cambridge Layout)", "📄 Compiled PDF Document", "💻 LaTeX Source Code (`paper.tex`)"],
-                index=0,
-                horizontal=True
-            )
+            st.markdown("### 📄 Question Paper (KaTeX Live Preview)")
+            st.caption("Clean pedagogical view of questions, subtasks, Jupyter cells, and mark brackets.")
         with col_btn_down:
-            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
             col_d1, col_d2 = st.columns(2)
             with col_d1:
                 st.download_button(
-                    "⬇️ paper.tex",
+                    "⬇️ paper.tex (Overleaf)",
                     data=curr_sess.latex_source,
                     file_name="paper.tex",
                     mime="text/x-tex",
@@ -328,46 +418,33 @@ if curr_sess:
             with col_d2:
                 pdf_file = Path(curr_sess.pdf_path) if curr_sess.pdf_path else None
                 if pdf_file and pdf_file.exists():
-                    pdf_data = pdf_file.read_bytes()
                     st.download_button(
                         "⬇️ paper.pdf",
-                        data=pdf_data,
+                        data=pdf_file.read_bytes(),
                         file_name=f"{curr_sess.syllabus_code}_{curr_sess.paper_number}_paper.pdf",
                         mime="application/pdf",
                         type="primary",
                         use_container_width=True
                     )
 
-        if "Typeset Exam Paper" in view_mode:
-            rendered_html = LaTeXVisualRenderer.render_to_html(curr_sess.latex_source, title=curr_sess.title)
-            import streamlit.components.v1 as components
-            components.html(rendered_html, height=900, scrolling=True)
-        elif "Compiled PDF" in view_mode:
-            pdf_file = Path(curr_sess.pdf_path) if curr_sess.pdf_path else None
-            if pdf_file and pdf_file.exists():
-                import base64
-                pdf_b64 = base64.b64encode(pdf_file.read_bytes()).decode('utf-8')
-                pdf_display = f'<iframe src="data:application/pdf;base64,{pdf_b64}" width="100%" height="750" type="application/pdf" style="border: 1px solid #cbd5e1; border-radius: 10px; margin-top: 10px;"></iframe>'
-                st.markdown(pdf_display, unsafe_allow_html=True)
-            else:
-                st.info("PDF document will render here upon generating exam package.")
-        else:
+        # 1-Click Copy Full LaTeX for Overleaf Box
+        with st.expander("📋 Copy Full LaTeX Source Code (for Overleaf / TeXLive / VS Code)", expanded=False):
+            st.caption("Click the copy icon in the top right of the code box to paste directly into Overleaf:")
             st.code(curr_sess.latex_source, language="latex")
 
+        # Clean KaTeX Questions Rendering (No Cover/Header noise)
+        rendered_html = LaTeXVisualRenderer.render_questions_only_html(curr_sess.latex_source, title=curr_sess.title)
+        components.html(rendered_html, height=850, scrolling=True)
+
     # --------------------------------------------------------------------------
-    # TAB 3: Mark Scheme & Rubrics (Typeset View, PDF, and .tex)
+    # TAB 3: Mark Scheme & Rubrics (Clean KaTeX View & Copy LaTeX)
     # --------------------------------------------------------------------------
     with tab3:
-        col_mshdr, col_msbtn = st.columns([1.6, 1])
+        col_mshdr, col_msbtn = st.columns([1.5, 1])
         with col_mshdr:
-            ms_view_mode = st.radio(
-                "Mark Scheme View Mode",
-                options=["🎓 Typeset Mark Scheme (Cambridge Layout)", "📄 Compiled PDF Document", "💻 LaTeX Source Code (`mark_scheme.tex`)"],
-                index=0,
-                horizontal=True
-            )
+            st.markdown("### 📝 Official Cambridge Mark Scheme (KaTeX Live Preview)")
+            st.caption("Granular partial credit rubrics with Assessment Objective (AO) allocations.")
         with col_msbtn:
-            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
             col_msd1, col_msd2 = st.columns(2)
             with col_msd1:
                 st.download_button(
@@ -390,22 +467,11 @@ if curr_sess:
                         use_container_width=True
                     )
 
-        if "Typeset Mark Scheme" in ms_view_mode:
-            ms_rendered_html = LaTeXVisualRenderer.render_to_html(curr_sess.mark_scheme_source, title="Mark Scheme")
-            import streamlit.components.v1 as components
-            components.html(ms_rendered_html, height=900, scrolling=True)
-        elif "Compiled PDF" in ms_view_mode:
-            sess_dir = BASE_DIR / "data_store" / "sessions" / curr_sess.session_id
-            ms_pdf = sess_dir / "mark_scheme.pdf"
-            if ms_pdf.exists():
-                import base64
-                pdf_b64 = base64.b64encode(ms_pdf.read_bytes()).decode('utf-8')
-                pdf_display = f'<iframe src="data:application/pdf;base64,{pdf_b64}" width="100%" height="750" type="application/pdf" style="border: 1px solid #cbd5e1; border-radius: 10px; margin-top: 10px;"></iframe>'
-                st.markdown(pdf_display, unsafe_allow_html=True)
-            else:
-                st.info("Mark scheme PDF will render here upon package compilation.")
-        else:
+        with st.expander("📋 Copy Mark Scheme LaTeX Source Code (for Overleaf / TeXLive)", expanded=False):
             st.code(curr_sess.mark_scheme_source, language="latex")
+
+        ms_rendered_html = LaTeXVisualRenderer.render_questions_only_html(curr_sess.mark_scheme_source, title="Mark Scheme")
+        components.html(ms_rendered_html, height=850, scrolling=True)
 
     # --------------------------------------------------------------------------
     # TAB 4: Demographic Datasets & Starter Code
@@ -476,17 +542,17 @@ if curr_sess:
     # --------------------------------------------------------------------------
     with tab6:
         st.markdown("### 🧠 Adaptive Educator Preference Feedback")
-        st.markdown("Teach EduScribe AI your personal style adjustments for this syllabus category.")
+        st.markdown("Teach EduScribe AI your personal phrasing and question structuring adjustments for this syllabus category.")
         
         feedback_input = st.text_area(
             "Educator Style Feedback",
-            placeholder="e.g. 'I prefer shorter 2-line code starter boxes and 8-mark OOP tasks rather than 12-mark ones.'"
+            placeholder="e.g. 'I prefer concise 2-sentence scenario preambles and explicit type annotations in Python starter boxes.'"
         )
-        if st.button("💾 Adapt & Save Preferences"):
+        if st.button("💾 Adapt & Save Preferences to Firestore"):
             updated = pref_learner.adapt_preferences_from_feedback(
                 category=curr_sess.category,
                 user_prompt=curr_sess.title,
                 educator_feedback=feedback_input
             )
-            st.success(f"Preferences updated and saved to Firestore/Local cache for category '{curr_sess.category}'!")
+            st.success(f"Preferences updated and saved to Firestore memory for category '{curr_sess.category}'!")
             st.json(updated)

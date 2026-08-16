@@ -212,10 +212,11 @@ gcloud services enable \
   run.googleapis.com \
   artifactregistry.googleapis.com \
   cloudbuild.googleapis.com \
-  firestore.googleapis.com
+  firestore.googleapis.com \
+  aiplatform.googleapis.com
 ```
 
-#### Step 2: Create a Service Account for GitHub Actions
+#### Step 2: Create a Service Account for GitHub Actions & Vertex AI
 In Google Cloud Shell:
 ```bash
 # 1. Create service account
@@ -223,7 +224,7 @@ gcloud iam service-accounts create github-deployer \
   --description="GitHub Actions Deployer" \
   --display-name="github-deployer"
 
-# 2. Grant required deployment roles
+# 2. Grant required deployment & Vertex AI roles
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/run.admin"
@@ -242,6 +243,14 @@ gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
 
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/aiplatform.user"
+
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/datastore.user"
+
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/iam.serviceAccountUser"
 
 # 3. Generate Service Account JSON Key
@@ -249,15 +258,15 @@ gcloud iam service-accounts keys create key.json \
   --iam-account=github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com
 ```
 
-#### Step 3: Add Repository Secrets in GitHub
-1. Go to your GitHub repo: **Settings** > **Secrets and variables** > **Actions** > **New repository secret**.
-2. Add these 3 secrets:
+#### Step 3: Add Repository Secrets in GitHub (Zero API Keys Needed!)
+1. Go to your GitHub repository: **Settings** > **Secrets and variables** > **Actions** > **New repository secret**.
+2. Add these 2 repository secrets:
    - `GCP_PROJECT_ID`: Your Google Cloud Project ID.
    - `GCP_SA_KEY`: Paste the entire contents of the `key.json` file.
-   - `GEMINI_API_KEY`: Your Google Gemini API Key.
+   *(Note: No `GEMINI_API_KEY` is required—EduScribe AI authenticates natively to Vertex AI via Google Cloud IAM!)*
 
 #### Step 4: Push to Main & Watch Live Deployment
-Push any commit to `main` (via GitHub Desktop or CLI). GitHub Actions will build the Docker container and deploy to **Cloud Run**, outputting your public HTTPS URL!
+Push any commit to `main` (via GitHub Desktop or CLI). GitHub Actions will automatically build the container and deploy to **Google Cloud Run**, outputting your public HTTPS URL!
 
 ---
 
@@ -272,7 +281,7 @@ If you prefer to deploy directly from the command line without GitHub Secrets:
 git clone https://github.com/bluechristopher/ComputingScribe.git
 cd ComputingScribe
 
-# 2. Deploy directly to Cloud Run using Cloud Build
+# 2. Deploy directly to Cloud Run with Vertex AI
 gcloud run deploy eduscribe-ai \
   --source . \
   --region=asia-southeast1 \
@@ -280,8 +289,7 @@ gcloud run deploy eduscribe-ai \
   --allow-unauthenticated \
   --memory=2Gi \
   --cpu=2 \
-  --port=8501 \
-  --set-env-vars="GEMINI_API_KEY=YOUR_GEMINI_API_KEY"
+  --set-env-vars="GCP_PROJECT_ID=YOUR_PROJECT_ID,GCP_LOCATION=asia-southeast1,USE_VERTEX_AI=true"
 ```
 
 Once deployment completes, Cloud Run will print your live **Service URL** (e.g. `https://eduscribe-ai-xxxxxx-as.a.run.app`).

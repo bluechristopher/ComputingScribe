@@ -76,16 +76,18 @@ class EduScribeOrchestrator:
         session_dir.mkdir(parents=True, exist_ok=True)
 
         # -------------------------------------------------------------
-        # Step 1: Memory & Style Retrieval
+        # Station 1 & 2: Memory & RAG Grounding Agents
         # -------------------------------------------------------------
-        prog.notify("Step 1: Memory Retrieval", f"Fetching learned styles for educator '{self.teacher_id}' on category '{category}'...")
+        prog.notify("Station 1: Memory & Style Agent", f"Querying persistent profile in Firestore for educator '{self.teacher_id}' on category '{category}'...")
         teacher_style = self.preference_learner.get_style_for_category(category)
+        
+        prog.notify("Station 2: RAG Grounding Agent", f"Scanning syllabus 9569 learning objectives and indexing exemplar past paper structures...")
         retrieved_context = self.rag_retriever.retrieve_context(user_prompt)
 
         # -------------------------------------------------------------
-        # Step 2: Blueprint Proposer
+        # Station 3: Blueprint Architect Agent
         # -------------------------------------------------------------
-        prog.notify("Step 2: Blueprint Proposer", f"Synthesizing learning objectives, question breakdown, and mark distributions...")
+        prog.notify("Station 3: Blueprint Architect Agent", f"Synthesizing structured learning objectives, task breakdown, and mark distribution with Gemini 3.7 Flash...")
         blueprint = self.question_author.propose_blueprint(
             prompt=user_prompt,
             paper_type=paper_type,
@@ -97,9 +99,9 @@ class EduScribeOrchestrator:
         blueprint.paper_number = paper_number
 
         # -------------------------------------------------------------
-        # Step 3: Tool Execution (Datasets & LaTeX)
+        # Station 4: Demographic Synthesizer Agent
         # -------------------------------------------------------------
-        prog.notify("Step 3: Tool Execution", "Synthesizing demographic datasets and candidate companion files...")
+        prog.notify("Station 4: Demographic Synthesizer Agent", "Synthesizing 50/50 gender balanced candidate datasets & SQL companion files...")
         companion_dataset = None
         generated_datasets = []
         starter_files = []
@@ -125,7 +127,10 @@ class EduScribeOrchestrator:
                     "content": companion_dataset.starter_python_code
                 })
 
-        prog.notify("Step 3: Tool Execution", "Authoring golden LaTeX question paper and Cambridge mark scheme...")
+        # -------------------------------------------------------------
+        # Station 5: Golden TeX Authoring Agent
+        # -------------------------------------------------------------
+        prog.notify("Station 5: Golden TeX Authoring Agent", "Drafting Cambridge-compliant LaTeX exam paper and granular mark scheme...")
         latex_paper_source = self.question_author.author_latex_paper(
             blueprint=blueprint,
             companion_dataset=companion_dataset,
@@ -143,21 +148,16 @@ class EduScribeOrchestrator:
         )
 
         # -------------------------------------------------------------
-        # Step 4: Self-Healing Compilation Sandbox
+        # Station 6: Self-Healing Sandbox Agent
         # -------------------------------------------------------------
-        prog.notify("Step 4: Self-Healing Sandbox", "Executing headless pdflatex compilation in container sandbox...")
+        prog.notify("Station 6: Self-Healing Sandbox Agent", "Executing headless pdflatex compilation and 3-pass Gemini self-healing verification...")
         compilation_result = self.latex_compiler.compile(
             latex_source=latex_paper_source,
             working_dir=session_dir,
             job_name="paper"
         )
 
-        if compilation_result.success:
-            prog.notify("Step 4: Self-Healing Sandbox", f"Compilation succeeded in {compilation_result.attempts} attempt(s)!")
-        else:
-            prog.notify("Step 4: Self-Healing Sandbox", f"LaTeX compilation notice: {compilation_result.compilation_log[:150]}...")
-
-        # Also compile mark scheme
+        # Compile mark scheme as well
         ms_result = self.latex_compiler.compile(
             latex_source=mark_scheme_source,
             working_dir=session_dir,
@@ -165,9 +165,9 @@ class EduScribeOrchestrator:
         )
 
         # -------------------------------------------------------------
-        # Step 5: Multi-Artefact Bundle & Persistence
+        # Station 7: Artifact Packaging Agent
         # -------------------------------------------------------------
-        prog.notify("Step 5: Packaging & Persistence", "Persisting session state in Firestore and building export archive...")
+        prog.notify("Station 7: Artifact Packaging Agent", "Persisting session state in Firestore and building downloadable .zip export bundle...")
         session = ExamSession(
             session_id=sess_id,
             title=f"{blueprint.title} ({paper_type.capitalize()})",

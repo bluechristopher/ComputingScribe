@@ -1,7 +1,7 @@
 """
 EduScribe AI - LaTeX Visual Typesetting & Sheet Renderer
-Renders Cambridge Examination LaTeX papers and Mark Schemes into publication-grade,
-pixel-perfect A4 exam sheets with math, tables, pseudocode, Jupyter cells, and mark brackets.
+Renders Cambridge Examination LaTeX papers and Mark Schemes using KaTeX in clean HTML,
+focusing purely on the technical questions, code listings, decision tables, and marks.
 """
 
 import re
@@ -10,73 +10,23 @@ from typing import Dict, Any, List
 
 class LaTeXVisualRenderer:
     @staticmethod
-    def render_to_html(latex_source: str, title: str = "Examination Paper") -> str:
+    def render_questions_only_html(latex_source: str, title: str = "Question Paper") -> str:
         """
-        Transforms Cambridge LaTeX source into a publication-grade A4 Exam Paper sheet.
-        Supports Jupyter cells, pseudocode listings, decision tables, and right-aligned mark brackets.
+        Renders purely the examination questions, subtasks, Jupyter cells, pseudocode,
+        tables, and marks using KaTeX, omitting document formatting headers/footers.
         """
-        # Extract macros
-        institution = "Anderson Serangoon Junior College"
-        inst_m = re.search(r"\\newcommand\{\\Institution\}\{([^}]+)\}", latex_source)
-        if inst_m:
-            institution = inst_m.group(1)
-
-        syllabus_code = "9569"
-        syl_m = re.search(r"\\newcommand\{\\SyllabusCode\}\{([^}]+)\}", latex_source)
-        if syl_m:
-            syllabus_code = syl_m.group(1)
-
-        paper_num = "02"
-        p_m = re.search(r"\\newcommand\{\\PaperNumber\}\{([^}]+)\}", latex_source)
-        if p_m:
-            paper_num = p_m.group(1)
-
-        exam_year = "2027"
-        y_m = re.search(r"\\newcommand\{\\ExamYear\}\{([^}]+)\}", latex_source)
-        if y_m:
-            exam_year = y_m.group(1)
-
-        exam_series = "PRELIM"
-        es_m = re.search(r"\\newcommand\{\\ExamSeries\}\{([^}]+)\}", latex_source)
-        if es_m:
-            exam_series = es_m.group(1)
-
         # Extract document body
         body_match = re.search(r"\\begin\{document\}(.*?)\\end\{document\}", latex_source, re.DOTALL)
         body_text = body_match.group(1) if body_match else latex_source
 
-        # Split into pages by \newpage
-        raw_pages = body_text.split(r"\newpage")
-        
-        pages_html = []
-        page_counter = 2
-        
-        for p_idx, raw_page in enumerate(raw_pages, start=2):
-            content_html = LaTeXVisualRenderer._process_page_content(raw_page)
-            if not content_html.strip():
-                continue
+        # Strip out document-level header / footer noise & cover page directives
+        body_text = re.sub(r"\\begin\{coverpage\}.*?\\end\{coverpage\}", "", body_text, flags=re.DOTALL)
+        body_text = re.sub(r"\\thispagestyle\{[^}]+\}", "", body_text)
+        body_text = re.sub(r"\\pagestyle\{[^}]+\}", "", body_text)
+        body_text = re.sub(r"\\maketitle", "", body_text)
 
-            page_html = f"""
-            <div class="exam-page">
-                <div class="exam-header">
-                    <div class="exam-header-left"><strong>{institution}</strong></div>
-                    <div class="exam-header-center"><strong>{page_counter}</strong></div>
-                    <div class="exam-header-right">{syllabus_code}/{paper_num}/{exam_series}/{exam_year[-2:]}</div>
-                </div>
-                <div class="exam-body">
-                    {content_html}
-                </div>
-                <div class="exam-footer">
-                    <div class="exam-footer-left">&copy; {institution} {exam_year}</div>
-                    <div class="exam-footer-center">{syllabus_code}/{paper_num}/{exam_series}/{exam_year[-2:]}</div>
-                    <div class="exam-footer-right"><strong>[Turn over</strong></div>
-                </div>
-            </div>
-            """
-            pages_html.append(page_html)
-            page_counter += 1
-
-        all_pages_str = "\n".join(pages_html)
+        # Process the clean questions content
+        content_html = LaTeXVisualRenderer._process_page_content(body_text)
 
         html_doc = f"""
         <!DOCTYPE html>
@@ -86,112 +36,88 @@ class LaTeXVisualRenderer:
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
             <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
             <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
-                onload="renderMathInElement(document.body);"></script>
+                onload="renderMathInElement(document.body, {{
+                    delimiters: [
+                        {{left: '$$', right: '$$', display: true}},
+                        {{left: '$', right: '$', display: false}},
+                        {{left: '\\\\(', right: '\\\\)', display: false}},
+                        {{left: '\\\\[', right: '\\\\]', display: true}}
+                    ]
+                }});"></script>
             <style>
-                @import url('https://fonts.googleapis.com/css2?family=Arial:wght@400;700&family=Courier+Prime&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
                 
                 body {{
-                    font-family: Arial, sans-serif;
-                    background-color: #f1f5f9;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background-color: #ffffff;
                     margin: 0;
-                    padding: 20px;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
+                    padding: 24px 32px;
                     color: #0f172a;
-                }}
-                
-                .exam-page {{
-                    background: #ffffff;
-                    width: 210mm;
-                    min-height: 297mm;
-                    padding: 20mm 20mm 25mm 20mm;
-                    margin-bottom: 25px;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-                    box-sizing: border-box;
-                    position: relative;
                     font-size: 11pt;
-                    line-height: 1.5;
-                }}
-                
-                .exam-header {{
-                    display: flex;
-                    justify-content: space-between;
-                    border-bottom: 1px solid #94a3b8;
-                    padding-bottom: 6px;
-                    margin-bottom: 18px;
-                    font-size: 9pt;
-                    color: #475569;
-                }}
-                
-                .exam-footer {{
-                    position: absolute;
-                    bottom: 12mm;
-                    left: 20mm;
-                    right: 20mm;
-                    display: flex;
-                    justify-content: space-between;
-                    border-top: 1px solid #94a3b8;
-                    padding-top: 6px;
-                    font-size: 8.5pt;
-                    color: #475569;
+                    line-height: 1.6;
                 }}
                 
                 .maintask-title {{
-                    font-size: 12pt;
-                    font-weight: bold;
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    margin-top: 24px;
+                    margin-bottom: 10px;
+                    color: #1e3a8a;
+                    border-bottom: 2px solid #e2e8f0;
+                    padding-bottom: 6px;
+                }}
+                
+                .subtask-title {{
+                    font-size: 1.05rem;
+                    font-weight: 600;
                     margin-top: 16px;
                     margin-bottom: 6px;
                     color: #0f172a;
                 }}
                 
-                .subtask-title {{
-                    font-size: 11pt;
-                    font-weight: bold;
-                    margin-top: 14px;
-                    margin-bottom: 4px;
-                    color: #0f172a;
-                }}
-                
                 .marks-bracket {{
                     float: right;
-                    font-weight: normal;
-                    color: #0f172a;
-                    margin-left: 10px;
+                    font-weight: 600;
+                    color: #2563eb;
+                    background: #eff6ff;
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                    border: 1px solid #bfdbfe;
+                    margin-left: 12px;
+                    font-size: 0.95rem;
                 }}
                 
                 .jupyter-box {{
-                    display: flex;
-                    align-items: flex-start;
+                    background: #f8fafc;
+                    border: 1px solid #cbd5e1;
+                    border-left: 4px solid #2563eb;
+                    border-radius: 6px;
+                    padding: 10px 14px;
                     margin: 12px 0;
-                    font-family: 'Courier Prime', monospace;
+                    font-family: 'Fira Code', monospace;
                     font-size: 10pt;
                 }}
                 
                 .jupyter-label {{
-                    width: 75px;
+                    color: #2563eb;
                     font-weight: bold;
-                    color: #334155;
+                    margin-bottom: 4px;
                 }}
                 
                 .jupyter-code {{
-                    flex: 1;
-                    background-color: #f1f5f9;
-                    border: 1px solid #000000;
-                    padding: 8px 12px;
                     white-space: pre-wrap;
-                    font-style: italic;
+                    color: #0f172a;
                 }}
                 
                 .pseudocode-box {{
                     background: #f8fafc;
-                    border: 1px solid #cbd5e1;
-                    border-left: 4px solid #2563eb;
+                    border: 1px solid #94a3b8;
+                    border-radius: 6px;
                     padding: 12px 16px;
                     margin: 14px 0;
-                    font-family: 'Courier Prime', monospace;
+                    font-family: 'Fira Code', monospace;
                     font-size: 10pt;
-                    line-height: 1.4;
+                    line-height: 1.45;
                 }}
                 
                 .pseudo-line {{
@@ -213,28 +139,35 @@ class LaTeXVisualRenderer:
                 }}
                 
                 .exam-table th, .exam-table td {{
-                    border: 1px solid #000000;
-                    padding: 6px 10px;
+                    border: 1px solid #cbd5e1;
+                    padding: 8px 12px;
                     text-align: left;
                     vertical-align: top;
                 }}
                 
                 .exam-table th {{
                     background-color: #f1f5f9;
-                    font-weight: bold;
+                    font-weight: 600;
+                    color: #1e293b;
                 }}
                 
                 code, .inline-code {{
-                    font-family: 'Courier Prime', monospace;
+                    font-family: 'Fira Code', monospace;
                     background: #f1f5f9;
-                    padding: 1px 4px;
-                    border-radius: 3px;
+                    color: #1e3a8a;
+                    padding: 2px 5px;
+                    border-radius: 4px;
                     font-size: 9.5pt;
+                    border: 1px solid #e2e8f0;
                 }}
                 
-                .testcases-list {{
-                    margin: 8px 0 8px 20px;
-                    list-style-type: square;
+                ul, ol {{
+                    margin: 8px 0 8px 24px;
+                    padding-left: 0;
+                }}
+                
+                li {{
+                    margin: 4px 0;
                 }}
                 
                 .clearfix::after {{
@@ -245,15 +178,20 @@ class LaTeXVisualRenderer:
             </style>
         </head>
         <body>
-            {all_pages_str}
+            {content_html}
         </body>
         </html>
         """
         return html_doc
 
     @staticmethod
+    def render_to_html(latex_source: str, title: str = "Examination Paper") -> str:
+        """Alias for backward compatibility, renders clean questions."""
+        return LaTeXVisualRenderer.render_questions_only_html(latex_source, title)
+
+    @staticmethod
     def _process_page_content(tex_chunk: str) -> str:
-        """Processes LaTeX commands inside a page chunk into clean semantic HTML."""
+        """Processes LaTeX commands inside a chunk into clean semantic HTML."""
         lines = tex_chunk.splitlines()
         html_out = []
         in_pseudocode = False
@@ -265,7 +203,7 @@ class LaTeXVisualRenderer:
             line = raw_line.strip()
             if not line or line.startswith("%"):
                 continue
-            if line.startswith(r"\setcounter") or line.startswith(r"\TurnOver") or line.startswith(r"\NoTurnOver"):
+            if line.startswith(r"\setcounter") or line.startswith(r"\TurnOver") or line.startswith(r"\NoTurnOver") or line.startswith(r"\newpage"):
                 continue
 
             # Check for Pseudocode Block
@@ -310,7 +248,7 @@ class LaTeXVisualRenderer:
                         <div class="jupyter-label">In [{in_num}]:</div>
                         <div class="jupyter-code">{html.escape(code_text)}</div>
                     </div>
-                    <div style="margin-left: 75px; font-family: 'Courier Prime', monospace; margin-bottom: 8px;">Output:</div>
+                    <div style="margin-left: 75px; font-family: 'Fira Code', monospace; margin-bottom: 8px; font-size: 9pt; color: #64748b;">Output:</div>
                     """)
                     continue
 

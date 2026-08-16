@@ -54,5 +54,4 @@ jobs:
             --allow-unauthenticated \
             --memory=2Gi \
             --cpu=2 \
-            --port=8501 \
-            --set-env-vars="GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},GCP_PROJECT_ID=${{ env.PROJECT_ID }}"
+            --set-env-vars="GCP_PROJECT_ID=${{ env.PROJECT_ID }},GCP_LOCATION=${{ env.GAR_LOCATION }},USE_VERTEX_AI=true"
