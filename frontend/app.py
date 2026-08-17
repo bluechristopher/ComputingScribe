@@ -581,7 +581,7 @@ if "Full Paper" in author_mode:
 # ==============================================================================
 # MODE B: QUESTION-BY-QUESTION CO-AUTHORING STUDIO
 # ==============================================================================
-else:
+elif "Question-by-Question" in author_mode:
     st.markdown("### 🎨 Question-by-Question Co-Authoring Studio")
     st.caption("Craft, refine, append, and reorder tasks individually with automatic task renumbering.")
 
