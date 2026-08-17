@@ -188,17 +188,18 @@ class LaTeXVisualRenderer:
 
         .blank-page-divider {{
             text-align: center;
-            margin: 20px 0 10px 0;
-            padding: 12px 0 20px 0;
-            border-top: 2px dashed #94a3b8;
+            margin: 4px 0 10px 0;
+            padding: 0;
+            border-top: 1px dashed #cbd5e1;
         }}
 
         .blank-page-text {{
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 800;
             letter-spacing: 2px;
             color: #0f172a;
-            margin-top: 10px;
+            margin-top: 4px;
+            margin-bottom: 20px;
         }}
         
         .pseudocode-box {{

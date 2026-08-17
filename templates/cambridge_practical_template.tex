@@ -174,10 +174,8 @@
   \loop
     \ifnum\numexpr\value{page}-((\value{page}-1)/4)*4\relax=1
     \else
-      \vspace*{1.5em}
-      \begin{center}
-        {\fontsize{13pt}{16pt}\selectfont\textbf{BLANK PAGE}}
-      \end{center}
+      \par\vspace*{-0.5em}%
+      {\centering\fontsize{12pt}{15pt}\selectfont\textbf{BLANK PAGE}\par}%
       \clearpage
   \repeat
 }

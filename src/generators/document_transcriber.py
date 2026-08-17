@@ -32,7 +32,17 @@ class DocumentTranscriber:
         conformed Cambridge LaTeX and Mark Scheme.
         """
         parsed_doc = DocumentParser.parse_file(file_bytes, filename)
-        extracted_text = parsed_doc.get("full_text", "")
+        
+        # Format structured page delimiters if multi-page structure is present
+        if "pages" in parsed_doc and parsed_doc["pages"]:
+            formatted_pages = []
+            for p in parsed_doc["pages"]:
+                p_num = p.get("page_num", 1)
+                p_txt = p.get("text", "").strip()
+                formatted_pages.append(f"--- [PAGE {p_num}] ---\n{p_txt}")
+            extracted_text = "\n\n".join(formatted_pages)
+        else:
+            extracted_text = parsed_doc.get("full_text", "")
 
         return self.transcribe_text(
             extracted_text=extracted_text,
@@ -82,6 +92,16 @@ SOURCE TEXT TO TRANSCRIBE:
 {extracted_text}
 ---
 
+PAGE PURPOSE ANALYSIS & FILTERING:
+1. Examine each page of the uploaded document to identify its purpose:
+   - EXCLUDE & IGNORE:
+     * Cover pages, title sheets, candidate instruction covers (e.g. "READ THESE INSTRUCTIONS FIRST", candidate name/index number fill-in boxes, formula sheets without questions, copyright boilerplate).
+     * Blank pages (e.g. pages containing "BLANK PAGE" or empty whitespace filler).
+     * Table of contents / index pages that contain no actual questions.
+   - INCLUDE & TRANSCRIBE:
+     * ONLY pages containing actual examination questions, tasks, subtasks, problem scenarios, datasets, code, and marks.
+   - Do NOT replicate the original document's cover page inside the LaTeX body (the Cambridge template already generates the official cover page).
+
 RIGID CAMBRIDGE CONFORMANCE RULES:
 1. Preserve all original technical questions, problems, marks, algorithms, and code requirements accurately.
 2. If PRACTICAL paper:
@@ -96,7 +116,7 @@ RIGID CAMBRIDGE CONFORMANCE RULES:
      * Format right-aligned marks with \\Marks{{<n>}} at the end of each subtask part.
      * At the end of Task X, output: \\taskfooter{{X}}
      * Place \\newpage and \\TurnOver between tasks.
-    - PYTHON SIGNATURE CONVENTION: Strip all parameter data types and return type arrows (e.g. normalize `def search(arr: list, target: int) -> bool:` or `search(arr, target) --> Boolean` into clean standard `def search(arr, target):` or `search(arr, target)`). Do not output `--> <Type>` or `: <Type>` in Python headers.
+   - PYTHON SIGNATURE CONVENTION: Strip all parameter data types and return type arrows (e.g. normalize `def search(arr: list, target: int) -> bool:` or `search(arr, target) --> Boolean` into clean standard `def search(arr, target):` or `search(arr, target)`). Do not output `--> <Type>` or `: <Type>` in Python headers.
    - For Database Schemas:
      * Format table definitions with primary keys underlined using \\uline{{...}} and foreign keys dashed-underlined using \\dashuline{{...}}.
    - For Code/Identifiers: Use \\code{{...}} or \\texttt{{...}}.
