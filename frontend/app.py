@@ -13,6 +13,7 @@ import time
 import base64
 import re
 import json
+from typing import Optional, List, Dict, Any
 from pathlib import Path
 
 # Explicitly ensure repository root is in sys.path across all deployment environments (Cloud Run, Docker, Local)
