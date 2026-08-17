@@ -313,21 +313,25 @@ Blueprint:
 
 CRITICAL FORMATTING & CONTEXTUAL RULES:
 1. For PRACTICAL papers:
-   - Provide an EXTENDED, REAL-WORLD SCENARIO preamble for each task (e.g. smart ticketing, banking, hospital patient records).
-   - Use \\maintask{{1}}, \\maintask{{2}}, etc. for main tasks.
-   - Use \\subtask{{1.1}}, \\subtask{{1.2}}, etc. for subtasks.
-   - Break down subtask instructions into CLEAR, STRUCTURED BULLETED POINTS (using \\begin{{itemize}} \\item ... \\end{{itemize}} or itemized steps).
-   - Use \\jupytercell{{<in_num>}}{{\\#Task X.Y\\\\Program code}} for code starter boxes.
-   - Use \\begin{{testcases}} \\item Test 1: ... \\end{{testcases}} for test cases.
-   - ALWAYS use \\Marks{{<n>}} at the end of each question part for right-aligned bracketed marks.
-   - Include \\newpage and \\TurnOver between major tasks.
+   - At the VERY TOP of the paper (before Task 1), ALWAYS include this exact general instruction:
+     \\noindent Your program code and output for each of Task 1 to 4 should be saved in a single \\texttt{{.ipynb}} file. For example, your program code and output for Task 1 should be saved as:\\par\\vspace{{0.4em}}
+     \\noindent\\texttt{{TASK1\\_<your name>\\_<centre number>\\_<index number>.ipynb}}\\par\\vspace{{1.0em}}
+   - For each Task X:
+     * Start with \\maintask{{X}} (which automatically outputs "Task X" and "Name your Jupyter Notebook as: TASKX_<your name>_<centre number>_<index number>.ipynb").
+     * Provide an EXTENDED, REAL-WORLD SCENARIO narrative background for the technical challenge.
+     * Before the subtasks, include \\tasksubtaskintro{{X}} EXACTLY ONCE per task (which outputs the local variables rule and the left-aligned In [1]: #Task X.1 Program code / Output: box). Do NOT repeat this instruction box more than once in a task.
+     * Use \\subtask{{X.1}}, \\subtask{{X.2}}, \\subtask{{X.3}}, etc. for subtask headers.
+     * Structure subtask instructions with clear, concise bullet points (using \\begin{{itemize}} \\item ... \\end{{itemize}}).
+     * ALWAYS use \\Marks{{<n>}} at the end of each question part for right-aligned bracketed marks.
+     * At the end of Task X, include: \\taskfooter{{X}} (which prints "Save your Jupyter Notebook for Task X.").
+     * Include \\newpage and \\TurnOver between major tasks.
 
 2. For THEORY papers:
    - Begin questions with a WELL-DEVELOPED DOMAIN SCENARIO establishing background context, business rules, hardware specs, or database schema.
    - Wrap the questions in \\begin{{questions}} ... \\end{{questions}}.
    - Use \\item for main questions.
    - Use \\begin{{parts}} \\item ... \\end{{parts}} for question subparts.
-   - Use \\begin{{subparts}} \\item ... \\end{{subparts}} for sub-subparts.
+   - Use \\begin{{subparts}} \\item ... \\end{{subparts}} for question sub-subparts.
    - Use \\begin{{pseudocode}} ... \\end{{pseudocode}} for pseudocode listings.
    - Use standard tabular environments for decision tables, trace tables, and comparison matrices.
    - ALWAYS use \\Marks{{<n>}} at the end of each question part.
@@ -361,6 +365,7 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
         full_tex = full_tex.replace("((SYLLABUS_CODE))", blueprint.syllabus_code)
         full_tex = full_tex.replace("((PAPER_NUMBER))", blueprint.paper_number)
         full_tex = full_tex.replace("((EXAM_SERIES))", exam_series)
+        full_tex = full_tex.replace("((TOTAL_MARKS))", str(blueprint.total_marks))
         full_tex = full_tex.replace("% __AGENT_BODY_SLOT__", latex_body)
 
         return full_tex
@@ -428,28 +433,42 @@ Output ONLY the LaTeX body to replace % __AGENT_BODY_SLOT__.
         self,
         prompt: str,
         paper_type: str = "practical",
-        category: str = "sec1_linear_adts",
+        category: str = "sec1_linear_adt",
         task_number: int = 1,
         total_marks: int = 25,
         companion_dataset: Optional[Any] = None,
-        teacher_style: Optional[Dict[str, Any]] = None
+        teacher_style: Optional[Dict[str, Any]] = None,
+        retrieved_context: str = ""
     ) -> Dict[str, Any]:
         """
-        Authors a single standalone task/question with corresponding mark scheme.
-        Supports iterative single-question co-authoring.
+        Authors an isolated, self-contained single task (Task N / Question N).
         """
-        is_contextual = "contextual" in prompt.lower()
-        contextual_note = "Provide an extended, realistic real-world scenario with structured step-by-step bulleted subtasks." if is_contextual else ""
+        style = teacher_style or self.preference_learner.get_style(category)
+        preferred_depth = style.get("preferred_depth", "long_contextual") if style else "long_contextual"
+        is_contextual = "contextual" in prompt.lower() or "long_contextual" in preferred_depth
+
+        contextual_note = """
+CONTEXTUAL DIRECTIVES:
+- Provide an authentic, real-world scenario narrative establishing the business/engineering domain.
+- Break down subtasks with structured, step-by-step bullet points specifying exact signatures, data types, validation checks, and return values.
+""" if is_contextual else ""
 
         single_prompt = f"""
-You are a Principal Cambridge H2 Computing (9569) Examiner.
-Author a SINGLE STANDALONE {'PRACTICAL TASK' if paper_type == 'practical' else 'THEORY QUESTION'} for an exam paper.
-
-Task Number: {task_number}
-Category: {category}
-Total Marks for this task: {total_marks}
-User Prompt: {prompt}
+You are a Principal Examiner for Singapore-Cambridge GCE A-Level H2 Computing (9569).
+Author a self-contained, high-quality examination task for:
+- Paper Type: {paper_type.upper()} ({('Paper 2 Practical' if paper_type == 'practical' else 'Paper 1 Theory')})
+- Task / Question Number: {task_number}
+- Syllabus Topic / Category: {category}
+- Total Marks for this task: {total_marks}
+- User Prompt: {prompt}
 {contextual_note}
+
+CRITICAL STRUCTURE REQUIREMENTS (PRACTICAL):
+1. Start with \\maintask{{{task_number}}}.
+2. Provide the domain scenario problem description.
+3. Include \\tasksubtaskintro{{{task_number}}} EXACTLY ONCE before the subtasks (this provides the local variables rule and In [1]: box).
+4. For each subtask, use \\subtask{{{task_number}.1}}, \\subtask{{{task_number}.2}}, etc. with bulleted instructions and \\Marks{{<n>}}.
+5. At the end of the task, output: \\taskfooter{{{task_number}}}.
 
 OUTPUT FORMAT:
 Return a JSON object matching this schema:
@@ -458,7 +477,7 @@ Return a JSON object matching this schema:
   "title": "Task {task_number}: <Title describing the technical challenge>",
   "topic": "{category}",
   "marks": {total_marks},
-  "latex_code": "<LaTeX body for this single task using \\maintask{{{task_number}}} or \\item, \\subtask{{{task_number}.x}} or \\begin{{parts}}...\\end{{parts}}, \\jupytercell{{{task_number}}}{{...}}, \\Marks{{<n>}}>",
+  "latex_code": "<LaTeX body for this single task>",
   "mark_scheme_code": "<LaTeX tabularx rows for this task's mark scheme table>"
 }}
 """
@@ -480,11 +499,9 @@ Return a JSON object matching this schema:
             fb_latex = f"""
 \\maintask{{{task_number}}}
 
-Name your Jupyter Notebook as: \\code{{TASK{task_number}\\_<your name>\\_<centre number>\\_<index number>.ipynb}}
-
 A linear data structure problem requires storing and manipulating customer records using Python.
 
-\\jupytercell{{{task_number}}}{{\\# Task {task_number}.1\\\\Program code}}
+\\tasksubtaskintro{{{task_number}}}
 
 \\subtask{{{task_number}.1}}
 
@@ -497,6 +514,8 @@ Write program code to search and retrieve items from the data structure, handlin
 \\subtask{{{task_number}.3}}
 
 Write driver program code to execute the system with sample test data and display summary metrics. \\Marks{{{total_marks - 12}}}
+
+\\taskfooter{{{task_number}}}
 """
             fb_ms = f"""
 \\textbf{{Task {task_number}.1}} & Implement insertion with bounds checking & \\textbf{{6}} & 1 mark per valid point (bounds check, assignment, pointer update) \\\\
@@ -617,8 +636,12 @@ Return a valid JSON object matching this schema with the updated code:
         latex = re.sub(rf"\\maintask\{{{old_num}\}}", f"\\\\maintask{{{new_number}}}", latex)
         # \subtask{X.y} -> \subtask{new.y}
         latex = re.sub(rf"\\subtask\{{{old_num}\.([0-9]+)\}}", rf"\\subtask{{{new_number}.\1}}", latex)
+        # \tasksubtaskintro{X} -> \tasksubtaskintro{new}
+        latex = re.sub(rf"\\tasksubtaskintro\{{{old_num}\}}", f"\\\\tasksubtaskintro{{{new_number}}}", latex)
         # \jupytercell{X} -> \jupytercell{new}
         latex = re.sub(rf"\\jupytercell\{{{old_num}\}}", f"\\\\jupytercell{{{new_number}}}", latex)
+        # \taskfooter{X} -> \taskfooter{new}
+        latex = re.sub(rf"\\taskfooter\{{{old_num}\}}", f"\\\\taskfooter{{{new_number}}}", latex)
         # TASKX_ -> TASK<new>_
         latex = re.sub(rf"TASK{old_num}\\_", f"TASK{new_number}\\_", latex)
         latex = re.sub(rf"Task\s+{old_num}\.([0-9]+)", rf"Task {new_number}.\1", latex)
@@ -764,20 +787,15 @@ INSTRUCTIONS:
         """Fallback LaTeX body generator."""
         if blueprint.paper_type == "practical":
             return r"""
-\textbf{Instruction to candidates:}
-
-Your program code and output for each of Task 1 to 4 should be saved in a single \code{.ipynb} file. For example, your program code and output for Task 1 should be saved as:
-
-\code{TASK1\_<your name>\_<centre number>\_<index number>.ipynb}
+\noindent Your program code and output for each of Task 1 to 4 should be saved in a single \texttt{.ipynb} file. For example, your program code and output for Task 1 should be saved as:\par\vspace{0.4em}
+\noindent\texttt{TASK1\_<your name>\_<centre number>\_<index number>.ipynb}\par\vspace{1.0em}
 
 \maintask{1}
-
-Name your Jupyter Notebook as: \code{TASK1\_<your name>\_<centre number>\_<index number>.ipynb}
 
 A denary number can be converted to binary using the division by 2 method and a stack abstract data type.
 The stack can store integer data items in a 1-dimensional list. A top of stack pointer stores the index of the next available space.
 
-\jupytercell{1}{\# Task 1.1\\Program code}
+\tasksubtaskintro{1}
 
 \subtask{1.1}
 
@@ -797,14 +815,16 @@ The function \code{main()} initialises the stack and prompts the user for a posi
 
 Write program code for \code{main()} and test with inputs 0, 22, and 46967. \Marks{12}
 
+\taskfooter{1}
+
 \newpage
 \TurnOver
 
 \maintask{2}
 
-Name your Jupyter Notebook as: \code{TASK2\_<your name>\_<centre number>\_<index number>.ipynb}
-
 The file \code{CANDIDATES.csv} contains candidate assessment records in CSV format with fields: \code{CandidateID}, \code{CandidateName}, \code{Gender}, \code{AssessmentScore}, \code{CourseworkScore}, \code{FinalStatus}.
+
+\tasksubtaskintro{2}
 
 \subtask{2.1}
 
@@ -817,6 +837,8 @@ Write program code to calculate and display the cohort average score and the hig
 \subtask{2.3}
 
 Write program code to output all candidates achieving 'Distinction' to a new file named \code{DISTINCTIONS.txt}. \Marks{6}
+
+\taskfooter{2}
 """
         else:
             return r"""

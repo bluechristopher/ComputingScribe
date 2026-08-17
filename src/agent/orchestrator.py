@@ -13,6 +13,7 @@ from src.ingestion.rag_retriever import RAGRetriever
 from src.ingestion.document_parser import DocumentParser
 from src.generators.dataset_generator import DatasetGenerator, SyntheticDataset
 from src.generators.question_author import QuestionAuthor, ExamBlueprint
+from src.generators.document_transcriber import DocumentTranscriber
 from src.sandbox.latex_compiler import LaTeXCompiler, LaTeXCompilationResult
 from config.gcp_config import LOCAL_SESSIONS_DIR
 
@@ -33,7 +34,20 @@ class EduScribeOrchestrator:
         self.rag_retriever = RAGRetriever()
         self.dataset_generator = DatasetGenerator()
         self.question_author = QuestionAuthor()
+        self.document_transcriber = DocumentTranscriber()
         self.latex_compiler = LaTeXCompiler(max_healing_attempts=3)
+
+        # Pre-seed authentic Cambridge 9569 exemplar grounding
+        sample_path = Path(__file__).resolve().parent.parent.parent / "sample" / "practical.txt"
+        if sample_path.exists():
+            try:
+                sample_text = sample_path.read_text(encoding="utf-8")
+                self.rag_retriever.add_document({
+                    "filename": "Singapore_Cambridge_9569_2025_Paper2_Official.txt",
+                    "full_text": sample_text
+                })
+            except Exception as e:
+                print(f"[Orchestrator] Note: Could not auto-seed sample reference: {e}")
 
     def set_teacher_id(self, teacher_id: str):
         self.teacher_id = teacher_id
@@ -366,5 +380,101 @@ class EduScribeOrchestrator:
             pdf_path=str(comp_res.pdf_path) if comp_res.pdf_path else None
         )
 
+        self.session_manager.save_session(session)
+        return session
+
+    def transcribe_and_compile_document(
+        self,
+        file_bytes: bytes,
+        filename: str,
+        paper_type: str = "auto",
+        institution: str = "Singapore Junior College",
+        exam_year: str = "2026",
+        exam_series: str = "PRELIM",
+        syllabus_code: str = "9569",
+        paper_number: str = "02",
+        session_id: Optional[str] = None,
+        progress: Optional[ExamGenerationProgress] = None
+    ) -> ExamSession:
+        """
+        Transcribes an uploaded Word (.docx) or PDF (.pdf) exam document into
+        conformed Cambridge LaTeX, compiles it to PDF, and packages a session.
+        """
+        prog = progress or ExamGenerationProgress()
+        sess_id = session_id or f"transcribe_{uuid.uuid4().hex[:8]}"
+        session_dir = LOCAL_SESSIONS_DIR / sess_id
+        session_dir.mkdir(parents=True, exist_ok=True)
+
+        prog.notify("Station 1: Document Ingestion", f"Extracting structured text & tables from '{filename}'...")
+        transcription = self.document_transcriber.transcribe_file_bytes(
+            file_bytes=file_bytes,
+            filename=filename,
+            paper_type=paper_type,
+            institution=institution,
+            exam_year=exam_year,
+            exam_series=exam_series,
+            syllabus_code=syllabus_code,
+            paper_number=paper_number
+        )
+
+        detected_type = transcription["detected_paper_type"]
+        latex_source = transcription["latex_source"]
+        ms_source = transcription["mark_scheme_source"]
+        total_marks = transcription["total_marks"]
+
+        prog.notify("Station 2: Cambridge Conformance", f"Normalized to Cambridge {detected_type.upper()} standard ({total_marks} marks)...")
+
+        prog.notify("Station 3: Compilation Sandbox", "Compiling normalized LaTeX document and mark scheme...")
+        comp_res = self.latex_compiler.compile(latex_source, session_dir, job_name="paper")
+        ms_res = self.latex_compiler.compile(ms_source, session_dir, job_name="mark_scheme")
+
+        blueprint_data = {
+            "title": f"Transcribed Singapore-Cambridge H2 Computing ({'Paper 2 Practical' if detected_type == 'practical' else 'Paper 1 Theory'})",
+            "paper_type": detected_type,
+            "syllabus_code": syllabus_code,
+            "paper_number": paper_number,
+            "total_marks": total_marks,
+            "learning_objectives": [f"Transcribed from {filename}"],
+            "sections": [
+                {
+                    "number": 1,
+                    "title": f"Transcribed Assessment ({filename})",
+                    "topic": "Transcribed Exam",
+                    "marks": total_marks,
+                    "subparts": []
+                }
+            ]
+        }
+
+        session = ExamSession(
+            session_id=sess_id,
+            title=f"Transcribed Cambridge {detected_type.capitalize()} Paper ({filename})",
+            teacher_id=self.teacher_id,
+            paper_type=detected_type,
+            category="transcribed_paper",
+            syllabus_code=syllabus_code,
+            paper_number=paper_number,
+            institution=institution,
+            exam_year=exam_year,
+            exam_series=exam_series,
+            blueprint=blueprint_data,
+            latex_source=comp_res.repaired_source or latex_source,
+            mark_scheme_source=ms_res.repaired_source or ms_source,
+            generated_datasets=[],
+            starter_files=[],
+            questions=[{
+                "task_number": 1,
+                "title": f"Transcribed Task ({filename})",
+                "topic": "Transcribed",
+                "marks": total_marks,
+                "latex_code": transcription["latex_body"],
+                "mark_scheme_code": transcription["mark_scheme_body"]
+            }],
+            status="completed" if comp_res.success else "draft",
+            compilation_logs=comp_res.compilation_log,
+            pdf_path=str(comp_res.pdf_path) if comp_res.pdf_path else None
+        )
+
+        prog.notify("Station 4: Packaging", f"Session saved. Ready for inspection and PDF export.")
         self.session_manager.save_session(session)
         return session

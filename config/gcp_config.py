@@ -14,10 +14,12 @@ load_dotenv()
 
 # Base directories
 BASE_DIR = Path(__file__).resolve().parent.parent
+TEMPLATES_DIR = BASE_DIR / "templates"
 STORAGE_DIR = BASE_DIR / "data_store"
 LOCAL_SESSIONS_DIR = STORAGE_DIR / "sessions"
 LOCAL_PREFS_DIR = STORAGE_DIR / "preferences"
 
+TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
 LOCAL_SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
 LOCAL_PREFS_DIR.mkdir(parents=True, exist_ok=True)
 

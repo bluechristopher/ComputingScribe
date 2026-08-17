@@ -210,6 +210,40 @@ class TestEduScribePipeline(unittest.TestCase):
         self.assertEqual(assembled["total_marks"], 50)
         print(" [PASS] Question-by-Question Studio & Auto-Renumbering Verified.")
 
+    def test_7_document_transcription_and_normalization(self):
+        """Tests transcribing a draft/legacy exam document into standardized Cambridge LaTeX."""
+        sample_draft = """
+        Task 1: Linear ADT Stack
+        Students must implement a Stack in Python with push and pop methods.
+        Subtask 1.1: Initialize stack with size 10. (4 marks)
+        Subtask 1.2: Implement push and pop with bounds check. (6 marks)
+        Subtask 1.3: Run driver code and test with inputs 0, 22. (10 marks)
+        """
+        transcription = self.orchestrator.document_transcriber.transcribe_text(
+            extracted_text=sample_draft,
+            filename="prelim_draft.docx",
+            paper_type="practical",
+            institution="Victoria Junior College",
+            exam_year="2026",
+            exam_series="PRELIM"
+        )
+        self.assertEqual(transcription["detected_paper_type"], "practical")
+        self.assertIn(r"\maintask{1}", transcription["latex_source"])
+        self.assertIn(r"\tasksubtaskintro{1}", transcription["latex_source"])
+        self.assertIn(r"\subtask{1.1}", transcription["latex_source"])
+        self.assertIn(r"\PadToMultipleOfFour", transcription["latex_source"])
+
+        # Test end-to-end compilation with orchestrator
+        session = self.orchestrator.transcribe_and_compile_document(
+            file_bytes=sample_draft.encode("utf-8"),
+            filename="prelim_draft.docx",
+            paper_type="practical",
+            institution="Victoria Junior College"
+        )
+        self.assertEqual(session.status, "completed")
+        self.assertIsNotNone(session.pdf_path)
+        print(" [PASS] Document Transcriber & Cambridge Normalization Verified.")
+
 if __name__ == "__main__":
     unittest.main()
 

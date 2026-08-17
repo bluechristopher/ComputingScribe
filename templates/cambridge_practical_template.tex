@@ -89,13 +89,20 @@
 
 % --- Practical Section & Task Headings ---
 \newcommand{\maintask}[1]{%
-  \vspace{0.8em}%
-  {\noindent\fontsize{11.5pt}{14pt}\selectfont\textbf{Task #1}}\par\vspace{0.2em}%
+  \vspace{1.0em}%
+  {\noindent\fontsize{12pt}{15pt}\selectfont\textbf{Task #1}}\par\vspace{0.4em}%
+  {\noindent Name your Jupyter Notebook as:}\par\vspace{0.4em}%
+  {\noindent\texttt{TASK#1\_<your name>\_<centre number>\_<index number>.ipynb}}\par\vspace{0.8em}%
 }
 
 \newcommand{\subtask}[1]{%
   \vspace{0.9em}%
   {\noindent\fontsize{11pt}{13.5pt}\selectfont\textbf{Task #1}}\par\vspace{0.2em}%
+}
+
+\newcommand{\taskfooter}[1]{%
+  \par\vspace{0.8em}\noindent
+  Save your Jupyter Notebook for Task #1.\par\vspace{1.0em}%
 }
 
 % --- Cambridge List Structure Setup ---
@@ -121,22 +128,30 @@
   parsep=0.1em
 }
 
-% --- Accurate Jupyter Notebook Cell Macro ---
+% --- Accurate Jupyter Notebook Subtask Instruction Macro ---
 \definecolor{jupytegray}{gray}{0.92}
 \newlength{\jupytlabelw}
 
-\newcommand{\jupytercell}[2]{%
-  \par\vspace{0.6em}\noindent
-  \settowidth{\jupytlabelw}{\ttfamily In [#1]:\space}%
+\newcommand{\tasksubtaskintro}[1]{%
+  \par\vspace{0.5em}\noindent
+  The program must only use local variables; any data required by a function needs to be passed as parameters and returned (where appropriate).\par\vspace{0.5em}\noindent
+  For each of the sub-tasks, add a comment statement at the beginning of the code, using the hash symbol `\#', to indicate the sub-task the program code belongs to, for example:\par\vspace{0.6em}\noindent
+  \settowidth{\jupytlabelw}{\ttfamily In [1]:\space}%
   \begin{tabular}{@{}p{\jupytlabelw}@{}p{\dimexpr\linewidth-\jupytlabelw\relax}@{}}
-    \ttfamily In [#1]: & \setlength{\fboxsep}{5.5pt}\fboxrule=0.6pt%
+    \ttfamily In [1]: & \setlength{\fboxsep}{5.5pt}\fboxrule=0.6pt%
     \fcolorbox{black}{jupytegray}{%
       \begin{minipage}{\dimexpr\linewidth-\jupytlabelw-14pt\relax}
-        \ttfamily\itshape #2
+        \ttfamily\itshape \#Task #1.1\par
+        \ttfamily\itshape Program code
       \end{minipage}%
     } \\
     & \vspace{0.2em}\ttfamily Output:
-  \end{tabular}\par\vspace{0.6em}
+  \end{tabular}\par\vspace{0.8em}%
+}
+
+% Jupyter cell macro alias
+\newcommand{\jupytercell}[2][1]{%
+  \tasksubtaskintro{#1}%
 }
 
 % --- Cambridge Header & Footer Setup ---
@@ -152,6 +167,22 @@
 \newcommand{\TurnOver}{\fancyfoot[R]{\fontsize{9.5pt}{11pt}\selectfont\textbf{[Turn over}}}
 \newcommand{\NoTurnOver}{\fancyfoot[R]{}}
 
+% --- Ensure total pages is a multiple of 4 with BLANK PAGE ---
+\newcommand{\PadToMultipleOfFour}{%
+  \clearpage
+  \NoTurnOver
+  \loop
+    \ifnum\numexpr\value{page}-((\value{page}-1)/4)*4\relax=1
+    \else
+      \vspace*{\fill}
+      \begin{center}
+        {\fontsize{13pt}{16pt}\selectfont\textbf{BLANK PAGE}}
+      \end{center}
+      \vspace*{\fill}
+      \clearpage
+  \repeat
+}
+
 % --- Begin Document ---
 \begin{document}
 
@@ -159,5 +190,7 @@
 \TurnOver
 
 % __AGENT_BODY_SLOT__
+
+\PadToMultipleOfFour
 
 \end{document}

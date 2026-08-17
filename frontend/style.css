@@ -944,3 +944,47 @@ code, pre, .inline-code, span.inline-code {
     font-weight: 700 !important;
     box-shadow: 0 2px 5px rgba(30, 64, 175, 0.08) !important;
 }
+
+/* ==============================================================================
+   9. PREMIUM SEGMENTED MODE SELECTOR
+   ============================================================================== */
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    padding: 6px !important;
+    margin: 8px 0 16px 0 !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 9px !important;
+    padding: 8px 16px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+    font-weight: 600 !important;
+    font-size: 0.93rem !important;
+}
+
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover {
+    background: #e2e8f0 !important;
+    color: #1e3a8a !important;
+}
+
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label[data-checked="true"],
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) {
+    background: #ffffff !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) * {
+    color: #1e3a8a !important;
+    font-weight: 700 !important;
+}

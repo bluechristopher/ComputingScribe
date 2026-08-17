@@ -170,7 +170,17 @@ ComputingScribe AI demonstrates deep architectural synergy between **Google Clou
 - **Automatic Renumbering Engine**: Reordering questions automatically renumbers all `\maintask{X}`, `\subtask{X.y}`, `In [X]:` Jupyter cells, and mark scheme rows across the entire paper!
 - **1-Click Full Assembly & Compilation**: Compiles the assembled question queue into a unified `paper.pdf`, `mark_scheme.pdf`, and `.zip` download.
 
-### 8. One-Click Multi-Artifact Export Bundle
+### 8. Document Transcriber & Cambridge LaTeX Normalizer (Mode 3)
+- **Legacy & Draft Document Ingestion**: Ingests exam drafts in Microsoft Word (`.docx`), Adobe PDF (`.pdf`), or text (`.txt`/`.tex`) format.
+- **Intelligent Structure Extraction**: Extracts sections, tasks, marks, tables, and algorithms using `DocumentParser`.
+- **Autonomous Cambridge Normalization**: Transcribes and reformats uploaded content into rigid **Singapore-Cambridge H2 Computing (9569)** LaTeX:
+  - Standardizes task headings into `\maintask{X}` with `TASKX_<your name>_<centre number>_<index number>.ipynb`.
+  - Injects `\tasksubtaskintro{X}` (local variables rule + left-aligned `In [1]:` box) before subtasks.
+  - Formats subtasks with structured bullet points and `\Marks{<n>}` brackets.
+  - Normalizes relational schemas with solid underline (`\uline{...}`) for Primary Keys and dashed underline (`\dashuline{...}`) for Foreign Keys.
+  - Automatically synthesizes matching Cambridge Mark Scheme rows and compiles to PDF.
+
+### 9. One-Click Multi-Artifact Export Bundle
 - Instantly packages a production-ready `.zip` archive containing:
   - `paper.pdf` & `paper.tex` (Exam Question Paper)
   - `mark_scheme.pdf` & `mark_scheme.tex` (Official Cambridge Mark Scheme)
@@ -188,15 +198,17 @@ ComputingScribe AI demonstrates deep architectural synergy between **Google Clou
 - **Frontend & Typesetting**: Streamlit, KaTeX, TeXLive (`pdflatex`), FPDF2, Pydantic, PyPDF, Python-Docx.
 
 ### Curricula & Styling References
-1. **Singapore-Cambridge GCE A-Level H2 Computing (Syllabus 9569 / 2027)**:
+1. **Singapore-Cambridge GCE A-Level H2 Computing (Syllabus 9569 / 2025–2027)**:
    - Section 1: Data and Data Structures (Linear & Non-Linear ADTs, BST, Hash Tables).
    - Section 2: Algorithms and Problem Solving (Quicksort, Merge sort, Decision tables, Big-O Complexity).
    - Section 3: System Design & Implementation (Python 3, OOP Polymorphism, 1NF-3NF Relational DBs, Flask, Networks & Subnetting).
    - Section 4: Ethics, Legislation & Emerging Tech (PDPA, AI Ethics, Cybersecurity).
-2. **Cambridge International AS & A Level Computer Science (9618)**:
+2. **Official October/November 2025 Paper 2 (9569/02) Grounding**:
+   - Standardized Jupyter filename formats (`TASKX_<name>_<centre>_<index>.ipynb`).
+   - Left-aligned invariant `In [1]:` subtask preamble and `#Task X.1` comment rules.
+   - 4-page signature booklet padding (`\PadToMultipleOfFour`) with bold `BLANK PAGE` sheets.
+3. **Cambridge International AS & A Level Computer Science (9618)**:
    - Command word taxonomy, tabular mark scheme rubrics, and pseudocode standards.
-3. **Past Singapore-Cambridge A-Level Computing Papers & Marking Styling References**:
-   - Authentic typographic layouts, nested task structures (`Task 1.1`, `Task 1.2`), right-aligned mark brackets (`\hfill [3]`), code listing boxes, and standard marking guidance conventions.
 
 ---
 

@@ -31,28 +31,38 @@ class DocumentParser:
     @staticmethod
     def parse_docx(file_bytes: bytes, filename: str = "document.docx") -> Dict[str, Any]:
         """Parses Word DOCX bytes into structured paragraph text and tables."""
-        doc = docx.Document(io.BytesIO(file_bytes))
-        paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
-        
-        tables_text = []
-        for table in doc.tables:
-            table_rows = []
-            for row in table.rows:
-                row_data = [cell.text.strip() for cell in row.cells]
-                table_rows.append(" | ".join(row_data))
-            tables_text.append("\n".join(table_rows))
+        try:
+            doc = docx.Document(io.BytesIO(file_bytes))
+            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+            
+            tables_text = []
+            for table in doc.tables:
+                table_rows = []
+                for row in table.rows:
+                    row_data = [cell.text.strip() for cell in row.cells]
+                    table_rows.append(" | ".join(row_data))
+                tables_text.append("\n".join(table_rows))
 
-        full_text = "\n\n".join(paragraphs)
-        if tables_text:
-            full_text += "\n\n--- Tables Extracted ---\n" + "\n\n".join(tables_text)
+            full_text = "\n\n".join(paragraphs)
+            if tables_text:
+                full_text += "\n\n--- Tables Extracted ---\n" + "\n\n".join(tables_text)
 
-        return {
-            "filename": filename,
-            "file_type": "docx",
-            "paragraph_count": len(paragraphs),
-            "table_count": len(tables_text),
-            "full_text": full_text
-        }
+            return {
+                "filename": filename,
+                "file_type": "docx",
+                "paragraph_count": len(paragraphs),
+                "table_count": len(tables_text),
+                "full_text": full_text
+            }
+        except Exception:
+            text = file_bytes.decode("utf-8", errors="ignore")
+            return {
+                "filename": filename,
+                "file_type": "docx",
+                "paragraph_count": len(text.splitlines()),
+                "table_count": 0,
+                "full_text": text
+            }
 
     @classmethod
     def parse_file(cls, file_bytes: bytes, filename: str) -> Dict[str, Any]:

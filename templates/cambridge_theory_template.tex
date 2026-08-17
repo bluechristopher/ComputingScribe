@@ -171,6 +171,22 @@
 \newcommand{\TurnOver}{\fancyfoot[R]{\fontsize{9.5pt}{11pt}\selectfont\textbf{[Turn over}}}
 \newcommand{\NoTurnOver}{\fancyfoot[R]{}}
 
+% --- Ensure total pages is a multiple of 4 with BLANK PAGE ---
+\newcommand{\PadToMultipleOfFour}{%
+  \clearpage
+  \NoTurnOver
+  \loop
+    \ifnum\numexpr\value{page}-((\value{page}-1)/4)*4\relax=1
+    \else
+      \vspace*{\fill}
+      \begin{center}
+        {\fontsize{13pt}{16pt}\selectfont\textbf{BLANK PAGE}}
+      \end{center}
+      \vspace*{\fill}
+      \clearpage
+  \repeat
+}
+
 % --- Begin Document ---
 \begin{document}
 
@@ -178,5 +194,7 @@
 \TurnOver
 
 % __AGENT_BODY_SLOT__
+
+\PadToMultipleOfFour
 
 \end{document}

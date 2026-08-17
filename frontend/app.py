@@ -378,7 +378,11 @@ col_m1, col_m2 = st.columns([1, 1])
 with col_m1:
     author_mode = st.radio(
         "🛠️ Choose Authoring Mode",
-        options=["⚡ Full Paper Co-Authoring (All-in-One)", "🎨 Question-by-Question Studio (Iterative & Modular)"],
+        options=[
+            "⚡ Full Paper Co-Authoring (All-in-One)",
+            "🎨 Question-by-Question Studio (Iterative & Modular)",
+            "📄 Document Transcriber (Word / PDF to Cambridge LaTeX)"
+        ],
         horizontal=True
     )
 
@@ -744,6 +748,94 @@ else:
                     st.success("🎉 Full Exam Package Assembled and Compiled Successfully!")
                     st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
+
+# ==============================================================================
+# MODE C: DOCUMENT TRANSCRIBER (WORD / PDF TO CAMBRIDGE LATEX)
+# ==============================================================================
+elif "Document Transcriber" in author_mode:
+    with st.expander("📄 Upload Exam Document to Transcribe & Standardize", expanded=True if not st.session_state.current_session else False):
+        st.markdown("Upload any legacy or draft examination paper in **Word (.docx)**, **PDF (.pdf)**, or **Text (.txt/.tex)** format. The AI agent will extract the questions and transcribe them into publication-grade **Singapore-Cambridge H2 Computing LaTeX** conforming strictly to Cambridge specifications.")
+        
+        doc_file = st.file_uploader(
+            "Upload Word / PDF Document",
+            type=["docx", "pdf", "txt", "tex"],
+            help="Upload your exam paper draft to convert into Cambridge LaTeX.",
+            key="trans_file_uploader"
+        )
+
+        col_t1, col_t2 = st.columns([1.2, 1.8])
+        with col_t1:
+            trans_paper_type = st.selectbox(
+                "Target Paper Standard",
+                options=["auto", "practical", "theory"],
+                format_func=lambda x: "Auto-Detect Format" if x == "auto" else ("Paper 2 Practical (9569/02)" if x == "practical" else "Paper 1 Theory (9569/01)"),
+                key="trans_paper_type_select"
+            )
+        with col_t2:
+            st.info("💡 **Autonomous Normalization**: Detects and enforces `\\maintask{X}`, `\\tasksubtaskintro{X}`, subtask structures, `\\Marks{n}`, monospace code formatting, and 4-page signature booklet padding.")
+
+        col_inst, col_yr, col_ser = st.columns([1.5, 0.8, 1.1])
+        with col_inst:
+            t_institution = st.text_input("Institution Name", value="Singapore Junior College", key="trans_inst")
+        with col_yr:
+            t_exam_year = st.text_input("Exam Year", value="2026", key="trans_yr")
+        with col_ser:
+            t_exam_series = st.selectbox("Series", options=["WA", "Promo", "Prelim", "Specimen"], index=2, key="trans_ser")
+
+        transcribe_btn = st.button("✨ Transcribe & Standardize to Cambridge LaTeX", type="primary", use_container_width=True, disabled=not doc_file, key="trans_run_btn")
+
+    if transcribe_btn and doc_file:
+        train_station_placeholder = st.empty()
+        logs = []
+        start_time = time.time()
+
+        def update_progress(step: str, message: str):
+            logs.append(f"[{step}] {message}")
+            current_station_idx = 0
+            if "Station 1" in step:
+                current_station_idx = 0
+            elif "Station 2" in step:
+                current_station_idx = 2
+            elif "Station 3" in step:
+                current_station_idx = 5
+            elif "Station 4" in step:
+                current_station_idx = 6
+
+            hud_html = build_pipeline_hud_html(
+                current_station_idx=current_station_idx,
+                active_msg=f"{step}: {message}",
+                is_done=False
+            )
+            train_station_placeholder.markdown(hud_html, unsafe_allow_html=True)
+            time.sleep(0.08)
+
+        progress_listener = ExamGenerationProgress(log_callback=update_progress)
+
+        with st.spinner("Extracting questions and normalizing to Cambridge LaTeX..."):
+            session = st.session_state.orchestrator.transcribe_and_compile_document(
+                file_bytes=doc_file.getvalue(),
+                filename=doc_file.name,
+                paper_type=trans_paper_type,
+                institution=t_institution,
+                exam_year=t_exam_year,
+                exam_series=t_exam_series,
+                progress=progress_listener
+            )
+
+        duration = time.time() - start_time
+        st.session_state.last_generation_duration = duration
+        st.session_state.current_session = session
+
+        # Show 100% complete HUD
+        final_hud = build_pipeline_hud_html(
+            current_station_idx=6,
+            active_msg="Document successfully transcribed & standardized to Cambridge LaTeX!",
+            is_done=True,
+            final_duration_str=f"{duration:.1f}s"
+        )
+        train_station_placeholder.markdown(final_hud, unsafe_allow_html=True)
+        st.success(f"🎉 Exam Document '{doc_file.name}' Transcribed into Cambridge LaTeX in {duration:.1f}s!")
+        st.rerun()
 
 # ==============================================================================
 # DISPLAY ARTIFACTS & RESULTS

@@ -141,37 +141,63 @@ class LaTeXVisualRenderer:
             font-weight: 600;
         }}
         
-        .jupyter-box {{
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-left: 4px solid #3b82f6;
-            border-radius: 6px;
-            padding: 12px 16px;
-            margin: 14px 0;
-            font-family: 'Fira Code', monospace;
+        .jupyter-intro-block {{
+            margin: 14px 0 18px 0;
             font-size: 10pt;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+            line-height: 1.55;
+            color: #1e293b;
         }}
         
-        .jupyter-label {{
-            color: #2563eb;
+        .jupyter-cell-aligned {{
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin: 10px 0 4px 0;
+        }}
+        
+        .jupyter-in-tag {{
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
             font-weight: 700;
-            margin-bottom: 6px;
-            font-size: 0.88rem;
-        }}
-        
-        .jupyter-code {{
-            white-space: pre-wrap;
             color: #0f172a;
-            line-height: 1.5;
+            white-space: nowrap;
+            padding-top: 4px;
         }}
         
-        .jupyter-output-label {{
-            margin-left: 12px;
-            font-family: 'Fira Code', monospace;
+        .jupyter-grey-frame {{
+            background: #ebeef2;
+            border: 1px solid #334155;
+            border-radius: 3px;
+            padding: 7px 14px;
+            flex: 1;
+            max-width: 550px;
+            font-family: 'Courier New', monospace;
+            font-style: italic;
+            color: #0f172a;
+            line-height: 1.45;
+        }}
+        
+        .jupyter-output-tag {{
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+            color: #0f172a;
+            margin-left: 64px;
+            margin-top: 4px;
             margin-bottom: 12px;
-            font-size: 0.82rem;
-            color: #64748b;
+        }}
+
+        .blank-page-divider {{
+            text-align: center;
+            margin: 50px 0 30px 0;
+            padding: 30px 0;
+            border-top: 2px dashed #94a3b8;
+        }}
+
+        .blank-page-text {{
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #0f172a;
         }}
         
         .pseudocode-box {{
@@ -362,12 +388,45 @@ class LaTeXVisualRenderer:
                 continue
             if line.startswith(r"\begin{questions}") or line.startswith(r"\end{questions}"):
                 continue
+            if r"\PadToMultipleOfFour" in line:
+                html_out.append("<div class='blank-page-divider'><div class='blank-page-text'>BLANK PAGE</div></div>")
+                continue
 
             # Main Tasks
             if r"\maintask{" in line:
                 m = re.search(r"\\maintask\{([^}]+)\}", line)
                 t_num = m.group(1) if m else "1"
-                html_out.append(f"<div class='maintask-box'><h3 class='maintask-title'>Task {t_num}</h3></div>")
+                html_out.append(
+                    f"<div class='maintask-box'>"
+                    f"<h3 class='maintask-title'>Task {t_num}</h3>"
+                    f"<p style='margin: 6px 0 4px 0;'>Name your Jupyter Notebook as:</p>"
+                    f"<code class='inline-code'>TASK{t_num}_&lt;your name&gt;_&lt;centre number&gt;_&lt;index number&gt;.ipynb</code>"
+                    f"</div>"
+                )
+                continue
+
+            # Subtask Jupyter Intro Box
+            if r"\tasksubtaskintro{" in line or r"\jupytercell{" in line:
+                m = re.search(r"\\(?:tasksubtaskintro|jupytercell)\{([^}]+)\}", line)
+                t_num = m.group(1) if m else "1"
+                html_out.append(
+                    f"<div class='jupyter-intro-block'>"
+                    f"<p>The program must only use local variables; any data required by a function needs to be passed as parameters and returned (where appropriate).</p>"
+                    f"<p>For each of the sub-tasks, add a comment statement at the beginning of the code, using the hash symbol '#', to indicate the sub-task the program code belongs to, for example:</p>"
+                    f"<div class='jupyter-cell-aligned'>"
+                    f"<span class='jupyter-in-tag'>In [1]:</span>"
+                    f"<div class='jupyter-grey-frame'>#Task {t_num}.1<br>Program code</div>"
+                    f"</div>"
+                    f"<div class='jupyter-output-tag'>Output:</div>"
+                    f"</div>"
+                )
+                continue
+
+            # Task Footer
+            if r"\taskfooter{" in line:
+                m = re.search(r"\\taskfooter\{([^}]+)\}", line)
+                t_num = m.group(1) if m else "1"
+                html_out.append(f"<p style='margin: 14px 0 18px 0; font-weight: 500;'>Save your Jupyter Notebook for Task {t_num}.</p>")
                 continue
 
             # Sub Tasks

@@ -1,217 +1,49 @@
-\documentclass[11pt,a4paper]{article}
-
 % ==============================================================================
-% EXAM CONFIGURATION
-% ==============================================================================
-\newcommand{\Institution}{HelloWorld Junior College}
-\newcommand{\ExamYear}{2026}
-\newcommand{\ExamYearShort}{26}
-\newcommand{\SyllabusCode}{9569}
-\newcommand{\PaperNumber}{02}
-\newcommand{\ExamSeries}{PRELIM}
-
-\newcommand{\FullPaperCode}{\SyllabusCode/\PaperNumber/\ExamSeries/\ExamYearShort}
+% SINGAPORE-CAMBRIDGE GCE A-LEVEL H2 COMPUTING (9569/02)
+% OFFICIAL SPECIMEN / EXEMPLAR PAPER 2 (LAB-BASED PRACTICAL)
 % ==============================================================================
 
-\usepackage[a4paper,
-  left=1.65cm,
-  right=1.65cm,
-  top=1.5cm,
-  bottom=2.3cm,
-  headheight=14pt,
-  headsep=18pt,
-  footskip=25pt
-]{geometry}
-
-\usepackage{iftex}
-\ifXeTeX
-  \usepackage{fontspec}
-  \setmainfont{Arial}
-  \setmonofont{Courier New}
-\else\ifLuaTeX
-  \usepackage{fontspec}
-  \setmainfont{Arial}
-  \setmonofont{Courier New}
-\else
-  \usepackage[utf8]{inputenc}
-  \usepackage[T1]{fontenc}
-  \usepackage{helvet}
-  \usepackage{courier}
-  \renewcommand{\familydefault}{\sfdefault}
-\fi\fi
-
-\usepackage{textcomp}
-\usepackage{upquote}
-\usepackage{enumitem}
-\usepackage{calc}
-\usepackage{tabularx}
-\usepackage{array}
-\usepackage{listings}
-\usepackage{fancyhdr}
-\usepackage{graphicx}
-\usepackage{xcolor}
-\usepackage{tikz}
-\usepackage[normalem]{ulem}
-
-% Configure dashed underline length and spacing for database schemas
-\dashlength 0.25em
-\dashgap 0.2em
-
-% --- Paragraph and Line Spacing ---
-\linespread{1.08}
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{0.5em}
-
-% --- Bulletproof Right-Aligned Marks Macro ---
-\newcommand{\Marks}[1]{%
-  \leavevmode
-  \unskip
-  \penalty9999
-  \hbox{}\nobreak\hfill
-  \quad
-  \hbox{[#1]}%
-  \par
-}
-
-% --- Inline Code Macro (Supports nested commands) ---
-\newcommand{\code}[1]{{\ttfamily #1}}
-
-% --- Listings Global Setup for Straight Quotes ---
-\lstset{
-  basicstyle=\ttfamily,
-  upquote=true
-}
-
-% --- Practical Section & Task Headings ---
-\newcommand{\maintask}[1]{%
-  \vspace{0.8em}%
-  {\noindent\fontsize{11.5pt}{14pt}\selectfont\textbf{Task #1}}\par\vspace{0.2em}%
-}
-
-\newcommand{\subtask}[1]{%
-  \vspace{0.9em}%
-  {\noindent\fontsize{11pt}{13.5pt}\selectfont\textbf{Task #1}}\par\vspace{0.2em}%
-}
-
-% --- Cambridge List Structure Setup ---
-\newlist{taskitemize}{itemize}{1}
-\setlist[taskitemize]{
-  label=\textbullet,
-  leftmargin=0.8cm,
-  labelwidth=0.4cm,
-  labelsep=0.4cm,
-  topsep=0.3em,
-  itemsep=0.2em,
-  parsep=0.2em
-}
-
-% --- Test Case Block Environment ---
-\newlist{testcases}{itemize}{1}
-\setlist[testcases]{
-  label={},
-  leftmargin=0pt,
-  itemindent=0pt,
-  topsep=0.2em,
-  itemsep=0.1em,
-  parsep=0.1em
-}
-
-% --- Accurate Jupyter Notebook Cell Macro ---
-\definecolor{jupytegray}{gray}{0.92}
-\newlength{\jupytlabelw}
-
-\newcommand{\jupytercell}[2]{%
-  \par\vspace{0.6em}\noindent
-  \settowidth{\jupytlabelw}{\ttfamily In [#1]:\space}%
-  \begin{tabular}{@{}p{\jupytlabelw}@{}p{\linewidth-\jupytlabelw}@{}}
-    \ttfamily In [#1]: & \setlength{\fboxsep}{5.5pt}\fboxrule=0.6pt%
-    \fcolorbox{black}{jupytegray}{%
-      \begin{minipage}{\dimexpr\linewidth-\jupytlabelw-12pt\relax}
-        \ttfamily\itshape #2
-      \end{minipage}%
-    } \\
-    & \vspace{0.2em}\ttfamily Output:
-  \end{tabular}\par\vspace{0.6em}
-}
-
-% --- Cambridge Header & Footer Setup ---
-\pagestyle{fancy}
-\fancyhf{}
-\renewcommand{\headrulewidth}{0pt}
-\renewcommand{\footrulewidth}{0pt}
-
-\fancyhead[C]{\textbf{\thepage}}
-
-\fancyfoot[L]{\fontsize{8.5pt}{10pt}\selectfont \copyright\ \Institution\ \ExamYear}
-\fancyfoot[C]{\fontsize{8.5pt}{10pt}\selectfont \FullPaperCode}
-\newcommand{\TurnOver}{\fancyfoot[R]{\fontsize{9.5pt}{11pt}\selectfont\textbf{[Turn over}}}
-\newcommand{\NoTurnOver}{\fancyfoot[R]{}}
-
-% --- Begin Document ---
-\begin{document}
-
-% ==============================================================================
-% PAGE 2
-% ==============================================================================
-\setcounter{page}{2}
-\TurnOver
-
-\textbf{Instruction to candidates:}
-
-Your program code and output for each of Task 1 to 4 should be saved in a single \code{.ipynb} file. For example, your program code and output for Task 1 should be saved as:
-
-\code{TASK1\_<your name>\_<centre number>\_<index number>.ipynb}
+\noindent Your program code and output for each of Task 1 to 4 should be saved in a single \texttt{.ipynb} file. For example, your program code and output for Task 1 should be saved as:\par\vspace{0.4em}
+\noindent\texttt{TASK1\_<your name>\_<centre number>\_<index number>.ipynb}\par\vspace{1.0em}
 
 \maintask{1}
 
-Name your Jupyter Notebook as:
-
-\code{TASK1\_<your name>\_<centre number>\_<index number>.ipynb}
-
 A denary number can be converted to binary using the division by 2 method. The denary number is divided by 2 repeatedly until it becomes 0. After each division, the remainder of 1 or 0 is stored. These remainders are written in reverse order to create the binary number. For example, converting the denary number 28 to binary:
 
-\vspace{0.2em}
-\hspace*{0.8cm}28 / 2 = 14 remainder 0 \\
-\hspace*{0.8cm}14 / 2 = 7 remainder 0 \\
-\hspace*{0.8cm}7 / 2 = 3 remainder 1 \\
-\hspace*{0.8cm}3 / 2 = 1 remainder 1 \\
-\hspace*{0.8cm}1 / 2 = 0 remainder 1 \\
-\hspace*{0.8cm}28 denary is 11100 in binary.
+\begin{center}
+\begin{tabular}{r@{\ }l}
+28 / 2 = 14 & remainder 0 \\
+14 / 2 = 7 & remainder 0 \\
+7 / 2 = 3 & remainder 1 \\
+3 / 2 = 1 & remainder 1 \\
+1 / 2 = 0 & remainder 1 \\
+\end{tabular}
+\end{center}
+28 denary is 11100 in binary.
 
 A denary number can be converted to binary using the division by 2 method and a stack.
 
 The stack can store any number of integer data items using a 1-dimensional list. The top of stack pointer stores the index of the next space to store data in the stack.
 
-The data is \textbf{not} deleted when it is popped from the stack; the top of stack pointer is changed to point to the next space to store data.
+The data is not deleted when it is popped from the stack; the top of stack pointer is changed to point to the next space to store data.
 
-The program must only use local variables; any data required by a function needs to be passed as parameters and returned (where appropriate).
-
-For each of the sub-tasks, add a comment statement at the beginning of the code, using the hash symbol '\#', to indicate the sub-task the program code belongs to, for example:
-
-\jupytercell{1}{\#Task 1.1\\Program code}
-
-\newpage
-
-% ==============================================================================
-% PAGE 3
-% ==============================================================================
-\TurnOver
+\tasksubtaskintro{1}
 
 \subtask{1.1}
 
 The function \code{push()} takes the stack, the top of stack pointer and the data item to push onto the stack as parameters. The function stores the data item in the stack and updates the top of stack pointer. The function returns the top of stack pointer. If the stack is full, the length of the list should be increased.
 
-Write program code for the function \code{push()} \Marks{4}
+Write program code for the function \code{push()}. \Marks{4}
 
 \subtask{1.2}
 
 The function \code{pop()} takes the stack and the top of stack pointer as parameters. The data item at the top of the stack is returned along with the updated top of stack pointer.
 
-The data is \textbf{not} deleted when it is popped. The top of stack pointer is changed to point to the new top of stack; this allows data to be overwritten when new data is pushed onto the stack.
+The data is not deleted when it is popped. The top of stack pointer is changed to point to the new top of stack; this allows data to be overwritten when new data is pushed onto the stack.
 
-If the stack is empty, the function returns \code{False}
+If the stack is empty, the function returns \code{False}.
 
-Write program code for the function \code{pop()} \Marks{4}
+Write program code for the function \code{pop()}. \Marks{4}
 
 \subtask{1.3}
 
@@ -219,7 +51,7 @@ The function \code{main()} declares a 1-dimensional list to represent the stack 
 
 The function takes a positive integer as input from the user or as a parameter.
 
-The function only outputs to the screen and does \textbf{not} return any data.
+The function only outputs to the screen and does not return any data.
 
 If the number input is 0, the program outputs the binary value 0.
 
@@ -228,92 +60,32 @@ If the number input is greater than 0, the input is repeatedly divided by 2 unti
 Write program code for \code{main()} and call this function. \Marks{10}
 
 Test your program with the following inputs:
-
-\begin{testcases}
+\begin{taskitemize}
   \item Test 1: 0
   \item Test 2: 22
   \item Test 3: 46967
-\end{testcases}
+\end{taskitemize}
 
 Show the output for each test. \Marks{2}
 
-Save your Jupyter Notebook for Task 1.
+\taskfooter{1}
 
 \newpage
-
-% ==============================================================================
-% PAGE 4
-% ==============================================================================
 \TurnOver
 
 \maintask{2}
-
-Name your Jupyter Notebook as:
-
-\code{TASK2\_<your name>\_<centre number>\_<index number>.ipynb}
 
 A prototype for a computer game needs to be created using Object-Oriented Programming.
 
 The game has a player who has to move through a series of rooms. Each room has at least one door to one other room. In all rooms apart from the Start room, a user has to answer a question correctly before he can move to the room he has chosen.
 
-An example layout for a series of rooms is shown. This layout is an example and does not match the layout for the game you will be programming.
+Each room has four positions where a door can be situated: North, South, East and West. Not all rooms have a door in each position. In the game, each room is given a number; the Start room is room number 0.
 
-\vspace{0.5em}
-\noindent\begin{minipage}{\linewidth}
-\centering
-\begin{tikzpicture}[scale=0.85]
-  \draw[thick] (0,2) rectangle (1.8,3.8);
-  \node at (0.9,3.3) {\fontsize{10pt}{12pt}\selectfont Start};
-  
-  \draw[thick] (0,0.2) rectangle (1.8,2);
-  \draw[thick] (1.8,0.2) rectangle (3.6,2);
-  \draw[thick] (1.8,-1.6) rectangle (3.6,0.2);
-  \draw[thick] (3.6,-1.6) rectangle (5.4,0.2);
-  \node at (4.5,-0.7) {\fontsize{10pt}{12pt}\selectfont Finish};
-
-  \fill[black] (1.65,2.6) rectangle (1.95,3.2);
-  \fill[black] (0.6,1.85) rectangle (1.2,2.15);
-  \fill[black] (2.3,1.85) rectangle (2.9,2.15);
-  \fill[black] (2.3,-0.75) rectangle (2.9,-0.45);
-  \fill[black] (4.1,-0.75) rectangle (4.7,-0.45);
-  \fill[black] (3.45,-0.3) rectangle (3.75,0.3);
-  \fill[black] (2.05,0.8) rectangle (2.35,1.4);
-
-  \begin{scope}[shift={(7,2)}]
-    \draw[thick, fill=gray!15] (0,0) circle (1.4);
-    \draw[thick] (0,0) circle (1.25);
-    \draw[thick, -latex] (0,-1.1) -- (0,1.1);
-    \draw[thick, -latex] (-1.1,0) -- (1.1,0);
-    \node[above] at (0,1.1) {\textbf{N}};
-    \node[below] at (0,-1.1) {\textbf{S}};
-    \node[right] at (1.1,0) {\textbf{E}};
-    \node[left] at (-1.1,0) {\textbf{W}};
-    \draw[thick] (-0.3,-0.3) -- (0.3,0.3);
-    \draw[thick] (-0.3,0.3) -- (0.3,-0.3);
-  \end{scope}
-\end{tikzpicture}
-\end{minipage}
-\vspace{0.5em}
-
-Each room has four positions where a door can be situated: North, South, East and West. Not all rooms have a door in each position. In the example diagram, each room is represented by a square and each door is represented by a solid rectangle between the two rooms. For example, the Start room only has doors to the East and the South.
-
-Each room is given a number; the Start room is room number 0.
-
-For each of the sub-tasks, add a comment statement at the beginning of the code, using the hash symbol '\#', to indicate the sub-task the program code belongs to, for example:
-
-\jupytercell{1}{\#Task 2.1\\Program code}
-
-\newpage
-
-% ==============================================================================
-% PAGE 5
-% ==============================================================================
-\TurnOver
+\tasksubtaskintro{2}
 
 \subtask{2.1}
 
 The class \code{Room} contains four attributes:
-
 \begin{taskitemize}
   \item \code{north\_exit} -- an integer for the room number that the North door leads to, or -1 if there is no door.
   \item \code{east\_exit} -- an integer for the room number that the East door leads to, or -1 if there is no door.
@@ -322,7 +94,6 @@ The class \code{Room} contains four attributes:
 \end{taskitemize}
 
 The class \code{Room} has the following methods:
-
 \begin{taskitemize}
   \item A constructor that takes four integers for \code{north\_exit}, \code{east\_exit}, \code{south\_exit} and \code{west\_exit} as parameters. Each parameter is assigned to the appropriate attribute.
   \item \code{get\_exit()} that takes a character as a parameter (\code{'N'}, \code{'S'}, \code{'E'}, or \code{'W'}) to represent the door selected and returns the attribute value for that door.
@@ -330,80 +101,58 @@ The class \code{Room} has the following methods:
 
 Write program code to declare the class \code{Room} and its methods. \Marks{5}
 
-Three classes inherit from \code{Room}: \code{Start}, \code{Finish} and \code{Normal}
+Three classes inherit from \code{Room}: \code{Start}, \code{Finish} and \code{Normal}.
 
 \code{Start} is the first room where the game begins and also contains:
-
 \begin{taskitemize}
-  \item the attribute \code{start\_text} that is output at the beginning of the game. This value is initialised in the constructor from a parameter
+  \item the attribute \code{start\_text} that is output at the beginning of the game. This value is initialised in the constructor from a parameter.
   \item the method \code{get\_message()} that returns the string in \code{start\_text} and a statement for each direction where there is a door from that room, for example \code{'There is a door to the North.'} The method also returns the string \code{"Start"} (for example as part of a tuple) to indicate that this is the Start room.
 \end{taskitemize}
 
 Write program code to declare the class \code{Start} and its methods. \Marks{5}
 
 \code{Finish} is the room where the game ends and also contains:
-
 \begin{taskitemize}
-  \item the attribute \code{finish\_text} that is output at the end of the game. This value is initialised in the constructor from a parameter
+  \item the attribute \code{finish\_text} that is output at the end of the game. This value is initialised in the constructor from a parameter.
   \item the method \code{get\_message()} that returns \code{finish\_text} and the string \code{"Finish"} (for example as part of a tuple) to indicate that the game is finished.
 \end{taskitemize}
 
 Write program code to declare the class \code{Finish} and its methods. \Marks{2}
 
-\code{Normal} is a room that is \textbf{not} the Start room and is \textbf{not} the Finish room. The class \code{Normal} also contains:
-
+\code{Normal} is a room that is not the Start room and is not the Finish room. The class \code{Normal} also contains:
 \begin{taskitemize}
-  \item the attributes \code{question} and \code{answer}. The value of each is initialised in the constructor from its parameter
-  \item the method \code{get\_question()} that returns the data in \code{question}
-  \item the method \code{check\_answer()} that compares its parameter (the user's answer) to \code{answer} and returns \code{True} if it matches and \code{False} if it does not match
-  \item the method \code{get\_message()} that returns a string describing all of the doors from that room, for example \code{'There is a room to the North. There is a room to the West.'} The method also returns the string \code{"Normal"} (for example as part of a tuple) to indicate that this is a normal room.
+  \item the attributes \code{question} and \code{answer}. The value of each is initialised in the constructor from its parameter.
+  \item the method \code{get\_question()} that returns the data in \code{question}.
+  \item the method \code{check\_answer()} that compares its parameter (the user's answer) to \code{answer} and returns \code{True} if it matches and \code{False} if it does not match.
+  \item the method \code{get\_message()} that returns a string describing all of the doors from that room. The method also returns the string \code{"Normal"} (for example as part of a tuple).
 \end{taskitemize}
 
 Write program code to declare the class \code{Normal} and its methods. \Marks{4}
-
-\newpage
-
-% ==============================================================================
-% PAGE 6
-% ==============================================================================
-\TurnOver
 
 \subtask{2.2}
 
 The text file \code{rooms.txt} stores data about the rooms in the game. Each row of data is a separate room.
 
 The values in each row are in the order:
-
 \begin{taskitemize}
   \item room type: \code{Start}, \code{Finish}, or \code{Normal}
   \item the room number that can be accessed to the North of the room, or -1 if there is no door
   \item the room number that can be accessed to the East of the room, or -1 if there is no door
   \item the room number that can be accessed to the South of the room, or -1 if there is no door
   \item the room number that can be accessed to the West of the room, or -1 if there is no door
-  \item the start message if the room is of type \code{Start}\\
-        or the finish message if the room is of type \code{Finish}\\
-        or the question if the room is of type \code{Normal}
+  \item the start message if the room is of type \code{Start}, or finish message if of type \code{Finish}, or question if of type \code{Normal}
   \item the answer to the question if the room is of type \code{Normal}
 \end{taskitemize}
 
-The rooms are read in the order they appear in the file and stored in a 1-dimensional list. For example: the room in the first row of the file is stored in index 0; the room in the second row of the file is stored in index 1.
+The rooms are read in the order they appear in the file and stored in a 1-dimensional list.
 
 Write program code for a function to:
-
 \begin{taskitemize}
   \item read the data from the text file
   \item create an object of the appropriate class for each room
   \item store the rooms in a 1-dimensional list
   \item return the 1-dimensional list.
-\end{taskitemize}
-\Marks{7}
-
-\newpage
-
-% ==============================================================================
-% PAGE 7
-% ==============================================================================
-\TurnOver
+\end{taskitemize} \Marks{7}
 
 \subtask{2.3}
 
@@ -415,40 +164,14 @@ The process repeats until the user reaches the Finish room. When the user reache
 
 Write program code for a function to allow a user to play the game and call this function. \Marks{13}
 
-Test your program with the following inputs:
+Test your program with given sample inputs. \Marks{2}
 
-\begin{testcases}
-  \item input 1: N
-  \item input 2: E
-  \item input 3: 00
-  \item input 4: FF
-  \item input 5: N
-  \item input 6: 0
-  \item input 7: N
-  \item input 8: 170
-  \item input 9: E
-  \item input 10: 0
-  \item input 11: N
-  \item input 12: 2
-  \item input 13: E
-  \item input 14: 4
-\end{testcases}
-\Marks{2}
-
-Save your Jupyter Notebook for Task 2.
+\taskfooter{2}
 
 \newpage
-
-% ==============================================================================
-% PAGE 8
-% ==============================================================================
 \TurnOver
 
 \maintask{3}
-
-Name your Jupyter Notebook as:
-
-\code{TASK3\_<your name>\_<centre number>\_<index number>.ipynb}
 
 A social media website allows users to create accounts. Users can create posts; these are messages that are displayed to other users. Users can comment on posts.
 
@@ -456,70 +179,46 @@ A database stores data about users, the posts and comments on each post from the
 
 Three tables in the database are shown:
 
-\vspace{0.4em}
-\hspace*{0.8cm}\code{User (\uline{Username}, Blocked)}
-
-\hspace*{0.8cm}\code{Post (\uline{PostID}, PostText, DateTimePosted, \dashuline{Username})}
-
-\hspace*{0.8cm}\code{Comment (\uline{CommentID}, \dashuline{PostID}, \dashuline{Username}, TheText, DateTimeCommented)}
-\vspace{0.4em}
+\noindent\code{User (\uline{Username}, Blocked)}\par
+\noindent\code{Post (\uline{PostID}, PostText, DateTimePosted, \dashuline{Username})}\par
+\noindent\code{Comment (\uline{CommentID}, \dashuline{PostID}, \dashuline{Username}, TheText, DateTimeCommented)}\par\vspace{0.4em}
 
 A primary key is indicated by underlining one or more attributes. Foreign keys are indicated by using a dashed underline.
 
-The database is being created and tested using sample data which is given in the following text files:
-\code{user.txt}, \code{post.txt} and \code{comment.txt}
+The database is being created and tested using sample data which is given in the following text files: \code{user.txt}, \code{post.txt} and \code{comment.txt}.
 
-The field \code{Blocked} in the table \code{User} stores 1 if the user is currently blocked and stores 0 if the user is \textbf{not} blocked.
+The field \code{Blocked} in the table \code{User} stores 1 if the user is currently blocked and stores 0 if the user is not blocked.
 
-For each of the sub-tasks, add a comment statement at the beginning of the code, using the hash symbol '\#', to indicate the sub-task the program code belongs to, for example:
-
-\jupytercell{1}{\#Task 3.1\\Program code}
+\tasksubtaskintro{3}
 
 \subtask{3.1}
 
-Write a Python program that uses SQL to create a database with the \textbf{three} tables: \code{User}, \code{Post} and \code{Comment}
+Write a Python program that uses SQL to create a database with the three tables: \code{User}, \code{Post} and \code{Comment}.
 
 Define the primary and foreign keys for each table. \Marks{6}
 
 \subtask{3.2}
 
-Write a Python program that uses SQL to insert the data from each of the \textbf{three} text files into the appropriate fields in each database table. \Marks{4}
+Write a Python program that uses SQL to insert the data from each of the three text files into the appropriate fields in each database table. \Marks{4}
 
 Run your program. \Marks{1}
-
-\newpage
-
-% ==============================================================================
-% PAGE 9
-% ==============================================================================
-\TurnOver
 
 \subtask{3.3}
 
 Write a Python function that:
-
 \begin{taskitemize}
   \item uses SQL to search for all comments by a user who is blocked
   \item outputs each returned username and comment on a new line.
-\end{taskitemize}
-\Marks{5}
+\end{taskitemize} \Marks{5}
 
 Run your program. \Marks{1}
 
-Save your Jupyter Notebook for Task 3.
+\taskfooter{3}
 
 \newpage
-
-% ==============================================================================
-% PAGE 10
-% ==============================================================================
 \TurnOver
 
 \maintask{4}
-
-Name your Jupyter Notebook as:
-
-\code{TASK4\_<your name>\_<centre number>\_<index number>.ipynb}
 
 A computer program prototype is being developed to store records in a hash table.
 
@@ -527,13 +226,11 @@ Each record has a key field (positive integer) and a string data item.
 
 The hash table is set up as a list, initialised with capacity for 100 records.
 
-The hashing algorithm is: \code{hash(k) = k mod s}
+The hashing algorithm is: $\text{hash}(k) = k \pmod s$
 
-\code{k} represents the key field and \code{s} represents the maximum size of the hash table.
+$k$ represents the key field and $s$ represents the maximum size of the hash table.
 
-For each of the sub-tasks, add a comment statement at the beginning of the code, using the hash symbol '\#', to indicate the sub-task the program code belongs to, for example:
-
-\jupytercell{1}{\#Task 4.1\\Program code}
+\tasksubtaskintro{4}
 
 \subtask{4.1}
 
@@ -548,55 +245,40 @@ Write program code for the function \code{calculate\_hash()} to take a key field
 The hash table uses linear probing when there is a collision. Linear probing is when the next index is checked to identify whether the index is free. This repeats until either a free index is found, or all indices have been checked and the list is full.
 
 Write program code for the function \code{insert()} to:
-
 \begin{taskitemize}
   \item take a key field and string data item as parameters
   \item calculate the index using the \code{calculate\_hash()} function
   \item store the key field and string data item in the index if available, otherwise use linear probing to find the next free index
   \item return \code{True} if the record was successfully stored or \code{False} if the hash table is full.
-\end{taskitemize}
-\Marks{6}
-
-\newpage
-
-% ==============================================================================
-% PAGE 11
-% ==============================================================================
-\NoTurnOver
+\end{taskitemize} \Marks{6}
 
 \subtask{4.4}
 
 The text file \code{records.txt} stores 70 key fields and the associated string data item. For this prototype, the string data item is a single word. The key field and string data item are separated by a space.
 
 Write program code for the function \code{read\_data()} to:
-
 \begin{taskitemize}
   \item read each key field and string data item from the text file
   \item call the function \code{insert()} with each key field and string data item
   \item output an appropriate message if any record cannot be stored in the hash table.
-\end{taskitemize}
-\Marks{4}
+\end{taskitemize} \Marks{4}
 
 Call the function \code{read\_data()} and then output the contents of the hash table. \Marks{1}
 
 \subtask{4.5}
 
-Write program code for the function \code{find\_record()} to:
-
+Write program code for the function \code{find\_record()}:
 \begin{taskitemize}
   \item take a key field as a parameter
-  \item use its hash value to return the string data item for that record or return \code{False} if the record is \textbf{not} stored in the hash table.
-\end{taskitemize}
-\Marks{3}
+  \item use its hash value to return the string data item for that record or return \code{False} if the record is not stored in the hash table.
+\end{taskitemize} \Marks{3}
 
 \subtask{4.6}
 
-Write program code to call the function \code{read\_data()} again and call the function \code{find\_record()} with the key field 475
+Write program code to call the function \code{read\_data()} again and call the function \code{find\_record()} with the key field 475.
 
-If the record is found, output the string data item in an appropriate message. If the record is \textbf{not} found, output \code{"Record not found"} \Marks{1}
+If the record is found, output the string data item in an appropriate message. If the record is not found, output \code{"Record not found"}. \Marks{1}
 
 Test your program. \Marks{1}
 
-Save your Jupyter Notebook for Task 4.
-
-\end{document}
+\taskfooter{4}
