@@ -483,7 +483,7 @@ if "Full Paper" in author_mode:
         with col_yr:
             exam_year = st.text_input("Exam Year", value="2027", key="full_yr")
         with col_ser:
-            exam_series = st.selectbox("Series", options=["WA", "Promo", "Prelim"], index=2, key="full_ser")
+            exam_series = st.selectbox("Series", options=["A-Level", "Prelim", "Practice Paper", "Promo", "WA", "Specimen"], index=1, key="full_ser")
 
         default_sample_prompt = (
             "Create a contextual H2 Computing Paper 2 practical task on implementing a Stack abstract data type in Python (push, pop, underflow check) and processing CANDIDATES.csv to calculate distinction metrics and generate a report."
@@ -527,7 +527,7 @@ if "Full Paper" in author_mode:
         stations = [
             ("Station 1: Memory & Style Agent", "🧠 Querying persistent educator profile in Cloud Firestore..."),
             ("Station 2: RAG Grounding Agent", "📚 Scanning syllabus 9569 standards & indexing exam exemplars..."),
-            ("Station 3: Blueprint Architect Agent", "📐 Synthesizing learning objectives & mark allocations on Vertex AI..."),
+            ("Station 3: Blueprint Architect Agent", "📐 Synthesizing learning objectives & mark allocations with Gemini 3.7 Flash..."),
             ("Station 4: Demographic Synthesizer Agent", "⚖️ Generating 50/50 gender balanced datasets & SQL schemas..."),
             ("Station 5: Golden TeX Authoring Agent", "✍️ Drafting Cambridge-compliant LaTeX exam paper & mark scheme..."),
             ("Station 6: Self-Healing Sandbox Agent", "🔄 Executing pdflatex compilation & 3-pass Gemini self-healing..."),
@@ -734,6 +734,16 @@ elif "Question-by-Question" in author_mode:
 
             st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
             
+            # Metadata Fields for Assembled Paper
+            with st.expander("⚙️ Assembled Paper Cover & Header Metadata", expanded=False):
+                col_b_inst, col_b_yr, col_b_ser = st.columns([1.5, 0.8, 1.1])
+                with col_b_inst:
+                    b_institution = st.text_input("Institution Name", value="HelloWorld Junior College", key="studio_inst")
+                with col_b_yr:
+                    b_exam_year = st.text_input("Exam Year", value="2027", key="studio_yr")
+                with col_b_ser:
+                    b_exam_series = st.selectbox("Series", options=["A-Level", "Prelim", "Practice Paper", "Promo", "WA", "Specimen"], index=1, key="studio_ser")
+
             # Compile & Build Button styled with blue background & light blue text
             st.markdown("<div class='compile-build-box'>", unsafe_allow_html=True)
             if st.button("🔨 Compile & Build Final Exam Package", use_container_width=True, key="studio_compile_btn"):
@@ -742,7 +752,10 @@ elif "Question-by-Question" in author_mode:
                         tasks_list=q_list,
                         paper_type=s_paper_type,
                         syllabus_code="9569",
-                        paper_number="02" if s_paper_type == "practical" else "01"
+                        paper_number="02" if s_paper_type == "practical" else "01",
+                        institution=b_institution if 'b_institution' in locals() else "HelloWorld Junior College",
+                        exam_year=b_exam_year if 'b_exam_year' in locals() else "2027",
+                        exam_series=b_exam_series if 'b_exam_series' in locals() else "Prelim"
                     )
                     st.session_state.current_session = compiled_sess
                     st.success("🎉 Full Exam Package Assembled and Compiled Successfully!")
@@ -780,7 +793,7 @@ elif "Document Transcriber" in author_mode:
         with col_yr:
             t_exam_year = st.text_input("Exam Year", value="2026", key="trans_yr")
         with col_ser:
-            t_exam_series = st.selectbox("Series", options=["WA", "Promo", "Prelim", "Specimen"], index=2, key="trans_ser")
+            t_exam_series = st.selectbox("Series", options=["A-Level", "Prelim", "Practice Paper", "Promo", "WA", "Specimen"], index=0, key="trans_ser")
 
         transcribe_btn = st.button("✨ Transcribe & Standardize to Cambridge LaTeX", type="primary", use_container_width=True, disabled=not doc_file, key="trans_run_btn")
 
@@ -788,6 +801,7 @@ elif "Document Transcriber" in author_mode:
         train_station_placeholder = st.empty()
         logs = []
         start_time = time.time()
+        start_ms = int(start_time * 1000)
 
         def update_progress(step: str, message: str):
             logs.append(f"[{step}] {message}")
@@ -804,9 +818,11 @@ elif "Document Transcriber" in author_mode:
             hud_html = build_pipeline_hud_html(
                 current_station_idx=current_station_idx,
                 active_msg=f"{step}: {message}",
-                is_done=False
+                is_done=False,
+                start_ms=start_ms
             )
-            train_station_placeholder.markdown(hud_html, unsafe_allow_html=True)
+            with train_station_placeholder.container():
+                components.html(hud_html, height=220)
             time.sleep(0.08)
 
         progress_listener = ExamGenerationProgress(log_callback=update_progress)
@@ -831,9 +847,11 @@ elif "Document Transcriber" in author_mode:
             current_station_idx=6,
             active_msg="Document successfully transcribed & standardized to Cambridge LaTeX!",
             is_done=True,
-            final_duration_str=f"{duration:.1f}s"
+            final_duration_str=f"{duration:.1f}s",
+            start_ms=start_ms
         )
-        train_station_placeholder.markdown(final_hud, unsafe_allow_html=True)
+        with train_station_placeholder.container():
+            components.html(final_hud, height=220)
         st.success(f"🎉 Exam Document '{doc_file.name}' Transcribed into Cambridge LaTeX in {duration:.1f}s!")
         st.rerun()
 

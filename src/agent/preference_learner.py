@@ -17,6 +17,7 @@ class CategoryStyle(BaseModel):
     task_count: int = Field(default=4, description="Standard number of questions or tasks")
     total_marks: int = Field(default=75, description="Target total mark allotment")
     rubric_style: str = Field(default="granular_partial_credit", description="Rubric breakdown preference")
+    python_signature_style: str = Field(default="plain_no_type_hints", description="Standard Python signature with no return arrows or input type hints (e.g. def search(arr, target))")
     include_starter_code: bool = True
     include_dataset_generation: bool = True
     custom_directives: list[str] = Field(default_factory=list)
@@ -86,6 +87,7 @@ class PreferenceLearner:
             "task_count": 4,
             "total_marks": 100,
             "rubric_style": "granular_partial_credit",
+            "python_signature_style": "plain_no_type_hints",
             "include_starter_code": True,
             "include_dataset_generation": True,
             "custom_directives": []
@@ -141,6 +143,7 @@ Return a valid JSON object matching this schema:
   "task_count": integer,
   "total_marks": integer,
   "rubric_style": "granular_partial_credit" or "point_based",
+  "python_signature_style": "plain_no_type_hints",
   "include_starter_code": boolean,
   "include_dataset_generation": boolean,
   "custom_directives": ["directive 1", "directive 2"]

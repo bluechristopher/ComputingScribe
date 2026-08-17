@@ -96,6 +96,7 @@ RIGID CAMBRIDGE CONFORMANCE RULES:
      * Format right-aligned marks with \\Marks{{<n>}} at the end of each subtask part.
      * At the end of Task X, output: \\taskfooter{{X}}
      * Place \\newpage and \\TurnOver between tasks.
+    - PYTHON SIGNATURE CONVENTION: Strip all parameter data types and return type arrows (e.g. normalize `def search(arr: list, target: int) -> bool:` or `search(arr, target) --> Boolean` into clean standard `def search(arr, target):` or `search(arr, target)`). Do not output `--> <Type>` or `: <Type>` in Python headers.
    - For Database Schemas:
      * Format table definitions with primary keys underlined using \\uline{{...}} and foreign keys dashed-underlined using \\dashuline{{...}}.
    - For Code/Identifiers: Use \\code{{...}} or \\texttt{{...}}.
