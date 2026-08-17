@@ -1,6 +1,6 @@
 """
 EduScribe AI - Orchestrator Module
-The central agentic brain executing the 5-step autonomous exam authoring lifecycle.
+The central agentic brain executing the autonomous exam authoring lifecycle.
 """
 
 import uuid
