@@ -134,7 +134,6 @@
 
 \newcommand{\tasksubtaskintro}[1]{%
   \par\vspace{0.5em}\noindent
-  The program must only use local variables; any data required by a function needs to be passed as parameters and returned (where appropriate).\par\vspace{0.5em}\noindent
   For each of the sub-tasks, add a comment statement at the beginning of the code, using the hash symbol `\#', to indicate the sub-task the program code belongs to, for example:\par\vspace{0.6em}\noindent
   \settowidth{\jupytlabelw}{\ttfamily In [1]:\space}%
   \begin{tabular}{@{}p{\jupytlabelw}@{}p{\dimexpr\linewidth-\jupytlabelw\relax}@{}}
@@ -174,8 +173,8 @@
   \loop
     \ifnum\numexpr\value{page}-((\value{page}-1)/4)*4\relax=1
     \else
-      \par\vspace*{-0.5em}%
-      {\centering\fontsize{12pt}{15pt}\selectfont\textbf{BLANK PAGE}\par}%
+      \par\vspace*{-3.0em}%
+      {\centering\fontsize{12pt}{14pt}\selectfont\textbf{BLANK PAGE}\par}%
       \clearpage
   \repeat
 }

@@ -175,7 +175,7 @@ ComputingScribe AI demonstrates deep architectural synergy between **Google Clou
 - **Intelligent Structure Extraction**: Extracts sections, tasks, marks, tables, and algorithms using `DocumentParser`.
 - **Autonomous Cambridge Normalization**: Transcribes and reformats uploaded content into rigid **Singapore-Cambridge H2 Computing (9569)** LaTeX:
   - Standardizes task headings into `\maintask{X}` with `TASKX_<your name>_<centre number>_<index number>.ipynb`.
-  - Injects `\tasksubtaskintro{X}` (local variables rule + left-aligned `In [1]:` box) before subtasks.
+  - Injects `\tasksubtaskintro{X}` (subtask comment instructions + left-aligned `In [1]:` box) before subtasks.
   - Formats subtasks with structured bullet points and `\Marks{<n>}` brackets.
   - Normalizes relational schemas with solid underline (`\uline{...}`) for Primary Keys and dashed underline (`\dashuline{...}`) for Foreign Keys.
   - Automatically synthesizes matching Cambridge Mark Scheme rows and compiles to PDF.

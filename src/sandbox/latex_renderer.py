@@ -413,7 +413,6 @@ class LaTeXVisualRenderer:
                 t_num = m.group(1) if m else "1"
                 html_out.append(
                     f"<div class='jupyter-intro-block'>"
-                    f"<p>The program must only use local variables; any data required by a function needs to be passed as parameters and returned (where appropriate).</p>"
                     f"<p>For each of the sub-tasks, add a comment statement at the beginning of the code, using the hash symbol '#', to indicate the sub-task the program code belongs to, for example:</p>"
                     f"<div class='jupyter-cell-aligned'>"
                     f"<span class='jupyter-in-tag'>In [1]:</span>"

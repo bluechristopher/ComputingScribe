@@ -81,29 +81,47 @@ PIPELINE_STATIONS = [
     ("Station 7: Artifact Packaging Agent", "📦 Persisting session state & bundling .zip download package...")
 ]
 
-def build_pipeline_hud_html(current_station_idx: int, active_msg: str, is_done: bool = False, start_ms: int = 0, final_duration_str: str = "14.8s") -> str:
+def build_pipeline_hud_html(
+    current_station_idx: int,
+    active_msg: str,
+    is_done: bool = False,
+    start_ms: int = 0,
+    final_duration_str: str = "14.8s",
+    skipped_indices: Optional[List[int]] = None
+) -> str:
+    skipped = set(skipped_indices or [])
     station_boxes = []
     for idx, (s_name, s_desc) in enumerate(PIPELINE_STATIONS):
         station_num = s_name.split(":")[0].strip()
         station_role = s_name.split(":")[1].strip()
 
-        if is_done or idx < current_station_idx:
+        if idx in skipped:
+            status_icon = "⏭️"
+            box_class = "station-box-skipped"
+            box_style = "background: #f1f5f9; border: 1.5px dashed #94a3b8; border-radius: 8px; padding: 8px 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px; opacity: 0.50;"
+            title_color = "#64748b"
+            station_role_disp = f"{station_role} <span style='font-size:0.6rem; color:#94a3b8; display:block;'>(Skipped)</span>"
+            eq_html = ""
+        elif is_done or idx < current_station_idx:
             status_icon = "✅"
             box_class = "station-box-done"
             box_style = "background: #ecfdf5; border: 2px solid #10b981; border-radius: 8px; padding: 8px 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;"
             title_color = "#065f46"
+            station_role_disp = station_role
             eq_html = ""
         elif idx == current_station_idx:
             status_icon = '<span class="station-icon-active">⚡</span>'
             box_class = "station-box-active"
             box_style = "border-radius: 8px; padding: 8px 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;"
             title_color = "#ffffff"
+            station_role_disp = station_role
             eq_html = '<div class="active-equalizer"><span></span><span></span><span></span><span></span><span></span></div>'
         else:
             status_icon = "⏳"
             box_class = "station-box-pending"
             box_style = "background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 8px; padding: 8px 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;"
             title_color = "#64748b"
+            station_role_disp = station_role
             eq_html = ""
 
         box_html = f"""
@@ -111,13 +129,13 @@ def build_pipeline_hud_html(current_station_idx: int, active_msg: str, is_done: 
             <div style="font-size: 1.1rem; line-height: 1;">{status_icon}</div>
             {eq_html}
             <div style="font-weight: 800; font-size: 0.76rem; color: {title_color}; margin-top: 3px; line-height: 1.15;">{station_num}</div>
-            <div style="font-size: 0.66rem; color: {title_color}; opacity: 0.95; line-height: 1.15; margin-top: 2px;">{station_role}</div>
+            <div style="font-size: 0.66rem; color: {title_color}; opacity: 0.95; line-height: 1.15; margin-top: 2px;">{station_role_disp}</div>
         </div>
         """
         station_boxes.append(box_html)
 
-    status_tag = "🎉 All 7 Stages Complete" if is_done else f"Station {min(current_station_idx + 1, 7)} of 7 Active"
-    action_text = "🎉 All 7 agents completed their tasks successfully! Exam package compiled & ready." if is_done else active_msg
+    status_tag = "🎉 All Active Stages Complete" if is_done else f"Station {min(current_station_idx + 1, 7)} of 7 Active"
+    action_text = "🎉 All active agents completed their tasks successfully! Exam package compiled & ready." if is_done else active_msg
     spinner_html = "" if is_done else '<span class="inline-spinner"></span>'
     stopwatch_init_text = f"⏱️ {final_duration_str}" if is_done else "⏱️ 00:00.0s"
 
@@ -129,6 +147,7 @@ def build_pipeline_hud_html(current_station_idx: int, active_msg: str, is_done: 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }}
 body {{ background: transparent; padding: 2px; }}
+.station-box-skipped {{ background: #f1f5f9 !important; border: 1.5px dashed #94a3b8 !important; opacity: 0.50 !important; }}
 @keyframes metallicWave {{
     0% {{ background-position: -200% 0; }}
     100% {{ background-position: 200% 0; }}
@@ -805,21 +824,22 @@ elif "Document Transcriber" in author_mode:
 
         def update_progress(step: str, message: str):
             logs.append(f"[{step}] {message}")
-            current_station_idx = 0
+            current_station_idx = 1
             if "Station 1" in step:
-                current_station_idx = 0
+                current_station_idx = 1  # Ingestion / Grounding
             elif "Station 2" in step:
-                current_station_idx = 2
+                current_station_idx = 4  # Golden TeX Conformance
             elif "Station 3" in step:
-                current_station_idx = 5
+                current_station_idx = 5  # Self-Healing Sandbox
             elif "Station 4" in step:
-                current_station_idx = 6
+                current_station_idx = 6  # Artifact Packaging
 
             hud_html = build_pipeline_hud_html(
                 current_station_idx=current_station_idx,
                 active_msg=f"{step}: {message}",
                 is_done=False,
-                start_ms=start_ms
+                start_ms=start_ms,
+                skipped_indices=[0, 2, 3]
             )
             with train_station_placeholder.container():
                 components.html(hud_html, height=220)
@@ -848,7 +868,8 @@ elif "Document Transcriber" in author_mode:
             active_msg="Document successfully transcribed & standardized to Cambridge LaTeX!",
             is_done=True,
             final_duration_str=f"{duration:.1f}s",
-            start_ms=start_ms
+            start_ms=start_ms,
+            skipped_indices=[0, 2, 3]
         )
         with train_station_placeholder.container():
             components.html(final_hud, height=220)
@@ -863,14 +884,19 @@ curr_sess: ExamSession = st.session_state.current_session
 if curr_sess:
     st.markdown("---")
     
-    # Persistent Multi-Agent Pipeline (All 7 Stages Complete)
+    # Persistent Multi-Agent Pipeline (All Stages Complete)
     dur_val = st.session_state.get("last_generation_duration", 14.8)
     dur_str = f"{dur_val:.1f}s" if isinstance(dur_val, (int, float)) else str(dur_val)
+    is_transcribed = curr_sess.category == "transcribed_paper"
+    persisted_skipped = [0, 2, 3] if is_transcribed else None
+    persisted_msg = "Document successfully transcribed, conformed to Cambridge LaTeX & compiled in Sandbox!" if is_transcribed else "All 7 multi-agent pipeline stages completed successfully! Artifact package compiled & ready."
+    
     persisted_pipeline_html = build_pipeline_hud_html(
         current_station_idx=6,
-        active_msg="All 7 multi-agent pipeline stages completed successfully! Artifact package compiled & ready.",
+        active_msg=persisted_msg,
         is_done=True,
-        final_duration_str=dur_str
+        final_duration_str=dur_str,
+        skipped_indices=persisted_skipped
     )
     components.html(persisted_pipeline_html, height=220)
     

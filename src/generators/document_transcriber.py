@@ -102,16 +102,18 @@ PAGE PURPOSE ANALYSIS & FILTERING:
      * ONLY pages containing actual examination questions, tasks, subtasks, problem scenarios, datasets, code, and marks.
    - Do NOT replicate the original document's cover page inside the LaTeX body (the Cambridge template already generates the official cover page).
 
-RIGID CAMBRIDGE CONFORMANCE RULES:
-1. Preserve all original technical questions, problems, marks, algorithms, and code requirements accurately.
+HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
+1. RETAIN ORIGINAL TEXT FIDELITY:
+   - Retain as much of the original source text, questions, scenarios, numbers, algorithm specifications, and phrasing as possible.
+   - Do NOT rewrite, abbreviate, summarize, or alter questions unless strictly converting to LaTeX formatting.
 2. If PRACTICAL paper:
    - At the VERY TOP of the paper (before Task 1), ALWAYS include this exact general instruction:
      \\noindent Your program code and output for each of Task 1 to 4 should be saved in a single \\texttt{{.ipynb}} file. For example, your program code and output for Task 1 should be saved as:\\par\\vspace{{0.4em}}
      \\noindent\\texttt{{TASK1\\_<your name>\\_<centre number>\\_<index number>.ipynb}}\\par\\vspace{{1.0em}}
    - For each Task X:
      * Start with \\maintask{{X}} (which outputs "Task X" and "Name your Jupyter Notebook as: TASKX_<your name>_<centre number>_<index number>.ipynb").
-     * Maintain the introductory problem scenario narrative.
-     * Include \\tasksubtaskintro{{X}} EXACTLY ONCE before the subtasks (outputs local variables rule and In [1]: #Task X.1 Program code / Output: box).
+     * Maintain the full introductory problem scenario narrative.
+     * Include \\tasksubtaskintro{{X}} EXACTLY ONCE before the subtasks (outputs the subtask comment instructions and In [1]: #Task X.1 Program code / Output: box).
      * Structure subtasks as \\subtask{{X.1}}, \\subtask{{X.2}}, etc. with bullet points (\\begin{{taskitemize}} ... \\end{{taskitemize}} or \\begin{{itemize}}).
      * Format right-aligned marks with \\Marks{{<n>}} at the end of each subtask part.
      * At the end of Task X, output: \\taskfooter{{X}}

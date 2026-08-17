@@ -319,7 +319,7 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
    - For each Task X:
      * Start with \\maintask{{X}} (which automatically outputs "Task X" and "Name your Jupyter Notebook as: TASKX_<your name>_<centre number>_<index number>.ipynb").
      * Provide an EXTENDED, REAL-WORLD SCENARIO narrative background for the technical challenge.
-     * Before the subtasks, include \\tasksubtaskintro{{X}} EXACTLY ONCE per task (which outputs the local variables rule and the left-aligned In [1]: #Task X.1 Program code / Output: box). Do NOT repeat this instruction box more than once in a task.
+     * Before the subtasks, include \\tasksubtaskintro{{X}} EXACTLY ONCE per task (which outputs the subtask comment instructions and the left-aligned In [1]: #Task X.1 Program code / Output: box). Do NOT repeat this instruction box more than once in a task.
      * Use \\subtask{{X.1}}, \\subtask{{X.2}}, \\subtask{{X.3}}, etc. for subtask headers.
      * Structure subtask instructions with clear, concise bullet points (using \\begin{{itemize}} \\item ... \\end{{itemize}}).
      * PYTHON SIGNATURE CONVENTION: In Python questions, write plain function headers WITHOUT type annotations or return arrows (e.g. write `def search(arr, target):` NOT `def search(arr: list, target: int) -> bool:` or `--> Boolean`). Explain parameter roles and return values in natural English.
@@ -467,7 +467,7 @@ Author a self-contained, high-quality examination task for:
 CRITICAL STRUCTURE REQUIREMENTS (PRACTICAL):
 1. Start with \\maintask{{{task_number}}}.
 2. Provide the domain scenario problem description.
-3. Include \\tasksubtaskintro{{{task_number}}} EXACTLY ONCE before the subtasks (this provides the local variables rule and In [1]: box).
+3. Include \\tasksubtaskintro{{{task_number}}} EXACTLY ONCE before the subtasks (this provides the subtask comment instructions and In [1]: box).
 4. For each subtask, use \\subtask{{{task_number}.1}}, \\subtask{{{task_number}.2}}, etc. with bulleted instructions and \\Marks{{<n>}}.
 5. PYTHON SIGNATURE CONVENTION: Use plain function headers WITHOUT type annotations or return arrows (e.g. `def search(arr, target):` NOT `def search(arr: list, target: int) -> bool:` or `--> Boolean`). Explain inputs and returns in natural English.
 6. At the end of the task, output: \\taskfooter{{{task_number}}}.
