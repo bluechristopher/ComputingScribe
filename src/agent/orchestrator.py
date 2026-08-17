@@ -77,12 +77,14 @@ class EduScribeOrchestrator:
         progress: Optional[ExamGenerationProgress] = None
     ) -> ExamSession:
         """
-        Autonomous 5-Step Pipeline:
-        1. Memory & Style Retrieval
-        2. Blueprint Proposer
-        3. Synthetic Dataset & LaTeX Code Synthesis
-        4. Self-Healing Compilation Loop
-        5. Session Sync & Bundle Packaging
+        Autonomous 7-Station Pipeline:
+        1. Station 1: Memory & Style Agent (Firestore)
+        2. Station 2: RAG Grounding Agent (Syllabus 9569 & Exemplars)
+        3. Station 3: Blueprint Architect Agent (Gemini 3.7 Flash)
+        4. Station 4: Demographic Synthesizer Agent (50/50 Gender Parity Datasets)
+        5. Station 5: Golden TeX Authoring Agent (Cambridge LaTeX & Mark Scheme)
+        6. Station 6: Self-Healing Sandbox Agent (Headless pdflatex + 3-pass Gemini repair)
+        7. Station 7: Artifact Packaging Agent (Firestore Sync & .ZIP Bundling)
         """
         prog = progress or ExamGenerationProgress()
         sess_id = session_id or f"sess_{uuid.uuid4().hex[:8]}"
