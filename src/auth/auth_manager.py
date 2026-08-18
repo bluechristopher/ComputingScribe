@@ -19,6 +19,7 @@ class AuthManager:
     _cached_credentials: Optional[Dict[str, Any]] = None
     _cache_timestamp: float = 0.0
     _CACHE_TTL: float = 300.0  # 5 minutes cache to minimize Secret Manager API calls
+    _last_error_message: str = ""
 
     @classmethod
     def _hash_password(cls, password: str, salt: str = "") -> str:
@@ -33,26 +34,24 @@ class AuthManager:
         Expected format in Secret Manager:
         {
           "users": {
+            "gcp+allthingsagentic*2026": "YourSecretPassword",
             "admin": {
               "password_hash": "...",
               "salt": "..."
-            },
-            "teacher1": "plaintext_or_hash"
+            }
           }
         }
         or simple key-value:
         {
-          "admin": "password123",
-          "teacher1": "securepass"
+          "gcp+allthingsagentic*2026": "YourSecretPassword"
         }
         """
         now = time.time()
         if not force_refresh and cls._cached_credentials is not None and (now - cls._cache_timestamp < cls._CACHE_TTL):
             return cls._cached_credentials
 
-        project_id = AppConfig.GCP_PROJECT
-        if not project_id:
-            project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT_ID") or ""
+        cls._last_error_message = ""
+        project_id = AppConfig.get_project_id()
 
         # 1. Try Google Cloud Secret Manager
         if project_id:
@@ -67,9 +66,12 @@ class AuthManager:
                 cls._cache_timestamp = now
                 return data
             except Exception as e:
-                print(f"[AuthManager] Secret Manager fetch note: {e}")
+                cls._last_error_message = f"Secret Manager fetch error: {e}"
+                print(f"[AuthManager] {cls._last_error_message}")
+        else:
+            cls._last_error_message = "Unable to resolve Google Cloud Project ID."
 
-        # 2. Fallback to Environment Variable for local dev
+        # 2. Fallback to Environment Variable for local dev / testing
         env_auth = os.getenv("AUTH_USERS_JSON", "").strip()
         if env_auth:
             try:
@@ -78,7 +80,8 @@ class AuthManager:
                 cls._cache_timestamp = now
                 return data
             except Exception as e:
-                print(f"[AuthManager] AUTH_USERS_JSON parse error: {e}")
+                cls._last_error_message = f"AUTH_USERS_JSON parse error: {e}"
+                print(f"[AuthManager] {cls._last_error_message}")
 
         return {}
 
@@ -94,9 +97,11 @@ class AuthManager:
         if not username or not password:
             return False, "Username and password cannot be empty."
 
-        credentials_data = cls.fetch_credentials_from_secret_manager()
+        credentials_data = cls.fetch_credentials_from_secret_manager(force_refresh=True)
         if not credentials_data:
-            return False, "No authentication credentials configured in Google Cloud Secret Manager."
+            project_id = AppConfig.get_project_id() or "unknown"
+            err_detail = cls._last_error_message or "Secret not found or empty."
+            return False, f"Could not load credentials from Secret Manager (Project: '{project_id}', Secret: '{DEFAULT_SECRET_ID}'). {err_detail}"
 
         users_dict = credentials_data.get("users", credentials_data)
 
@@ -110,7 +115,7 @@ class AuthManager:
             stored_hash = user_entry.get("password_hash") or user_entry.get("hash") or ""
             salt = user_entry.get("salt") or ""
             computed_hash = cls._hash_password(password, salt)
-            if hmac.compare_digest(stored_hash, computed_hash):
+            if stored_hash and hmac.compare_digest(stored_hash, computed_hash):
                 return True, "Authentication successful."
             # Also check if stored plain password inside dict
             if "password" in user_entry:

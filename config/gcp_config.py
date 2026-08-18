@@ -136,6 +136,41 @@ class AppConfig:
 
     # Active Auth Mode: "byok" or "vertex_ai"
     ACTIVE_AUTH_MODE: str = os.getenv("ACTIVE_AUTH_MODE", "byok").strip()
+
+    @classmethod
+    def get_project_id(cls) -> str:
+        """Dynamically discovers the active Google Cloud Project ID."""
+        if cls.GCP_PROJECT:
+            return cls.GCP_PROJECT
+        for env_var in ["GOOGLE_CLOUD_PROJECT", "GCP_PROJECT_ID", "GCP_PROJECT"]:
+            val = os.getenv(env_var, "").strip()
+            if val:
+                cls.GCP_PROJECT = val
+                return val
+        # Try google.auth.default()
+        try:
+            import google.auth
+            _, auth_project = google.auth.default()
+            if auth_project:
+                cls.GCP_PROJECT = auth_project
+                return auth_project
+        except Exception:
+            pass
+        # Try metadata server (on Cloud Run / Compute Engine)
+        try:
+            import urllib.request
+            req = urllib.request.Request(
+                "http://metadata.google.internal/computeMetadata/v1/project/project-id",
+                headers={"Metadata-Flavor": "Google"}
+            )
+            with urllib.request.urlopen(req, timeout=1.0) as resp:
+                meta_p = resp.read().decode("utf-8").strip()
+                if meta_p:
+                    cls.GCP_PROJECT = meta_p
+                    return meta_p
+        except Exception:
+            pass
+        return ""
     
     @classmethod
     def is_cloud_environment(cls) -> bool:
@@ -143,7 +178,7 @@ class AppConfig:
         return bool(
             os.getenv("K_SERVICE") or
             os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or
-            cls.GCP_PROJECT
+            cls.get_project_id()
         )
 
     @classmethod
@@ -162,8 +197,8 @@ class AppConfig:
 
         # --- A. Vertex AI Mode (Authenticated Access) ---
         if effective_mode == "vertex_ai":
-            project = cls.GCP_PROJECT or os.getenv("GOOGLE_CLOUD_PROJECT") or ""
-            location = cls.GCP_LOCATION or "us-central1"
+            project = cls.get_project_id()
+            location = cls.GCP_LOCATION or "asia-southeast1"
             
             # 1. Try google.genai with vertexai=True
             try:
