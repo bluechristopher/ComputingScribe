@@ -26,6 +26,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 from config.gcp_config import AppConfig, BASE_DIR
+from src.auth.auth_manager import AuthManager
 from src.agent.orchestrator import EduScribeOrchestrator, ExamGenerationProgress
 from src.agent.preference_learner import PreferenceLearner
 from src.agent.session_manager import SessionManager, ExamSession
@@ -47,6 +48,18 @@ if css_file.exists():
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # Initialize Session State
+if "auth_choice" not in st.session_state:
+    st.session_state.auth_choice = None
+
+if "auth_user" not in st.session_state:
+    st.session_state.auth_user = None
+
+# Synchronize active auth mode with AppConfig
+if st.session_state.auth_choice == "authenticated":
+    AppConfig.set_auth_mode("vertex_ai")
+else:
+    AppConfig.set_auth_mode("byok")
+
 if "teacher_id" not in st.session_state:
     st.session_state.teacher_id = "default_educator"
 
@@ -272,27 +285,46 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(f"**Model**: {GEMINI_ICON} <span style='color: #ffffff; font-weight: 700;'>Gemini 3.7 Flash</span>", unsafe_allow_html=True)
     
-    active_key = st.session_state.get("gemini_api_key") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
-    
-    with st.expander("⚙️ AI Engine & Settings", expanded=True if not active_key else False):
-        st.markdown("🔑 **Bring Your Own Key (BYOK)**")
-        st.caption("You can obtain your Gemini API key from Google AI Studio. Your key is kept strictly in your local browser session and is never stored on the server.")
-        st.markdown("[👉 Get a Gemini API Key from Google AI Studio](https://aistudio.google.com/app/apikey)", unsafe_allow_html=True)
-        
-        api_key_input = st.text_input(
-            "Gemini API Key",
-            value=active_key,
-            type="password",
-            placeholder="AIzaSy...",
-            help="Paste your Gemini API key from Google AI Studio here."
+    if st.session_state.auth_choice == "authenticated":
+        st.markdown(
+            f"<div style='background: linear-gradient(135deg, #064e3b, #047857); border: 1.5px solid #10b981; border-radius: 10px; padding: 12px; margin-top: 10px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);'>"
+            f"<div style='font-size: 0.88rem; font-weight: 800; color: #a7f3d0;'>🛡️ Vertex AI Active (Google Cloud)</div>"
+            f"<div style='font-size: 0.82rem; color: #ffffff; margin-top: 3px;'>User: <strong>{st.session_state.auth_user}</strong></div>"
+            f"<div style='font-size: 0.74rem; color: #d1fae5; margin-top: 2px;'>Backend: Enterprise Vertex AI (Gemini 3.7 Flash)</div>"
+            f"</div>",
+            unsafe_allow_html=True
         )
-        if api_key_input:
-            clean_k = api_key_input.strip()
-            st.session_state["gemini_api_key"] = clean_k
-            os.environ["GEMINI_API_KEY"] = clean_k
-            st.success("✅ Gemini API Key connected!")
-        elif not active_key:
-            st.warning("⚠️ Please provide a Gemini API key to enable live exam generation.")
+        if st.button("🚪 Logout / Switch Access", use_container_width=True, key="sb_logout_btn"):
+            st.session_state.auth_choice = None
+            st.session_state.auth_user = None
+            AppConfig.set_auth_mode("byok")
+            st.rerun()
+    else:
+        active_key = st.session_state.get("gemini_api_key") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
+        with st.expander("⚙️ AI Engine & Settings (Guest BYOK)", expanded=True if not active_key else False):
+            st.markdown("🔑 **Bring Your Own Key (BYOK)**")
+            st.caption("You can obtain your Gemini API key from Google AI Studio. Your key is kept strictly in your local browser session and is never stored on the server.")
+            st.markdown("[👉 Get a Gemini API Key from Google AI Studio](https://aistudio.google.com/app/apikey)", unsafe_allow_html=True)
+            
+            api_key_input = st.text_input(
+                "Gemini API Key",
+                value=active_key,
+                type="password",
+                placeholder="AIzaSy...",
+                help="Paste your Gemini API key from Google AI Studio here."
+            )
+            if api_key_input:
+                clean_k = api_key_input.strip()
+                st.session_state["gemini_api_key"] = clean_k
+                os.environ["GEMINI_API_KEY"] = clean_k
+                st.success("✅ Gemini API Key connected!")
+            elif not active_key:
+                st.warning("⚠️ Please provide a Gemini API key to enable live exam generation.")
+
+            st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
+            if st.button("🔐 Switch to Authenticated Access", use_container_width=True, key="sb_switch_auth_btn"):
+                st.session_state.auth_choice = None
+                st.rerun()
     
     st.markdown("---")
     st.markdown("### 👩‍🏫 Educator Profile")
@@ -384,6 +416,75 @@ with st.sidebar:
                 f'</div>'
             )
             st.markdown(card_html, unsafe_allow_html=True)
+
+# ==============================================================================
+# WELCOME & ACCESS GATEWAY MODAL (FIRST VISIT POPUP)
+# ==============================================================================
+@st.dialog("🎓 Welcome to ComputingScribe AI", width="large")
+def show_welcome_gateway():
+    st.markdown("#### Select Access Mode")
+    st.markdown("Choose whether to use your own free Gemini API key (**Guest Entry**) or log in with verified credentials for **Google Cloud Vertex AI**.")
+    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+    
+    col_guest, col_auth = st.columns(2)
+    
+    with col_guest:
+        st.markdown(
+            """
+            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 18px; min-height: 150px;">
+                <div style="font-size: 1.8rem; margin-bottom: 4px;">👤</div>
+                <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 1.15rem;">Guest Entry</h3>
+                <p style="font-size: 0.86rem; color: #475569; line-height: 1.45;">
+                    <strong>Bring Your Own Key (BYOK)</strong> via your Google AI Studio API key. Instant access, zero server credentials required.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.write("")
+        if st.button("👉 Enter as Guest (BYOK)", type="secondary", use_container_width=True, key="dlg_guest_btn"):
+            st.session_state.auth_choice = "guest"
+            AppConfig.set_auth_mode("byok")
+            st.rerun()
+
+    with col_auth:
+        st.markdown(
+            """
+            <div style="background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 12px; padding: 18px; min-height: 150px;">
+                <div style="font-size: 1.8rem; margin-bottom: 4px;">🔐</div>
+                <h3 style="margin: 0 0 6px 0; color: #1e3a8a; font-size: 1.15rem;">Authenticated Access</h3>
+                <p style="font-size: 0.86rem; color: #1e40af; line-height: 1.45; margin-bottom: 8px;">
+                    <strong>Enterprise Vertex AI</strong> (Gemini 3.7 Flash). Authenticates securely against Google Cloud Secret Manager.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.write("")
+        with st.form("auth_login_form"):
+            u_input = st.text_input("Username", placeholder="e.g. admin or educator", key="dlg_user_in")
+            p_input = st.text_input("Password", type="password", placeholder="••••••••", key="dlg_pass_in")
+            login_submitted = st.form_submit_button("🚀 Log In & Access Vertex AI", type="primary", use_container_width=True)
+            if login_submitted:
+                if u_input and p_input:
+                    with st.spinner("Verifying credentials against Google Cloud Secret Manager..."):
+                        is_valid, msg = AuthManager.verify_credentials(u_input, p_input)
+                        if is_valid:
+                            st.session_state.auth_choice = "authenticated"
+                            st.session_state.auth_user = u_input.strip()
+                            st.session_state.teacher_id = u_input.strip()
+                            st.session_state.orchestrator.set_teacher_id(u_input.strip())
+                            AppConfig.set_auth_mode("vertex_ai")
+                            st.success(f"✅ Authenticated! Connected to Vertex AI.")
+                            time.sleep(0.4)
+                            st.rerun()
+                        else:
+                            st.error(f"❌ {msg}")
+                else:
+                    st.warning("Please enter both username and password.")
+
+if st.session_state.auth_choice is None:
+    show_welcome_gateway()
 
 # ==============================================================================
 # MAIN PANEL: Header Banner Image (Full Width)

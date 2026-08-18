@@ -10,4 +10,5 @@ python-docx>=1.1.2
 pandas>=2.2.3
 jinja2>=3.1.4
 fpdf2>=2.8.2
+google-cloud-secret-manager>=2.20.0
 python-dotenv>=1.0.1

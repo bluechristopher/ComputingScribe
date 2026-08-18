@@ -244,6 +244,42 @@ class TestEduScribePipeline(unittest.TestCase):
         self.assertIsNotNone(session.pdf_path)
         print(" [PASS] Document Transcriber & Cambridge Normalization Verified.")
 
+    def test_8_auth_manager_verification(self):
+        """Tests AuthManager verification with salted hashes and plain secrets."""
+        import os
+        from src.auth.auth_manager import AuthManager
+
+        # Test local secret mock
+        test_credentials = {
+            "users": {
+                "teacher_alice": {
+                    "password_hash": AuthManager._hash_password("SuperSecret2026!", salt="s@lt123"),
+                    "salt": "s@lt123"
+                },
+                "teacher_bob": "DirectPassword456!"
+            }
+        }
+        os.environ["AUTH_USERS_JSON"] = json.dumps(test_credentials)
+        AuthManager._cached_credentials = None
+
+        # Verify correct credentials
+        valid_a, msg_a = AuthManager.verify_credentials("teacher_alice", "SuperSecret2026!")
+        self.assertTrue(valid_a, f"Alice auth failed: {msg_a}")
+
+        valid_b, msg_b = AuthManager.verify_credentials("teacher_bob", "DirectPassword456!")
+        self.assertTrue(valid_b, f"Bob auth failed: {msg_b}")
+
+        # Verify incorrect credentials
+        invalid_a, _ = AuthManager.verify_credentials("teacher_alice", "WrongPassword")
+        self.assertFalse(invalid_a)
+
+        invalid_user, _ = AuthManager.verify_credentials("unknown_user", "AnyPassword")
+        self.assertFalse(invalid_user)
+
+        invalid_empty, _ = AuthManager.verify_credentials("", "")
+        self.assertFalse(invalid_empty)
+        print(" [PASS] AuthManager Secret Verification Verified.")
+
 if __name__ == "__main__":
     unittest.main()
 

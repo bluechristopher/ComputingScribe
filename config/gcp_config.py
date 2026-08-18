@@ -1,7 +1,8 @@
 """
 ComputingScribe AI - Configuration Module
-Handles Gemini Models (Gemini 3.7 Flash) and local/cloud persistence.
-Architecture: Bring Your Own Key (BYOK) via Google AI Studio API Key.
+Handles Gemini Models (Gemini 3.7 Flash) and dual access modes:
+1. Guest Entry: Bring Your Own Key (BYOK) via Google AI Studio API Key.
+2. Authenticated Access: Enterprise Google Cloud Vertex AI (Gemini 3.7 Flash).
 """
 
 import os
@@ -25,7 +26,7 @@ LOCAL_PREFS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class GeminiModelWrapper:
-    """Unified wrapper providing generate_content interface using direct Gemini API key."""
+    """Unified wrapper providing generate_content interface using direct Gemini API key or Vertex AI."""
     def __init__(self, model_name: str, client_type: str, raw_client: Any):
         self.model_name = str(model_name).strip()
         self.client_type = client_type
@@ -65,7 +66,39 @@ class GeminiModelWrapper:
                     print(f"[GeminiModelWrapper] Google GenAI SDK error on model {m_candidate}: {e}")
                     continue
 
-        # 2. google.generativeai fallback (Legacy API key mode)
+        # 2. Google GenAI SDK with Vertex AI (Authenticated Enterprise Mode)
+        elif self.client_type == "GENAI_VERTEX" and self.raw_client:
+            for m_candidate in self.model_candidates:
+                try:
+                    from google.genai import types
+                    req_config = None
+                    if "response_mime_type" in generation_config:
+                        req_config = types.GenerateContentConfig(response_mime_type=generation_config["response_mime_type"])
+                    res = self.raw_client.models.generate_content(
+                        model=m_candidate,
+                        contents=prompt,
+                        config=req_config
+                    )
+                    if res and res.text:
+                        return ResponseWrapper(res.text)
+                except Exception as e:
+                    print(f"[GeminiModelWrapper] GenAI Vertex AI error on model {m_candidate}: {e}")
+                    continue
+
+        # 3. Legacy Vertex AI SDK
+        elif self.client_type == "VERTEX_AI" and self.raw_client:
+            for m_candidate in self.model_candidates:
+                try:
+                    from vertexai.generative_models import GenerativeModel
+                    model = GenerativeModel(m_candidate)
+                    res = model.generate_content(prompt, generation_config=generation_config)
+                    if res and res.text:
+                        return ResponseWrapper(res.text)
+                except Exception as e:
+                    print(f"[GeminiModelWrapper] Legacy Vertex AI error on model {m_candidate}: {e}")
+                    continue
+
+        # 4. Legacy google.generativeai fallback
         elif self.client_type == "GOOGLE_GENAI" and self.raw_client:
             for m_candidate in self.model_candidates:
                 try:
@@ -77,7 +110,7 @@ class GeminiModelWrapper:
                     print(f"[GeminiModelWrapper] google.generativeai error on model {m_candidate}: {e}")
                     continue
 
-        raise RuntimeError("No valid Gemini model response received. Please ensure a valid Gemini API key is configured.")
+        raise RuntimeError("No valid Gemini model response received. Please check your API key (Guest BYOK) or Google Cloud Vertex AI configuration.")
 
 
 class UnifiedGeminiClient:
@@ -100,22 +133,58 @@ class AppConfig:
     _raw_location = os.getenv("GCP_LOCATION", "us-central1")
     GCP_LOCATION = _raw_location.strip()
     GCS_BUCKET = os.getenv("GCS_BUCKET_NAME", "computingscribe-assets").strip()
+
+    # Active Auth Mode: "byok" or "vertex_ai"
+    ACTIVE_AUTH_MODE: str = os.getenv("ACTIVE_AUTH_MODE", "byok").strip()
     
     @classmethod
     def is_cloud_environment(cls) -> bool:
         """Checks if running inside a cloud environment with persistent GCP services."""
         return bool(
-            os.getenv("K_SERVICE") and
-            os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+            os.getenv("K_SERVICE") or
+            os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or
+            cls.GCP_PROJECT
         )
 
     @classmethod
-    def get_gemini_client(cls) -> Optional[UnifiedGeminiClient]:
+    def set_auth_mode(cls, mode: str):
+        """Sets active auth mode: 'byok' or 'vertex_ai'."""
+        cls.ACTIVE_AUTH_MODE = "vertex_ai" if mode == "vertex_ai" else "byok"
+
+    @classmethod
+    def get_gemini_client(cls, auth_mode: Optional[str] = None) -> Optional[UnifiedGeminiClient]:
         """
-        Initializes and returns the Gemini client using the educator's self-supplied API Key:
-        - Primary: Google GenAI SDK (google.genai) with user-provided GEMINI_API_KEY
-        - Fallback: Legacy google.generativeai with GEMINI_API_KEY
+        Initializes and returns the Gemini client based on active auth mode:
+        1. 'vertex_ai': Uses Google Cloud Vertex AI (Gemini 3.7 Flash) with GCP credentials.
+        2. 'byok': Uses educator's self-supplied GEMINI_API_KEY via Google GenAI SDK.
         """
+        effective_mode = auth_mode or cls.ACTIVE_AUTH_MODE or "byok"
+
+        # --- A. Vertex AI Mode (Authenticated Access) ---
+        if effective_mode == "vertex_ai":
+            project = cls.GCP_PROJECT or os.getenv("GOOGLE_CLOUD_PROJECT") or ""
+            location = cls.GCP_LOCATION or "us-central1"
+            
+            # 1. Try google.genai with vertexai=True
+            try:
+                from google import genai
+                client = genai.Client(vertexai=True, project=project or None, location=location)
+                return UnifiedGeminiClient("GENAI_VERTEX", client)
+            except Exception as e:
+                print(f"[AppConfig] genai Vertex AI init note: {e}")
+
+            # 2. Try legacy vertexai SDK
+            try:
+                import vertexai
+                if project:
+                    vertexai.init(project=project, location=location)
+                else:
+                    vertexai.init(location=location)
+                return UnifiedGeminiClient("VERTEX_AI", vertexai)
+            except Exception as e2:
+                print(f"[AppConfig] vertexai init note: {e2}")
+
+        # --- B. BYOK Mode (Guest Entry with User API Key) ---
         api_key = (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or "").strip()
 
         if api_key:
