@@ -3,6 +3,8 @@
 > **The adaptive co-authoring agent for technical educators:** turning syllabus standards into compiled LaTeX papers, balanced synthetic datasets, and verified mark schemes.
 
 [![Google Gemini 3.7 Flash](https://img.shields.io/badge/Model-Gemini%203.7%20Flash-4285F4?logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Google Cloud Vertex AI](https://img.shields.io/badge/Agent%20Platform-Vertex%20AI-2463EB?logo=googlecloud&logoColor=white)](https://cloud.google.com/vertex-ai)
+[![Google Cloud Secret Manager](https://img.shields.io/badge/Security-Secret%20Manager-34A853?logo=googlecloud&logoColor=white)](https://cloud.google.com/secret-manager)
 [![Google GenAI SDK](https://img.shields.io/badge/SDK-Google%20GenAI%20SDK-34A853?logo=googlecloud&logoColor=white)](https://cloud.google.com/vertex-ai)
 [![Google Cloud Run](https://img.shields.io/badge/Hosting-Google%20Cloud%20Run-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/run)
 [![Google Cloud Firestore](https://img.shields.io/badge/Database-Cloud%20Firestore-FFCA28?logo=firebase&logoColor=black)](https://cloud.google.com/firestore)
@@ -23,8 +25,9 @@
 | :--- | :--- | :---: |
 | **Model** (Gemini 3.5 or newer) | **Gemini 3.7 Flash** (`gemini-3.7-flash`) powers blueprint synthesis, contextual scenario formulation, LaTeX self-healing compilation, and feedback extraction. | ✅ **Pass** |
 | **Google Agent Framework** | **Google GenAI SDK (`google-genai`)** with structured JSON Pydantic schemas, multi-modal grounding, and tool execution loops. | ✅ **Pass** |
-| **Google Cloud Infrastructure** | **Google Cloud Run** (serverless hosting), **Google Cloud Firestore** (persistent teacher memory), **Google Artifact Registry** (container management), and **Google Cloud Build** (CI/CD). | ✅ **Pass** |
-| **Collaborative Partner Behavior** | Proactively leads with structured blueprints, asks for clarifications, accepts natural feedback (Tab 6), and adapts to the teacher's evolving style in Firestore. | ✅ **Pass** |
+| **Google Cloud Infrastructure** | **Google Cloud Run** (serverless hosting), **Google Cloud Vertex AI** (Enterprise Agent Platform), **Google Cloud Secret Manager** (Zero-Trust auth), **Google Cloud Firestore** (persistent teacher memory), and **Google Artifact Registry / Cloud Build** (CI/CD). | ✅ **Pass** |
+| **Collaborative Partner Behavior** | Proactively leads with structured blueprints, asks for clarifications, accepts natural feedback, and adapts to the teacher's evolving style in Firestore. | ✅ **Pass** |
+| **Dual Access Gateway** | **Guest Entry (BYOK)** with zero server credentials + **Authenticated Access** utilizing Vertex AI backed by Secret Manager. | ✅ **Pass** |
 | **Public Code Repository** | [https://github.com/bluechristopher/ComputingScribe](https://github.com/bluechristopher/ComputingScribe) | ✅ **Pass** |
 | **Reproducibility** | Full Dockerfile with headless TeXLive, automated GitHub Actions CI/CD, and zero-configuration local execution. | ✅ **Pass** |
 
@@ -71,19 +74,26 @@ As a computing teacher, my goal was to build a true **Collaborative Pedagogical 
 flowchart TD
     subgraph Client["Web Browser & Client Layer"]
         UI["Streamlit Interactive Web App (app.py)"]
+        Gateway["Access Gateway Modal: Guest BYOK vs. Authenticated Access"]
         Renderer["KaTeX / HTML5 A4 Typeset Sheet Viewer"]
+    end
+
+    subgraph Security["Security & Access Layer"]
+        SecretMgr[("Google Cloud Secret Manager: computingscribe-auth-credentials")]
+        BYOK["Local Session BYOK: Google AI Studio Gemini API Key"]
     end
 
     subgraph GCP["Google Cloud Platform (Singapore - asia-southeast1)"]
         CR["Google Cloud Run (eduscribe-ai Serverless Container)"]
-        Firestore[("Google Cloud Firestore: Teacher Profiles & Learned Styles")]
+        Firestore[("Google Cloud Firestore: Teacher Profiles & Sessions")]
         ArtifactReg["Google Artifact Registry: eduscribe-repo"]
         CloudBuild["Google Cloud Build: Automated CI/CD Engine"]
     end
 
-    subgraph AI["Google AI & Reasoning Layer"]
-        Gemini["Gemini 3.7 Flash Engine (Google GenAI SDK)"]
-        RAG["RAG Ingestion Engine (Past Paper Document Grounding)"]
+    subgraph AI["Google AI & Agent Reasoning Platform"]
+        VertexAI["Google Cloud Vertex AI: Gemini 3.7 Flash Enterprise Platform"]
+        GenAISDK["Google GenAI SDK Engine (Direct API / BYOK)"]
+        RAG["RAG Ingestion Engine (2025 Paper 2 Grounding & Syllabus Index)"]
     end
 
     subgraph Sandbox["Execution & Compilation Sandbox"]
@@ -93,15 +103,19 @@ flowchart TD
         PythonExec["Python Subprocess Runner (Starter Code Validation)"]
     end
 
-    UI -->|1. Prompt, Syllabus Category & Contextual Flag| CR
+    UI --> Gateway
+    Gateway -->|Option A: Guest Entry| BYOK --> GenAISDK
+    Gateway -->|Option B: Authenticated Access| SecretMgr --> VertexAI
+
+    UI -->|1. Prompt, Syllabus Category & Settings| CR
     CR -->|2. Query Persistent Teacher Memory| Firestore
     CR -->|3. Query Ingested Past Paper Grounding| RAG
-    CR -->|4. Propose Blueprint & Synthesize Exam Paper| Gemini
+    CR -->|4. Propose Blueprint & Synthesize Exam Paper| VertexAI & GenAISDK
     CR -->|5. Generate Balanced Datasets & Skeleton Code| DataGen
     CR -->|6. Compile Raw LaTeX Source| TeXLive
     TeXLive -->|7. Intercept Stderr & Trigger Auto-Repair| SelfHealing
-    SelfHealing -->|8. Repaired TeX Code| Gemini
-    CR -->|9. Persist Updated Style & Feedback| Firestore
+    SelfHealing -->|8. Repaired TeX Code| VertexAI & GenAISDK
+    CR -->|9. Persist Updated Style, Sessions & Feedback| Firestore
     CR -->|10. Deliver Typeset Sheet, PDF & ZIP Archive| Renderer
     Renderer --> UI
 
@@ -118,18 +132,22 @@ ComputingScribe AI demonstrates deep architectural synergy between **Google Clou
 
 | Google Cloud Service | Role in Agentic Workflow | Synergy Mechanism |
 | :--- | :--- | :--- |
+| **Google Cloud Vertex AI** | **Enterprise Agent Platform** | Powers enterprise-grade inference with **Gemini 3.7 Flash** (`gemini-3.7-flash`). Operates via Application Default Credentials (ADC) without requiring user API keys. |
+| **Google Cloud Secret Manager** | **Zero-Trust Access Control** | Stores encrypted authentication credentials (`computingscribe-auth-credentials`). Authorizes educators securely to unlock the Vertex AI Agent Platform with timing-safe verification (`hmac.compare_digest`). |
 | **Gemini 3.7 Flash** | **Cognitive Agent Brain** | Handles multi-step reasoning: deconstructs prompts into structured blueprints, synthesizes Cambridge LaTeX markup, diagnoses compiler error logs, and extracts pedagogical rules from educator feedback. |
-| **Google GenAI SDK** | **Agentic Tool & Schema Layer** | Enforces structured Pydantic JSON schemas, coordinates multi-modal RAG past-paper grounding, and orchestrates tool calling across data generators. |
-| **Google Cloud Firestore** | **Persistent Long-Term Agent Memory** | Acts as the agent's memory cortex (`teacher_profiles/{teacher_id}`). Persists learned styles (question depth, rubric granularity, custom phrasing directives) across user sessions so the agent continuously adapts. |
+| **Google GenAI SDK (`google-genai`)** | **Agentic Tool & Schema Layer** | Enforces structured Pydantic JSON schemas, coordinates multi-modal RAG past-paper grounding, and orchestrates tool calling across data generators. |
+| **Google Cloud Firestore** | **Persistent Long-Term Agent Memory** | Acts as the agent's memory cortex (`teacher_profiles/{teacher_id}` and `exam_sessions/{session_id}`). Persists learned styles (question depth, rubric granularity, custom phrasing directives) across user sessions so the agent continuously adapts. |
 | **Google Cloud Run** | **Serverless Execution Runtime** | Hosts the containerized application in Singapore (`asia-southeast1`). Scales dynamically from zero to handle compute-intensive LaTeX compilation without persistent server overhead. |
 | **Google Cloud Build & Artifact Registry** | **Automated CI/CD Pipeline** | Builds the production container with full headless TeXLive packages and deploys automatically on every `git push` to `main`. |
 
-### The 5-Step Autonomous Agent Lifecycle:
-1. **Memory & Style Retrieval**: Agent queries Firestore for the educator's category profile (e.g. `sec1_linear_adts` preference for `long_contextual` scenarios with bulleted subtasks).
-2. **Blueprint Synthesis**: Gemini 3.7 Flash formulates a structured syllabus-aligned blueprint with balanced point distributions.
-3. **Multi-Artifact Generation**: Parallel generation of Cambridge LaTeX source, demographically balanced companion CSV datasets (`CANDIDATES.csv`), and starter Python scripts.
-4. **Self-Healing Sandbox**: Headless `pdflatex` compiles the paper; if syntax errors occur, Gemini intercepts the error log, repairs the code, and retries in an automatic 3-pass loop.
-5. **Continuous Learning**: The educator reviews the draft and provides feedback (Tab 6), which Gemini extracts and updates in Firestore for future generations.
+### The 7-Station Autonomous Agent Pipeline:
+1. **Station 1: Memory & Style Agent**: Queries Firestore for the educator's category profile (e.g. `sec1_linear_adts` preference for `long_contextual` scenarios with bulleted subtasks).
+2. **Station 2: RAG Grounding Agent**: Scans indexed syllabus 9569 learning outcomes and retrieves the authentic October/November 2025 Paper 2 exemplar.
+3. **Station 3: Blueprint Architect Agent**: Gemini 3.7 Flash formulates a structured syllabus-aligned blueprint with balanced point distributions.
+4. **Station 4: Demographic Synthesizer Agent**: Generates 50/50 gender-balanced companion CSV datasets (`CANDIDATES.csv`), SQL scripts, and starter Python code.
+5. **Station 5: Golden TeX Authoring Agent**: Drafts Cambridge-compliant LaTeX source (`\maintask`, `\subtask`, `\Marks`) and official Cambridge Mark Scheme tabular rubrics.
+6. **Station 6: Self-Healing Sandbox Agent**: Headless `pdflatex` compiles the paper; if syntax errors occur, Gemini intercepts the error log, repairs the code, and retries in an automatic 3-pass loop.
+7. **Station 7: Artifact Packaging Agent**: Persists completed session state to Firestore and bundles the downloadable `.zip` export package.
 
 ---
 
@@ -212,166 +230,148 @@ ComputingScribe AI demonstrates deep architectural synergy between **Google Clou
 
 ---
 
-## 🔑 7. Bring Your Own Key (BYOK) Model & Deployment Guide
+## 🔑 7. Dual Access Gateway (BYOK vs. Vertex AI Agent Platform) & GCP Setup Guide
 
-ComputingScribe AI is built with a **Bring Your Own Key (BYOK)** architecture designed for technical educators:
-- **Zero Shared Credit Consumption**: When sharing the web application across departments or schools, each visiting educator provides their own free **Gemini API Key** from [Google AI Studio](https://aistudio.google.com/app/apikey) in the sidebar under **⚙️ AI Engine & Settings**.
-- **No Cloud Billing Leak**: The web server runs completely keyless and stateless; credentials are kept in the educator's browser session.
+ComputingScribe AI provides two flexible, enterprise-grade access pathways on its welcome gateway:
 
----
-
-### Quickstart 1: Run Locally in 3 Steps (Recommended for Teachers)
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/bluechristopher/ComputingScribe.git
-cd ComputingScribe
-
-# 2. Install Python dependencies
-pip install -r requirements.txt
-
-# 3. Launch the web application
-streamlit run frontend/app.py
 ```
-> Open `http://localhost:8501`, enter your free Gemini API key in the sidebar under **⚙️ AI Engine & Settings**, and start authoring Cambridge exam packages!
-
----
-
-### Quickstart 2: Run via Docker (Full TeXLive Sandbox Included)
-
-```bash
-# 1. Build the container
-docker build -t computingscribe-ai .
-
-# 2. Run container (locally on port 8501)
-docker run -p 8501:8501 computingscribe-ai
-
-# 3. Open in browser: http://localhost:8501
+                  ┌──────────────────────────────────────────────┐
+                  │       WELCOME ACCESS GATEWAY (MODAL)         │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                 ┌───────────────────────┴───────────────────────┐
+                 ▼                                               ▼
+    [ Option 1: 👤 Guest Entry ]               [ Option 2: 🔐 Authenticated Access ]
+                 │                                               │
+     Bring Your Own Key (BYOK)                       Username & Password Validation
+   (Google AI Studio Gemini Key)                                 │
+                 │                                               ▼
+                 │                                Google Cloud Secret Manager
+                 │                             (computingscribe-auth-credentials)
+                 │                                               │
+                 ▼                                               ▼
+      Direct Google GenAI SDK                     Google Cloud Vertex AI
+       (Gemini 3.7 Flash)                           (Enterprise Agent Platform)
 ```
 
+1. **Option 1: 👤 Guest Entry (Bring Your Own Key — BYOK)**:
+   - Designed for teachers and evaluators who want instant access without server-managed billing.
+   - Educators enter their personal free **Gemini API Key** from [Google AI Studio](https://aistudio.google.com/app/apikey) in the sidebar.
+   - The key is retained strictly in the local browser session and never stored on the server.
+
+2. **Option 2: 🔐 Authenticated Access (Google Cloud Vertex AI Agent Platform)**:
+   - Designed for institutional deployments and enterprise workflows.
+   - Educators log in with verified **Username & Password** credentials checked securely against **Google Cloud Secret Manager**.
+   - Upon verification, the application automatically unlocks **Google Cloud Vertex AI (Gemini 3.7 Flash)** using Google Application Default Credentials (ADC)—no API keys required.
+
 ---
 
-### Quickstart 3: Deploy to Google Cloud Run (Serverless Web App)
+### ☁️ Complete Google Cloud Platform (GCP) Setup Guide
 
-Whenever you push to the `main` branch, `.github/workflows/deploy.yml` builds and deploys to **Google Cloud Run**.
+Follow these steps in **[Google Cloud Shell](https://shell.cloud.google.com/)** to configure Secret Manager, IAM roles, and Vertex AI for your Cloud Run deployment:
 
 #### Step 1: Enable Google Cloud APIs
-In **[Google Cloud Shell](https://shell.cloud.google.com/)**:
 ```bash
-gcloud config set project YOUR_PROJECT_ID
+# 1. Set your active Project ID
+export PROJECT_ID="eduscribe-505616"
+gcloud config set project $PROJECT_ID
 
+# 2. Enable Vertex AI, Secret Manager, Cloud Run, and Firestore APIs
 gcloud services enable \
+  secretmanager.googleapis.com \
+  aiplatform.googleapis.com \
   run.googleapis.com \
+  firestore.googleapis.com \
   artifactregistry.googleapis.com \
-  cloudbuild.googleapis.com \
-  firestore.googleapis.com
+  cloudbuild.googleapis.com
 ```
 
-#### Step 2: Create a Service Account for GitHub Actions Deployment
-In Google Cloud Shell:
+#### Step 2: Create Authentication Secret in Google Cloud Secret Manager
 ```bash
-# 1. Create deployment service account
-gcloud iam service-accounts create github-deployer \
-  --description="GitHub Actions Cloud Run Deployer" \
-  --display-name="github-deployer"
+# 1. Create your credentials JSON payload (custom username and password)
+cat <<EOF > auth_credentials.json
+{
+  "users": {
+    "gcp+allthingsagentic*2026": "YourSecurePassword2026!",
+    "admin": "AdminPassword2026!"
+  }
+}
+EOF
 
-# 2. Grant required deployment roles
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/run.admin"
+# 2. Upload to Google Cloud Secret Manager
+gcloud secrets create computingscribe-auth-credentials \
+    --replication-policy="automatic" \
+    --data-file="auth_credentials.json"
 
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/artifactregistry.admin"
-
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/cloudbuild.builds.editor"
-
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/storage.admin"
-
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/datastore.user"
-
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/iam.serviceAccountUser"
-
-# 3. Generate Service Account JSON Key
-gcloud iam service-accounts keys create key.json \
-  --iam-account=github-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com
+# 3. Securely remove the local temporary file
+rm auth_credentials.json
 ```
 
-#### Step 3: Add Repository Secrets in GitHub
-1. Go to your GitHub repository: **Settings** > **Secrets and variables** > **Actions** > **New repository secret**.
-2. Add these 2 repository secrets:
-   - `GCP_PROJECT_ID`: Your Google Cloud Project ID.
-   - `GCP_SA_KEY`: Paste the entire contents of `key.json`.
-
-#### Step 4: Push to Main & Share URL
-Push your commit to `main`. GitHub Actions will deploy your serverless Cloud Run instance and output your public HTTPS URL for teachers to use!
-
----
-
-### Direct 1-Click Deployment via Google Cloud Shell CLI
-
+#### Step 3: Grant IAM Permissions to Cloud Run Service Account
 ```bash
-# In Google Cloud Shell:
-git clone https://github.com/bluechristopher/ComputingScribe.git
-cd ComputingScribe
+# 1. Identify Cloud Run Compute Service Account
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+export SERVICE_ACCOUNT="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 
-gcloud run deploy computingscribe-ai \
+# 2. Grant permission to read Secret Manager credentials
+gcloud secrets add-iam-policy-binding computingscribe-auth-credentials \
+    --member="serviceAccount:${SERVICE_ACCOUNT}" \
+    --role="roles/secretmanager.secretAccessor"
+
+# 3. Grant permission to invoke Vertex AI models (Gemini 3.7 Flash)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:${SERVICE_ACCOUNT}" \
+    --role="roles/aiplatform.user"
+```
+
+#### Step 4: Deploy to Google Cloud Run
+```bash
+gcloud run deploy eduscribe-ai \
   --source . \
   --region=asia-southeast1 \
   --platform=managed \
   --allow-unauthenticated \
   --memory=2Gi \
   --cpu=2 \
-  --set-env-vars="GCP_PROJECT_ID=YOUR_PROJECT_ID,GCP_LOCATION=asia-southeast1"
-```
+  --set-env-vars="GCP_PROJECT_ID=eduscribe-505616,GCP_LOCATION=asia-southeast1"
 ```
 
 ---
 
-### Method 4: Local Python Virtual Environment
+### Local Quickstart (3 Steps)
 
-```powershell
-# 1. Create and activate virtual environment
-python -m venv venv
-.\venv\Scripts\Activate.ps1   # On Linux/macOS: source venv/bin/activate
+```bash
+# 1. Clone the repository
+git clone https://github.com/bluechristopher/ComputingScribe.git
+cd ComputingScribe
 
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Set environment variable
-$env:GEMINI_API_KEY="YOUR_GEMINI_API_KEY"   # On Linux/macOS: export GEMINI_API_KEY="YOUR_KEY"
-
-# 4. Run automated test suite
-python -m unittest tests/test_pipeline.py
-
-# 5. Launch Streamlit application
+# 3. Launch application
 streamlit run frontend/app.py
 ```
+> Open `http://localhost:8501`, select **Guest Entry** to use your Google AI Studio key, or select **Authenticated Access** to log in with your credentials!
 
 ---
 
 ## 🧪 8. Automated Testing & Verification
 
-The repository includes a comprehensive automated test suite verifying all agentic modules:
+The repository includes a comprehensive automated test suite verifying all 7 agent stations, authentic LaTeX macros, and cloud security:
 
 ```powershell
 python -m unittest tests/test_pipeline.py
 ```
 
-**Test Coverage Summary:**
+**Test Coverage Matrix:**
 - `test_1_demographic_fairness_dataset`: Strictly verifies 50/50 gender balance and multiracial naming distributions.
-- `test_2_practical_paper_templating`: Verifies Practical paper blueprinting and LaTeX macro generation.
+- `test_2_practical_paper_templating`: Verifies Practical paper blueprinting and LaTeX macro generation (`\maintask`, `\tasksubtaskintro`, `\PadToMultipleOfFour`).
 - `test_3_theory_paper_templating`: Verifies Theory paper blueprinting, decision tables, pseudocode, and mark schemes.
 - `test_4_session_lifecycle_and_zip_export`: Verifies session saving, restoring, `.zip` archive creation, and deletion.
-- `test_5_end_to_end_orchestrator`: Verifies the full 5-step autonomous agent pipeline for both Practical and Theory workflows.
+- `test_5_end_to_end_orchestrator`: Verifies the full 7-station autonomous agent pipeline for both Practical and Theory workflows.
+- `test_6_question_studio_renumbering`: Verifies modular Question Studio drafting and automated task/subtask renumbering engine.
+- `test_7_document_transcription_and_normalization`: Verifies Word/PDF ingestion and autonomous Cambridge LaTeX normalization.
+- `test_8_auth_manager_verification`: Verifies Secret Manager authentication, salted hash comparison, and timing-safe matching.
 
 ---
 
@@ -382,22 +382,25 @@ ComputingScribe/
 ├── .github/workflows/
 │   └── deploy.yml                   # Automated GitHub Actions CI/CD to Google Cloud Run
 ├── config/
-│   ├── gcp_config.py                # Google Cloud Platform & Gemini client configuration
+│   ├── gcp_config.py                # Dual Vertex AI & BYOK Gemini configuration
 │   └── default_preferences.json     # 8 H2 Computing 2027 (9569) category style presets
 ├── frontend/
-│   ├── app.py                       # Streamlit web application & in-browser document viewer
-│   └── style.css                    # Custom CSS styling (dark sidebar, light paper sheets)
+│   ├── app.py                       # Streamlit web app, live HUD, & welcome gateway
+│   └── style.css                    # Modern theme, dark sidebar, & typeset sheet styles
 ├── src/
 │   ├── agent/
-│   │   ├── orchestrator.py          # Central 5-step agent lifecycle coordinator
+│   │   ├── orchestrator.py          # Central 7-station agent lifecycle coordinator
 │   │   ├── preference_learner.py    # Firestore & local persistent style memory
 │   │   └── session_manager.py       # Session CRUD lifecycle and .zip exporter
+│   ├── auth/
+│   │   └── auth_manager.py          # Google Cloud Secret Manager & timing-safe auth
 │   ├── generators/
 │   │   ├── dataset_generator.py     # Demographic fairness synthetic dataset synthesizer
-│   │   └── question_author.py       # Blueprint proposer & LaTeX question author
+│   │   ├── document_transcriber.py  # Word/PDF to Cambridge LaTeX normalizer & page filter
+│   │   └── question_author.py       # Blueprint proposer, LaTeX author & auto-renumberer
 │   ├── ingestion/
-│   │   ├── document_parser.py       # PDF/DOCX past paper ingestion parser
-│   │   └── rag_retriever.py         # Grounded past paper style retriever
+│   │   ├── document_parser.py       # Multi-format document parser (.docx, .pdf, .txt, .tex)
+│   │   └── rag_retriever.py         # Grounded 2025 Paper 2 exemplar & syllabus retriever
 │   └── sandbox/
 │       ├── code_executor.py         # Subprocess Python code executor
 │       ├── latex_compiler.py        # Self-healing pdflatex compilation sandbox
@@ -406,10 +409,12 @@ ComputingScribe/
 │   ├── cambridge_practical_template.tex # Golden Paper 2 Practical LaTeX template
 │   ├── cambridge_theory_template.tex    # Golden Paper 1 Theory LaTeX template
 │   └── mark_scheme_template.tex         # Official Cambridge Mark Scheme template
+├── sample/
+│   └── practical.txt                # Authentic October/November 2025 Paper 2 exemplar
 ├── tests/
-│   └── test_pipeline.py             # Automated unit & integration test suite
+│   └── test_pipeline.py             # 8 automated unit & integration test suites
 ├── Dockerfile                       # Production container with TeXLive and Python 3.11
-├── requirements.txt                 # Pinned dependencies (google-genai, streamlit, etc.)
+├── requirements.txt                 # Pinned dependencies (google-genai, secretmanager, etc.)
 ├── DEPLOYMENT.md                    # Detailed deployment documentation
 └── README.md                        # Master Project Documentation & Hackathon Submission
 ```
