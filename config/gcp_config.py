@@ -128,9 +128,12 @@ class AppConfig:
     FALLBACK_MODEL = "gemini-2.5-flash"
     
     _raw_project = os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT") or ""
-    GCP_PROJECT = _raw_project.strip()
+    if _raw_project.strip() == "genai-ecg-project" or not _raw_project.strip():
+        GCP_PROJECT = "eduscribe-505616"
+    else:
+        GCP_PROJECT = _raw_project.strip()
     
-    _raw_location = os.getenv("GCP_LOCATION", "us-central1")
+    _raw_location = os.getenv("GCP_LOCATION", "asia-southeast1")
     GCP_LOCATION = _raw_location.strip()
     GCS_BUCKET = os.getenv("GCS_BUCKET_NAME", "computingscribe-assets").strip()
 
@@ -139,38 +142,41 @@ class AppConfig:
 
     @classmethod
     def get_project_id(cls) -> str:
-        """Dynamically discovers the active Google Cloud Project ID."""
-        if cls.GCP_PROJECT:
-            return cls.GCP_PROJECT
-        for env_var in ["GOOGLE_CLOUD_PROJECT", "GCP_PROJECT_ID", "GCP_PROJECT"]:
-            val = os.getenv(env_var, "").strip()
-            if val:
-                cls.GCP_PROJECT = val
-                return val
-        # Try google.auth.default()
-        try:
-            import google.auth
-            _, auth_project = google.auth.default()
-            if auth_project:
-                cls.GCP_PROJECT = auth_project
-                return auth_project
-        except Exception:
-            pass
-        # Try metadata server (on Cloud Run / Compute Engine)
+        """Dynamically discovers the active Google Cloud Project ID from runtime metadata."""
+        # 1. Primary on Cloud Run: Metadata server is 100% authoritative for the actual deployment project
         try:
             import urllib.request
             req = urllib.request.Request(
                 "http://metadata.google.internal/computeMetadata/v1/project/project-id",
                 headers={"Metadata-Flavor": "Google"}
             )
-            with urllib.request.urlopen(req, timeout=1.0) as resp:
+            with urllib.request.urlopen(req, timeout=0.8) as resp:
                 meta_p = resp.read().decode("utf-8").strip()
-                if meta_p:
+                if meta_p and meta_p != "genai-ecg-project":
                     cls.GCP_PROJECT = meta_p
                     return meta_p
         except Exception:
             pass
-        return ""
+
+        # 2. Try google.auth.default()
+        try:
+            import google.auth
+            _, auth_project = google.auth.default()
+            if auth_project and auth_project != "genai-ecg-project":
+                cls.GCP_PROJECT = auth_project
+                return auth_project
+        except Exception:
+            pass
+
+        # 3. Environment Variables (filtering out stale project names)
+        for env_var in ["GOOGLE_CLOUD_PROJECT", "GCP_PROJECT_ID", "GCP_PROJECT"]:
+            val = os.getenv(env_var, "").strip()
+            if val and val != "genai-ecg-project":
+                cls.GCP_PROJECT = val
+                return val
+
+        # 4. Default fallback to active project
+        return "eduscribe-505616"
     
     @classmethod
     def is_cloud_environment(cls) -> bool:

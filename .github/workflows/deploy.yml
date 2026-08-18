@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || 'eduscribe-505616' }}
   GAR_LOCATION: asia-southeast1 # Singapore region
   SERVICE_NAME: eduscribe-ai
   REPOSITORY: eduscribe-repo
@@ -54,4 +54,4 @@ jobs:
             --allow-unauthenticated \
             --memory=2Gi \
             --cpu=2 \
-            --set-env-vars="GCP_PROJECT_ID=${{ env.PROJECT_ID }},GCP_LOCATION=${{ env.GAR_LOCATION }}"
+            --set-env-vars="GCP_PROJECT_ID=eduscribe-505616,GCP_LOCATION=${{ env.GAR_LOCATION }}"
