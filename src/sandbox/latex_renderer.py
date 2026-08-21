@@ -277,6 +277,58 @@ class LaTeXVisualRenderer:
             font-weight: 500;
         }}
         
+        .questions-list {{
+            list-style-type: decimal;
+            margin: 18px 0 18px 24px;
+            padding-left: 0;
+        }}
+        
+        .questions-list > li {{
+            margin: 22px 0 16px 0;
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 1.08rem;
+        }}
+        
+        .questions-list > li > * {{
+            font-weight: 400;
+            font-size: 11pt;
+        }}
+        
+        .parts-list {{
+            list-style-type: lower-alpha;
+            margin: 10px 0 10px 24px;
+            padding-left: 0;
+        }}
+        
+        .parts-list > li {{
+            margin: 10px 0;
+            font-weight: 400;
+            color: #0f172a;
+        }}
+        
+        .subparts-list {{
+            list-style-type: lower-roman;
+            margin: 8px 0 8px 24px;
+            padding-left: 0;
+        }}
+        
+        .subparts-list > li {{
+            margin: 8px 0;
+            font-weight: 400;
+            color: #1e293b;
+        }}
+        
+        .tightitemize {{
+            list-style-type: disc;
+            margin: 8px 0 8px 20px;
+            padding-left: 0;
+        }}
+        
+        .tightitemize > li {{
+            margin: 4px 0;
+        }}
+        
         ul, ol {{
             margin: 8px 0 8px 24px;
             padding-left: 0;
@@ -388,13 +440,11 @@ class LaTeXVisualRenderer:
             if line.startswith(r"\TurnOver") or line.startswith(r"\NoTurnOver") or line.startswith(r"\newpage"):
                 html_out.append("<div class='section-separator'></div>")
                 continue
-            if line.startswith(r"\begin{questions}") or line.startswith(r"\end{questions}"):
-                continue
             if r"\PadToMultipleOfFour" in line:
                 html_out.append("<div class='blank-page-divider'><div class='blank-page-text'>BLANK PAGE</div></div>")
                 continue
 
-            # Main Tasks
+            # Cambridge Practical Macros (Paper 2)
             if r"\maintask{" in line:
                 m = re.search(r"\\maintask\{([^}]+)\}", line)
                 t_num = m.group(1) if m else "1"
@@ -407,7 +457,6 @@ class LaTeXVisualRenderer:
                 )
                 continue
 
-            # Subtask Jupyter Intro Box
             if r"\tasksubtaskintro{" in line or r"\jupytercell{" in line:
                 m = re.search(r"\\(?:tasksubtaskintro|jupytercell)\{([^}]+)\}", line)
                 t_num = m.group(1) if m else "1"
@@ -423,28 +472,56 @@ class LaTeXVisualRenderer:
                 )
                 continue
 
-            # Task Footer
             if r"\taskfooter{" in line:
                 m = re.search(r"\\taskfooter\{([^}]+)\}", line)
                 t_num = m.group(1) if m else "1"
                 html_out.append(f"<p style='margin: 14px 0 18px 0; font-weight: 500;'>Save your Jupyter Notebook for Task {t_num}.</p>")
                 continue
 
-            # Sub Tasks
             if r"\subtask{" in line:
                 m = re.search(r"\\subtask\{([^}]+)\}", line)
                 s_num = m.group(1) if m else "1.1"
                 html_out.append(f"<div class='subtask-title'><span class='subtask-badge'>Task {s_num}</span></div>")
                 continue
 
-            # Lists
-            if r"\begin{itemize}" in line or r"\begin{enumerate}" in line or r"\begin{parts}" in line or r"\begin{subparts}" in line:
-                html_out.append("<ul>")
-                in_list = True
+            # Cambridge Theory Environments (Paper 1)
+            if r"\begin{questions}" in line:
+                html_out.append("<ol class='questions-list'>")
                 continue
-            if r"\end{itemize}" in line or r"\end{enumerate}" in line or r"\end{parts}" in line or r"\end{subparts}" in line:
+            if r"\end{questions}" in line:
+                html_out.append("</ol>")
+                continue
+            if r"\begin{parts}" in line:
+                html_out.append("<ol class='parts-list' type='a'>")
+                continue
+            if r"\end{parts}" in line:
+                html_out.append("</ol>")
+                continue
+            if r"\begin{subparts}" in line:
+                html_out.append("<ol class='subparts-list' type='i'>")
+                continue
+            if r"\end{subparts}" in line:
+                html_out.append("</ol>")
+                continue
+            if r"\begin{tightitemize}" in line:
+                html_out.append("<ul class='tightitemize'>")
+                continue
+            if r"\end{tightitemize}" in line:
                 html_out.append("</ul>")
-                in_list = False
+                continue
+
+            # Standard Lists
+            if r"\begin{itemize}" in line:
+                html_out.append("<ul>")
+                continue
+            if r"\end{itemize}" in line:
+                html_out.append("</ul>")
+                continue
+            if r"\begin{enumerate}" in line:
+                html_out.append("<ol>")
+                continue
+            if r"\end{enumerate}" in line:
+                html_out.append("</ol>")
                 continue
 
             # Extract Marks Bracket

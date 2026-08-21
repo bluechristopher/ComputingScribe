@@ -198,17 +198,55 @@ class TestEduScribePipeline(unittest.TestCase):
         self.assertIn(r"\maintask{1}", renumbered_task["latex_code"])
         self.assertIn(r"\subtask{1.1}", renumbered_task["latex_code"])
 
-        # 4. Assemble multiple tasks into unified paper
+        # 4. Author Theory single question (Must not have Jupyter/maintask macros)
+        q_theory = self.orchestrator.author_single_task(
+            prompt="Hash table collision resolution and time complexity",
+            paper_type="theory",
+            category="sec1_nonlinear_bst_hash",
+            task_number=1,
+            total_marks=20
+        )
+        self.assertEqual(q_theory["task_number"], 1)
+        self.assertNotIn(r"\maintask", q_theory["latex_code"])
+        self.assertNotIn(r"\tasksubtaskintro", q_theory["latex_code"])
+        self.assertNotIn(r"\taskfooter", q_theory["latex_code"])
+        self.assertNotIn(".ipynb", q_theory["latex_code"])
+        self.assertIn(r"\Marks", q_theory["latex_code"])
+
+        # 5. Assemble multiple tasks into unified practical paper
         tasks_list = [task_1, renumbered_task]
-        assembled = self.question_author.assemble_full_paper(
+        assembled_prac = self.question_author.assemble_full_paper(
             tasks_list=tasks_list,
             paper_type="practical",
             syllabus_code="9569",
             paper_number="02"
         )
-        self.assertIn(r"\documentclass", assembled["latex_source"])
-        self.assertEqual(assembled["total_marks"], 50)
-        print(" [PASS] Question-by-Question Studio & Auto-Renumbering Verified.")
+        self.assertIn(r"\documentclass", assembled_prac["latex_source"])
+        self.assertIn("Your program code and output for each of Task", assembled_prac["latex_source"])
+        self.assertEqual(assembled_prac["total_marks"], 50)
+
+        # 6. Assemble multiple tasks into unified theory paper
+        q_theory_2 = self.orchestrator.author_single_task(
+            prompt="Logic gates and Boolean algebra",
+            paper_type="theory",
+            category="sec2_logic_gates",
+            task_number=2,
+            total_marks=20
+        )
+        theory_list = [q_theory, q_theory_2]
+        assembled_theory = self.question_author.assemble_full_paper(
+            tasks_list=theory_list,
+            paper_type="theory",
+            syllabus_code="9569",
+            paper_number="01"
+        )
+        self.assertIn(r"\begin{questions}", assembled_theory["latex_source"])
+        self.assertIn(r"\end{questions}", assembled_theory["latex_source"])
+        self.assertNotIn(r"\maintask", assembled_theory["latex_source"])
+        self.assertNotIn(r"\tasksubtaskintro", assembled_theory["latex_source"])
+        self.assertNotIn(".ipynb", assembled_theory["latex_source"])
+        self.assertEqual(assembled_theory["total_marks"], 40)
+        print(" [PASS] Question-by-Question Studio & Distinct Practical vs Theory Formatting Verified.")
 
     def test_7_document_transcription_and_normalization(self):
         """Tests transcribing a draft/legacy exam document into standardized Cambridge LaTeX."""
@@ -279,6 +317,35 @@ class TestEduScribePipeline(unittest.TestCase):
         invalid_empty, _ = AuthManager.verify_credentials("", "")
         self.assertFalse(invalid_empty)
         print(" [PASS] AuthManager Secret Verification Verified.")
+
+    def test_9_skip_self_healing_and_zero_compile_lint(self):
+        """Tests fast mode compilation (skip_self_healing) and standalone zero-compile Gemini AI TeX linter."""
+        # 1. Test fast mode compilation with skip_self_healing=True
+        fast_session = self.orchestrator.generate_exam_package(
+            user_prompt="Binary search on sorted array in Python",
+            paper_type="practical",
+            category="sec1_linear_adts",
+            syllabus_code="9569",
+            paper_number="02",
+            skip_self_healing=True
+        )
+        self.assertIsNotNone(fast_session)
+        self.assertEqual(fast_session.paper_type, "practical")
+
+        # 2. Test Zero-Compile AI TeX Linter & Repair
+        sample_tex_with_unescaped = r"""
+        \begin{questions}
+        \item Explain how variable candidate_name and total_score are processed in the algorithm. \Marks{4}
+        \end{questions}
+        """
+        lint_result = self.orchestrator.ai_lint_and_repair_document(
+            latex_source=sample_tex_with_unescaped,
+            paper_type="theory"
+        )
+        self.assertIn("repaired_latex_source", lint_result)
+        self.assertIn("audit_summary", lint_result)
+        self.assertIn("fixes_applied", lint_result)
+        print(" [PASS] Fast Mode (Skip Self-Healing) & Zero-Compile AI Linter Verified.")
 
 if __name__ == "__main__":
     unittest.main()

@@ -619,11 +619,18 @@ if "Full Paper" in author_mode:
             key="full_prompt"
         )
 
-        col_btn, col_hint = st.columns([1, 2])
-        with col_btn:
-            generate_btn = st.button("Author & Compile Exam Package", type="primary", use_container_width=True)
+        col_opt, col_hint = st.columns([1.5, 1.5])
+        with col_opt:
+            skip_healing_full = st.checkbox(
+                "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
+                value=False,
+                key="full_skip_healing",
+                help="Executes a single-pass compilation without calling iterative Gemini auto-repair loops if minor compiler warnings occur."
+            )
         with col_hint:
             st.caption("💡 *Tip: Adding the word `'contextual'` triggers extended real-world scenarios and step-by-step bulleted subtasks.*")
+
+        generate_btn = st.button("Author & Compile Exam Package", type="primary", use_container_width=True)
 
     if generate_btn:
         # Smoothly scroll the page down to the pipeline container
@@ -686,7 +693,8 @@ if "Full Paper" in author_mode:
                 institution=institution,
                 exam_year=exam_year,
                 exam_series=exam_series,
-                progress=progress_handler
+                progress=progress_handler,
+                skip_self_healing=skip_healing_full
             )
             st.session_state.current_session = session
             st.session_state.compilation_logs = logs
@@ -865,10 +873,31 @@ elif "Question-by-Question" in author_mode:
                 with col_b_ser:
                     b_exam_series = st.selectbox("Series", options=["A-Level", "Prelim", "Practice Paper", "Promo", "WA", "Specimen"], index=1, key="studio_ser")
 
+            # Live Preview of Full Assembled LaTeX Source
+            with st.expander("👁️ Inspect Full Assembled LaTeX Document Code", expanded=False):
+                st.caption("Complete combined LaTeX document for all assembled questions above:")
+                preview_assembled = st.session_state.orchestrator.question_author.assemble_full_paper(
+                    tasks_list=q_list,
+                    paper_type=s_paper_type,
+                    syllabus_code="9569",
+                    paper_number="02" if s_paper_type == "practical" else "01",
+                    institution=b_institution if 'b_institution' in locals() else "HelloWorld Junior College",
+                    exam_year=b_exam_year if 'b_exam_year' in locals() else "2027",
+                    exam_series=b_exam_series if 'b_exam_series' in locals() else "Prelim"
+                )
+                st.code(preview_assembled["latex_source"], language="latex")
+
+            skip_healing_studio = st.checkbox(
+                "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
+                value=False,
+                key="studio_skip_healing",
+                help="Executes single-pass compilation without calling iterative Gemini auto-repair loops if minor compiler warnings occur."
+            )
+
             # Compile & Build Button styled with blue background & light blue text
             st.markdown("<div class='compile-build-box'>", unsafe_allow_html=True)
-            if st.button("🔨 Compile & Build Final Exam Package", use_container_width=True, key="studio_compile_btn"):
-                with st.spinner("Assembling LaTeX document, companion datasets, and compiling in sandbox..."):
+            if st.button("🔨 Compile & Build Final Exam Package (All Assembled Questions)", use_container_width=True, key="studio_compile_btn"):
+                with st.spinner("Assembling full LaTeX document for all questions and compiling in sandbox..."):
                     compiled_sess = st.session_state.orchestrator.compile_assembled_session(
                         tasks_list=q_list,
                         paper_type=s_paper_type,
@@ -876,7 +905,8 @@ elif "Question-by-Question" in author_mode:
                         paper_number="02" if s_paper_type == "practical" else "01",
                         institution=b_institution if 'b_institution' in locals() else "HelloWorld Junior College",
                         exam_year=b_exam_year if 'b_exam_year' in locals() else "2027",
-                        exam_series=b_exam_series if 'b_exam_series' in locals() else "Prelim"
+                        exam_series=b_exam_series if 'b_exam_series' in locals() else "Prelim",
+                        skip_self_healing=skip_healing_studio
                     )
                     st.session_state.current_session = compiled_sess
                     st.success("🎉 Full Exam Package Assembled and Compiled Successfully!")
@@ -915,6 +945,13 @@ elif "Document Transcriber" in author_mode:
             t_exam_year = st.text_input("Exam Year", value="2026", key="trans_yr")
         with col_ser:
             t_exam_series = st.selectbox("Series", options=["A-Level", "Prelim", "Practice Paper", "Promo", "WA", "Specimen"], index=0, key="trans_ser")
+
+        skip_healing_trans = st.checkbox(
+            "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
+            value=False,
+            key="trans_skip_healing",
+            help="Executes single-pass compilation without calling iterative Gemini auto-repair loops if minor compiler warnings occur."
+        )
 
         transcribe_btn = st.button("✨ Transcribe & Standardize to Cambridge LaTeX", type="primary", use_container_width=True, disabled=not doc_file, key="trans_run_btn")
 
@@ -957,7 +994,8 @@ elif "Document Transcriber" in author_mode:
                 institution=t_institution,
                 exam_year=t_exam_year,
                 exam_series=t_exam_series,
-                progress=progress_listener
+                progress=progress_listener,
+                skip_self_healing=skip_healing_trans
             )
 
         duration = time.time() - start_time
@@ -1027,6 +1065,37 @@ if curr_sess:
                 type="primary",
                 use_container_width=True
             )
+
+    # Post-generation Zero-Compile AI TeX Audit & Repair Action Bar
+    col_lint_btn, col_lint_hint = st.columns([1.4, 2.6])
+    with col_lint_btn:
+        if st.button("🤖 Gemini AI TeX Audit & Fix (Zero-Compile)", key="top_ai_lint_btn", type="secondary", use_container_width=True, help="Scans working LaTeX document with Gemini 3.7 Flash, fixes unescaped characters, unclosed environments, and syntax errors without pdflatex compilation."):
+            with st.spinner("🤖 Gemini 3.7 Flash is auditing and repairing LaTeX syntax (zero-compile)..."):
+                lint_result = st.session_state.orchestrator.ai_lint_and_repair_document(
+                    latex_source=curr_sess.latex_source,
+                    mark_scheme_source=curr_sess.mark_scheme_source,
+                    paper_type=curr_sess.paper_type
+                )
+                curr_sess.latex_source = lint_result["repaired_latex_source"]
+                if lint_result.get("repaired_mark_scheme_source"):
+                    curr_sess.mark_scheme_source = lint_result["repaired_mark_scheme_source"]
+                st.session_state.orchestrator.session_manager.save_session(curr_sess)
+                st.session_state.current_session = curr_sess
+                st.session_state["last_lint_summary"] = lint_result.get("audit_summary", "Audit completed successfully.")
+                st.session_state["last_lint_fixes"] = lint_result.get("fixes_applied", [])
+                st.success(f"✅ AI TeX Audit & Fix Complete! {lint_result.get('audit_summary', '')}")
+                st.rerun()
+    with col_lint_hint:
+        st.caption("⚡ **Zero-Compile AI Linter**: Audits syntax, unescaped `_`/`%`/`#`, unmatched `\\begin{...}`, and Cambridge tags using pure Gemini reasoning without invoking pdflatex.")
+
+    if st.session_state.get("last_lint_summary"):
+        with st.expander(f"✨ AI TeX Audit Report: {st.session_state.get('last_lint_summary')}", expanded=True):
+            fixes = st.session_state.get("last_lint_fixes", [])
+            if fixes:
+                for fix in fixes:
+                    st.markdown(f"- 🔧 {fix}")
+            else:
+                st.markdown("- ✅ All LaTeX environments, tags, and macros verified syntax-clean.")
 
     # --------------------------------------------------------------------------
     # NAVIGATION TABS
@@ -1148,15 +1217,15 @@ if curr_sess:
     # TAB 2: Exam Question Paper (Clean KaTeX Questions Preview & Copy LaTeX)
     # --------------------------------------------------------------------------
     with tab2:
-        col_hdr, col_btn_down = st.columns([1.5, 1])
+        col_hdr, col_btn_down = st.columns([1.3, 1.7])
         with col_hdr:
             st.markdown("### 📄 Question Paper (KaTeX Live Preview)")
             st.caption("Clean pedagogical view of questions, subtasks, Jupyter cells, and mark brackets.")
         with col_btn_down:
-            col_d1, col_d2 = st.columns(2)
+            col_d1, col_d2, col_d3 = st.columns([1, 1, 1.2])
             with col_d1:
                 st.download_button(
-                    "⬇️ paper.tex (Overleaf)",
+                    "⬇️ paper.tex",
                     data=curr_sess.latex_source,
                     file_name="paper.tex",
                     mime="text/x-tex",
@@ -1173,6 +1242,23 @@ if curr_sess:
                         type="primary",
                         use_container_width=True
                     )
+            with col_d3:
+                if st.button("🤖 AI Fix TeX", key="tab2_ai_lint_btn", use_container_width=True, help="Run zero-compile Gemini static linter and syntax repair."):
+                    with st.spinner("🤖 Gemini is checking and fixing LaTeX syntax (zero-compile)..."):
+                        lint_res = st.session_state.orchestrator.ai_lint_and_repair_document(
+                            latex_source=curr_sess.latex_source,
+                            mark_scheme_source=curr_sess.mark_scheme_source,
+                            paper_type=curr_sess.paper_type
+                        )
+                        curr_sess.latex_source = lint_res["repaired_latex_source"]
+                        if lint_res.get("repaired_mark_scheme_source"):
+                            curr_sess.mark_scheme_source = lint_res["repaired_mark_scheme_source"]
+                        st.session_state.orchestrator.session_manager.save_session(curr_sess)
+                        st.session_state.current_session = curr_sess
+                        st.session_state["last_lint_summary"] = lint_res.get("audit_summary", "Audit completed successfully.")
+                        st.session_state["last_lint_fixes"] = lint_res.get("fixes_applied", [])
+                        st.success(f"✅ Repaired: {lint_res.get('audit_summary', '')}")
+                        st.rerun()
 
         # 1-Click Copy Full LaTeX for Overleaf Box
         with st.expander("📋 Copy Full LaTeX Source Code (for Overleaf / TeXLive / VS Code)", expanded=False):

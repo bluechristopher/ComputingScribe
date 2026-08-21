@@ -27,8 +27,7 @@
 \usepackage{courier}
 \renewcommand{\familydefault}{\sfdefault}
 
-\usepackage{textcomp}
-\usepackage{upquote}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \usepackage{enumitem}
 \usepackage{calc}
 \usepackage{tabularx}
@@ -44,17 +43,10 @@
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.5em}
 
-\newcommand{\Marks}[1]{%
-  \leavevmode
-  \unskip
-  \penalty9999
-  \hbox{}\nobreak\hfill
-  \quad
-  \hbox{[#1]}%
-  \par
-}
+% --- Precise Right-Aligned Marks Macro (Aligned to the last line of question text) ---
+\newcommand{\Marks}[1]{\unskip\nolinebreak\hspace*{1em}\hfill\mbox{[#1]}}
 
-\newcommand{\code}[1]{{\ttfamily #1}}
+\providecommand{\code}[1]{{\ttfamily #1}}
 
 \lstset{
   basicstyle=\ttfamily\small,

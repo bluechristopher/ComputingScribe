@@ -103,9 +103,10 @@ PAGE PURPOSE ANALYSIS & FILTERING:
    - Do NOT replicate the original document's cover page inside the LaTeX body (the Cambridge template already generates the official cover page).
 
 HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
-1. RETAIN ORIGINAL TEXT FIDELITY:
-   - Retain as much of the original source text, questions, scenarios, numbers, algorithm specifications, and phrasing as possible.
-   - Do NOT rewrite, abbreviate, summarize, or alter questions unless strictly converting to LaTeX formatting.
+1. STRICT RETENTION OF ORIGINAL PHRASING & TEXT (HIGHEST PRIORITY):
+   - You MUST retain as much of the author's ORIGINAL PHRASING, exact sentences, vocabulary, descriptions, problem scenarios, algorithm specifications, numbers, variable names, and mark allocations as humanly possible.
+   - DO NOT rephrase, paraphrase, rewrite, summarize, simplify, or reword any part of the questions or scenario background.
+   - Preserve the author's exact sentences and wording verbatim; your sole responsibility is structuring and typesetting the text into valid Cambridge LaTeX syntax (such as converting headings into \\maintask/\\subtask or \\item/\\begin{{parts}}, formatting tables, wrapping code in \\code, and right-aligning \\Marks{{<n>}}).
 2. If PRACTICAL paper:
    - At the VERY TOP of the paper (before Task 1), ALWAYS include this exact general instruction:
      \\noindent Your program code and output for each of Task 1 to 4 should be saved in a single \\texttt{{.ipynb}} file. For example, your program code and output for Task 1 should be saved as:\\par\\vspace{{0.4em}}
@@ -115,7 +116,7 @@ HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
      * Maintain the full introductory problem scenario narrative.
      * Include \\tasksubtaskintro{{X}} EXACTLY ONCE before the subtasks (outputs the subtask comment instructions and In [1]: #Task X.1 Program code / Output: box).
      * Structure subtasks as \\subtask{{X.1}}, \\subtask{{X.2}}, etc. with bullet points (\\begin{{taskitemize}} ... \\end{{taskitemize}} or \\begin{{itemize}}).
-     * Format right-aligned marks with \\Marks{{<n>}} at the end of each subtask part.
+     * Place \\Marks{{<n>}} directly at the end of each subtask on the SAME line (do not insert `\\\\` or blank lines before `\\Marks{{<n>}}`).
      * At the end of Task X, output: \\taskfooter{{X}}
      * Place \\newpage and \\TurnOver between tasks.
    - PYTHON SIGNATURE CONVENTION: Strip all parameter data types and return type arrows (e.g. normalize `def search(arr: list, target: int) -> bool:` or `search(arr, target) --> Boolean` into clean standard `def search(arr, target):` or `search(arr, target)`). Do not output `--> <Type>` or `: <Type>` in Python headers.
@@ -124,11 +125,12 @@ HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
    - For Code/Identifiers: Use \\code{{...}} or \\texttt{{...}}.
 
 3. If THEORY paper:
+   - STRICT PROHIBITION: DO NOT USE \\maintask, \\tasksubtaskintro, \\taskfooter, Jupyter notebook names (.ipynb), #Task comments, or In [1]: boxes! These belong strictly to Practical programming exams and must NOT appear in Theory papers.
    - Wrap questions in \\begin{{questions}} ... \\end{{questions}}.
    - Use \\item for main questions, \\begin{{parts}} \\item ... \\end{{parts}} for subparts, \\begin{{subparts}} for sub-subparts.
    - Use \\begin{{pseudocode}} ... \\end{{pseudocode}} for pseudocode listings (with 2-digit line numbers).
    - Use tabular environments for decision tables, trace tables, and comparison grids.
-   - Use \\Marks{{<n>}} at the end of each question part.
+   - ALWAYS place \\Marks{{<n>}} directly at the end of each question part on the SAME line (do not insert `\\\\` or blank lines before `\\Marks{{<n>}}`).
    - Insert \\newpage and \\TurnOver between pages where appropriate.
 
 4. Output ONLY valid JSON matching this schema:

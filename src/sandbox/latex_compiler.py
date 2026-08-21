@@ -105,9 +105,15 @@ INSTRUCTIONS:
         healed = healed.replace(r"\_\_", "__")
         return healed
 
-    def compile(self, latex_source: str, working_dir: Path, job_name: str = "paper") -> LaTeXCompilationResult:
+    def compile(
+        self,
+        latex_source: str,
+        working_dir: Path,
+        job_name: str = "paper",
+        skip_self_healing: bool = False
+    ) -> LaTeXCompilationResult:
         """
-        Executes pdflatex in working_dir with self-healing reflection loop.
+        Executes pdflatex in working_dir with optional self-healing reflection loop.
         Generates clean PDF document for viewing.
         """
         working_dir.mkdir(parents=True, exist_ok=True)
@@ -133,7 +139,9 @@ INSTRUCTIONS:
                 repaired_source=current_source
             )
 
-        for attempt in range(1, self.max_healing_attempts + 1):
+        effective_max_attempts = 1 if skip_self_healing else self.max_healing_attempts
+
+        for attempt in range(1, effective_max_attempts + 1):
             tex_file = working_dir / f"{job_name}.tex"
             pdf_file = working_dir / f"{job_name}.pdf"
             log_file = working_dir / f"{job_name}.log"
@@ -162,11 +170,12 @@ INSTRUCTIONS:
             except subprocess.TimeoutExpired:
                 print(f"[LaTeXCompiler] pdflatex timed out on attempt {attempt}")
                 # Fallback to standalone PDF directly
-                pdf_bytes = self._generate_fallback_pdf(current_source, pdf_file)
+                pdf_path = self._generate_fallback_pdf(current_source, working_dir, job_name)
+                pdf_bytes = pdf_path.read_bytes() if pdf_path and pdf_path.exists() else None
                 return LaTeXCompilationResult(
                     success=True,
                     pdf_bytes=pdf_bytes,
-                    pdf_path=pdf_file,
+                    pdf_path=pdf_path,
                     compilation_log="pdflatex compilation timed out; rendered high-fidelity fallback PDF.",
                     attempts=attempt,
                     repaired_source=current_source
@@ -190,14 +199,15 @@ INSTRUCTIONS:
                     repaired_source=current_source
                 )
 
-            # Compilation failed -> Trigger self-healing
+            # Compilation failed
             error_snippet = self._extract_error_snippet(log_content or proc.stdout)
-            logs_accumulated.append(f"[Self-Healing Triggered on Attempt {attempt}]:\n{error_snippet}")
+            logs_accumulated.append(f"[Compiler error on Attempt {attempt}]:\n{error_snippet}")
 
-            if attempt < self.max_healing_attempts:
+            if not skip_self_healing and attempt < effective_max_attempts:
+                logs_accumulated.append(f"[Self-Healing Triggered on Attempt {attempt}]")
                 current_source = self._heal_latex_source(current_source, error_snippet)
 
-        # Fallback PDF generation if compiler attempts exhausted
+        # Fallback PDF generation if compiler attempts exhausted or self-healing skipped
         pdf_path = self._generate_fallback_pdf(current_source, working_dir, job_name)
         pdf_bytes = pdf_path.read_bytes() if pdf_path and pdf_path.exists() else None
 
@@ -206,7 +216,7 @@ INSTRUCTIONS:
             pdf_bytes=pdf_bytes,
             pdf_path=pdf_path,
             compilation_log="\n".join(logs_accumulated),
-            attempts=self.max_healing_attempts,
+            attempts=effective_max_attempts,
             repaired_source=current_source
         )
 

@@ -22,25 +22,30 @@
   footskip=25pt
 ]{geometry}
 
-\usepackage{iftex}
-\ifXeTeX
+% Self-contained engine check (no external iftex.sty required)
+\makeatletter
+\@ifundefined{XeTeXrevision}{%
+  \@ifundefined{directlua}{%
+    % PDFLaTeX engine
+    \usepackage[utf8]{inputenc}
+    \usepackage[T1]{fontenc}
+    \usepackage{helvet}
+    \usepackage{courier}
+    \renewcommand{\familydefault}{\sfdefault}
+  }{%
+    % LuaLaTeX engine
+    \usepackage{fontspec}
+    \setmainfont{Arial}
+    \setmonofont{Courier New}
+  }%
+}{%
+  % XeLaTeX engine
   \usepackage{fontspec}
   \setmainfont{Arial}
   \setmonofont{Courier New}
-\else\ifLuaTeX
-  \usepackage{fontspec}
-  \setmainfont{Arial}
-  \setmonofont{Courier New}
-\else
-  \usepackage[utf8]{inputenc}
-  \usepackage[T1]{fontenc}
-  \usepackage{helvet}
-  \usepackage{courier}
-  \renewcommand{\familydefault}{\sfdefault}
-\fi\fi
+}
+\makeatother
 
-\usepackage{textcomp}
-\usepackage{upquote}
 \usepackage{enumitem}
 \usepackage{calc}
 \usepackage{tabularx}
@@ -51,7 +56,17 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz}
-\usepackage[normalem]{ulem}
+
+% Safe fallback for upquote
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+
+% Safe fallback for ulem (underlining)
+\IfFileExists{ulem.sty}{%
+  \usepackage[normalem]{ulem}
+}{%
+  \providecommand{\uline}[1]{\underline{#1}}
+  \providecommand{\dashuline}[1]{\underline{#1}}
+}
 
 % Configure dashed underline length and spacing for database schemas
 \newlength{\mydashlength}
@@ -64,19 +79,11 @@
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.45em}
 
-% --- Bulletproof Right-Aligned Marks Macro (Standard Weight) ---
-\newcommand{\Marks}[1]{%
-  \leavevmode
-  \unskip
-  \penalty9999
-  \hbox{}\nobreak\hfill
-  \quad
-  \hbox{[#1]}%
-  \par
-}
+% --- Precise Right-Aligned Marks Macro (Aligned to the last line of question text) ---
+\newcommand{\Marks}[1]{\unskip\nolinebreak\hspace*{1em}\hfill\mbox{[#1]}}
 
 % --- Inline Code Macro ---
-\newcommand{\code}[1]{{\ttfamily #1}}
+\providecommand{\code}[1]{{\ttfamily #1}}
 
 % --- Cambridge List Structure Setup ---
 % Level 0: Main Question numbers (1, 2, ...)

@@ -323,7 +323,7 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
      * Use \\subtask{{X.1}}, \\subtask{{X.2}}, \\subtask{{X.3}}, etc. for subtask headers.
      * Structure subtask instructions with clear, concise bullet points (using \\begin{{itemize}} \\item ... \\end{{itemize}}).
      * PYTHON SIGNATURE CONVENTION: In Python questions, write plain function headers WITHOUT type annotations or return arrows (e.g. write `def search(arr, target):` NOT `def search(arr: list, target: int) -> bool:` or `--> Boolean`). Explain parameter roles and return values in natural English.
-     * ALWAYS use \\Marks{{<n>}} at the end of each question part for right-aligned bracketed marks.
+     * ALWAYS use \\Marks{{<n>}} directly at the end of each question part on the SAME line (e.g. `\\item Implement the search algorithm. \\Marks{{4}}`). Never insert a newline `\\\\` or blank line before `\\Marks{{<n>}}`.
      * At the end of Task X, include: \\taskfooter{{X}} (which prints "Save your Jupyter Notebook for Task X.").
      * Include \\newpage and \\TurnOver between major tasks.
 
@@ -335,7 +335,7 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
    - Use \\begin{{subparts}} \\item ... \\end{{subparts}} for question sub-subparts.
    - Use \\begin{{pseudocode}} ... \\end{{pseudocode}} for pseudocode listings.
    - Use standard tabular environments for decision tables, trace tables, and comparison matrices.
-   - ALWAYS use \\Marks{{<n>}} at the end of each question part.
+   - ALWAYS place \\Marks{{<n>}} directly at the end of the question text on the SAME line (e.g. `\\item Complete the truth table. \\Marks{{3}}`). Never insert `\\\\` before `\\Marks{{<n>}}`.
    - Include \\newpage and \\TurnOver between pages where appropriate.
 
 3. General LaTeX Rules:
@@ -451,8 +451,30 @@ Output ONLY the LaTeX body to replace % __AGENT_BODY_SLOT__.
         contextual_note = """
 CONTEXTUAL DIRECTIVES:
 - Provide an authentic, real-world scenario narrative establishing the business/engineering domain.
-- Break down subtasks with structured, step-by-step bullet points specifying exact signatures, data types, validation checks, and return values.
+- Break down subtasks with structured, step-by-step instructions specifying exact signatures, data types, validation checks, and return values.
 """ if is_contextual else ""
+
+        if paper_type == "practical":
+            structure_rules = f"""
+CRITICAL STRUCTURE REQUIREMENTS (PAPER 2 PRACTICAL):
+1. Start with \\maintask{{{task_number}}} (which automatically formats "Task {task_number}" and "Name your Jupyter Notebook as: TASK{task_number}_<your name>_<centre number>_<index number>.ipynb").
+2. Provide the domain scenario technical challenge description.
+3. Include \\tasksubtaskintro{{{task_number}}} EXACTLY ONCE before the subtasks (this formats the subtask comment instructions and the left-aligned In [1]: #Task {task_number}.1 Program code / Output: box).
+4. For each subtask, use \\subtask{{{task_number}.1}}, \\subtask{{{task_number}.2}}, etc. with structured bullet points (\\begin{{itemize}} \\item ... \\end{{itemize}}). Place \\Marks{{<n>}} directly at the end of the text on the SAME line (do not insert `\\\\` or newlines before `\\Marks{{<n>}}`).
+5. PYTHON SIGNATURE CONVENTION: Use plain function headers WITHOUT type annotations or return arrows (e.g. `def search(arr, target):` NOT `def search(arr: list, target: int) -> bool:` or `--> Boolean`). Explain parameter roles and return values in natural English.
+6. At the end of the task, output: \\taskfooter{{{task_number}}}.
+"""
+        else:
+            structure_rules = f"""
+CRITICAL STRUCTURE REQUIREMENTS (PAPER 1 THEORY):
+1. Start with \\item followed by the problem scenario, technical background, specifications, or business rules. (DO NOT output \\begin{{questions}} or \\end{{questions}} for this single question; output only this question's \\item body).
+2. STRICT PROHIBITION: DO NOT USE \\maintask, \\tasksubtaskintro, \\taskfooter, Jupyter notebook names (.ipynb), #Task comments, or In [1]: boxes! These are strictly for Practical programming exams and must NOT appear in Theory papers.
+3. Structure subparts using \\begin{{parts}} \\item ... \\end{{parts}} and sub-subparts using \\begin{{subparts}} \\item ... \\end{{subparts}}.
+4. For pseudocode listings, use \\begin{{pseudocode}} ... \\end{{pseudocode}} (with 2-digit line numbers 01, 02, ...).
+5. For decision tables, trace tables, or comparison grids, use standard LaTeX tabular environments.
+6. For database schemas, underline primary keys with \\uline{{...}} and dashed-underline foreign keys with \\dashuline{{...}}.
+7. ALWAYS place \\Marks{{<n>}} directly at the end of each question part on the SAME line (e.g. `\\item Complete the truth table. \\Marks{{3}}`). Never insert `\\\\` or blank lines before `\\Marks{{<n>}}`.
+"""
 
         single_prompt = f"""
 You are a Principal Examiner for Singapore-Cambridge GCE A-Level H2 Computing (9569).
@@ -464,19 +486,13 @@ Author a self-contained, high-quality examination task for:
 - User Prompt: {prompt}
 {contextual_note}
 
-CRITICAL STRUCTURE REQUIREMENTS (PRACTICAL):
-1. Start with \\maintask{{{task_number}}}.
-2. Provide the domain scenario problem description.
-3. Include \\tasksubtaskintro{{{task_number}}} EXACTLY ONCE before the subtasks (this provides the subtask comment instructions and In [1]: box).
-4. For each subtask, use \\subtask{{{task_number}.1}}, \\subtask{{{task_number}.2}}, etc. with bulleted instructions and \\Marks{{<n>}}.
-5. PYTHON SIGNATURE CONVENTION: Use plain function headers WITHOUT type annotations or return arrows (e.g. `def search(arr, target):` NOT `def search(arr: list, target: int) -> bool:` or `--> Boolean`). Explain inputs and returns in natural English.
-6. At the end of the task, output: \\taskfooter{{{task_number}}}.
+{structure_rules}
 
 OUTPUT FORMAT:
 Return a JSON object matching this schema:
 {{
   "task_number": {task_number},
-  "title": "Task {task_number}: <Title describing the technical challenge>",
+  "title": "{'Task' if paper_type == 'practical' else 'Question'} {task_number}: <Title describing the technical challenge>",
   "topic": "{category}",
   "marks": {total_marks},
   "latex_code": "<LaTeX body for this single task>",
@@ -529,26 +545,26 @@ Write driver program code to execute the system with sample test data and displa
 """
         else:
             fb_latex = f"""
-\\item An algorithm performs data processing and analysis.
+\\item An algorithm performs data processing and analysis within an enterprise network.
 
 \\begin{{parts}}
-  \\item State two advantages of this data structure compared to an array. \\Marks{{4}}
-  \\item Construct a decision table or trace table showing the step-by-step state changes for this algorithm. \\Marks{{8}}
-  \\item Evaluate the Big-O time and space complexity of the algorithm, justifying your answer. \\Marks{{{total_marks - 12}}}
+  \\item State two advantages of using a hash table compared to a linear array for fast record lookup. \\Marks{{4}}
+  \\item Construct a trace table showing the step-by-step state changes for the hashing function with collision resolution. \\Marks{{8}}
+  \\item Evaluate the Big-O time complexity of search operations in the worst case and average case, justifying your answer. \\Marks{{{total_marks - 12}}}
 \\end{{parts}}
 """
             fb_ms = f"""
-\\textbf{{Q{task_number}(a)}} & 2 distinct advantages explained & \\textbf{{4}} & 2 marks per advantage \\\\
+\\textbf{{Q{task_number}(a)}} & 2 distinct advantages of hash table explained & \\textbf{{4}} & 2 marks per valid advantage (O(1) average lookup, direct indexing) \\\\
 \\hline
-\\textbf{{Q{task_number}(b)}} & Correct decision / trace table construction & \\textbf{{8}} & 1 mark per correct row/column \\\\
+\\textbf{{Q{task_number}(b)}} & Correct trace table showing collision resolution steps & \\textbf{{8}} & 1 mark per correct row/state \\\\
 \\hline
-\\textbf{{Q{task_number}(c)}} & Big-O complexity justification & \\textbf{{{total_marks - 12}}} & O(n log n) with valid justification \\\\
+\\textbf{{Q{task_number}(c)}} & Worst case O(n) and average case O(1) Big-O justification & \\textbf{{{total_marks - 12}}} & Full justification with collision chaining explanation \\\\
 \\hline
 """
 
         return {
             "task_number": task_number,
-            "title": f"Task {task_number}: Technical Challenge ({category})",
+            "title": f"{'Task' if paper_type == 'practical' else 'Question'} {task_number}: Technical Challenge ({category})",
             "topic": category,
             "marks": total_marks,
             "latex_code": fb_latex.strip(),
@@ -565,9 +581,16 @@ Write driver program code to execute the system with sample test data and displa
         """
         Refines an existing single task using conversational prompting.
         """
+        paper_format_rules = """
+- For PRACTICAL papers: Keep \\maintask, \\tasksubtaskintro, \\subtask, \\taskfooter, and Jupyter notebook naming conventions.
+- For THEORY papers: Keep \\item, \\begin{parts}, \\begin{subparts}, \\begin{pseudocode}, and \\Marks. Strictly DO NOT introduce \\maintask, \\tasksubtaskintro, \\taskfooter, or Jupyter notebook references!
+"""
         refine_instruction = f"""
 You are a Principal Cambridge Examiner.
 Refine and update this specific exam task based on the educator's feedback:
+
+PAPER TYPE: {paper_type.upper()}
+{paper_format_rules}
 
 CURRENT TASK:
 Title: {current_task.get('title')}
@@ -735,14 +758,36 @@ INSTRUCTIONS:
 
         # Combine LaTeX bodies with page breaks
         body_parts = []
-        for t in tasks_list:
-            body_parts.append(t.get("latex_code", "").strip())
+        for idx, t in enumerate(tasks_list):
+            raw_code = t.get("latex_code", "").strip()
+            if not raw_code:
+                continue
+            
+            if paper_type == "theory":
+                # Clean any stray \begin{questions} or \end{questions} from single-question bodies
+                clean_code = re.sub(r"\\begin\{questions\}", "", raw_code)
+                clean_code = re.sub(r"\\end\{questions\}", "", clean_code).strip()
+                if clean_code and not clean_code.startswith(r"\item") and not clean_code.startswith(r"\question"):
+                    clean_code = f"\\item {clean_code}"
+                body_parts.append(clean_code)
+            else:
+                body_parts.append(raw_code)
 
         separator = "\n\n\\newpage\n\\TurnOver\n\n"
         if paper_type == "theory":
             combined_body = "\\begin{questions}\n\n" + separator.join(body_parts) + "\n\n\\end{questions}"
         else:
-            combined_body = separator.join(body_parts)
+            practical_body = separator.join(body_parts)
+            # Ensure top general .ipynb instruction is present at the very beginning of the practical paper
+            general_ipynb_instruction = (
+                r"\noindent Your program code and output for each of Task 1 to 4 should be saved in a single \texttt{.ipynb} file. "
+                r"For example, your program code and output for Task 1 should be saved as:\par\vspace{0.4em}" "\n"
+                r"\noindent\texttt{TASK1\_<your name>\_<centre number>\_<index number>.ipynb}\par\vspace{1.0em}" "\n\n"
+            )
+            if "Your program code and output for each of Task" not in practical_body:
+                combined_body = general_ipynb_instruction + practical_body
+            else:
+                combined_body = practical_body
 
         # Build Full LaTeX Paper
         full_paper = paper_template
