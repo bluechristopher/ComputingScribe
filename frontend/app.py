@@ -58,20 +58,49 @@ def build_session_image_data_urls(session: ExamSession) -> Dict[str, str]:
     return data_urls
 
 
-def insert_exam_image(latex_source: str, image_macro: str, placement: str, phrase: str = "") -> tuple[Optional[str], Optional[str]]:
-    """Adds an image after a uniquely matched source phrase or at the end of the paper."""
-    if r"\newcommand{\ExamImage}" not in latex_source:
-        if r"\usepackage{graphicx}" in latex_source:
-            latex_source = latex_source.replace(
-                r"\usepackage{graphicx}",
-                r"\usepackage{graphicx}" + "\n" + EXAM_IMAGE_MACRO,
-                1,
-            )
-        else:
-            latex_source = latex_source.replace(r"\begin{document}", EXAM_IMAGE_MACRO + "\n\\begin{document}", 1)
-
+def insert_exam_image(
+    latex_source: str,
+    image_macro: str,
+    placement: str = "Click to select line in paper.tex",
+    phrase: str = "",
+    line_number: Optional[int] = None,
+    position: str = "after",
+) -> tuple[Optional[str], Optional[str]]:
+    """Adds an image after a selected line number, after a uniquely matched source phrase, or at the end of the paper."""
     if placement == "At end of paper":
+        if r"\newcommand{\ExamImage}" not in latex_source:
+            if r"\usepackage{graphicx}" in latex_source:
+                latex_source = latex_source.replace(
+                    r"\usepackage{graphicx}",
+                    r"\usepackage{graphicx}" + "\n" + EXAM_IMAGE_MACRO,
+                    1,
+                )
+            else:
+                latex_source = latex_source.replace(r"\begin{document}", EXAM_IMAGE_MACRO + "\n\\begin{document}", 1)
         return latex_source.rstrip() + f"\n\n{image_macro}\n", None
+
+    if placement in ("Click to select line in paper.tex", "After selected line", "Before selected line") or line_number is not None:
+        if line_number is None:
+            return None, "Please select a line number in paper.tex where the image should be placed."
+        raw_lines = latex_source.splitlines(keepends=True)
+        if not (1 <= line_number <= len(raw_lines)):
+            return None, f"Selected line {line_number} is out of range (1 to {len(raw_lines)})."
+        
+        insert_idx = line_number if position.lower() == "after" else (line_number - 1)
+        formatted_macro = f"\n{image_macro}\n" if (insert_idx > 0 and not raw_lines[insert_idx - 1].endswith("\n")) else f"{image_macro}\n"
+        raw_lines.insert(insert_idx, formatted_macro)
+        updated_source = "".join(raw_lines)
+        
+        if r"\newcommand{\ExamImage}" not in updated_source:
+            if r"\usepackage{graphicx}" in updated_source:
+                updated_source = updated_source.replace(
+                    r"\usepackage{graphicx}",
+                    r"\usepackage{graphicx}" + "\n" + EXAM_IMAGE_MACRO,
+                    1,
+                )
+            else:
+                updated_source = updated_source.replace(r"\begin{document}", EXAM_IMAGE_MACRO + "\n\\begin{document}", 1)
+        return updated_source, None
 
     phrase = phrase.strip()
     if not phrase:
@@ -84,7 +113,17 @@ def insert_exam_image(latex_source: str, image_macro: str, placement: str, phras
     line_end = latex_source.find("\n", phrase_end)
     if line_end == -1:
         line_end = len(latex_source)
-    return latex_source[:line_end] + f"\n\n{image_macro}" + latex_source[line_end:], None
+    updated_source = latex_source[:line_end] + f"\n\n{image_macro}" + latex_source[line_end:]
+    if r"\newcommand{\ExamImage}" not in updated_source:
+        if r"\usepackage{graphicx}" in updated_source:
+            updated_source = updated_source.replace(
+                r"\usepackage{graphicx}",
+                r"\usepackage{graphicx}" + "\n" + EXAM_IMAGE_MACRO,
+                1,
+            )
+        else:
+            updated_source = updated_source.replace(r"\begin{document}", EXAM_IMAGE_MACRO + "\n\\begin{document}", 1)
+    return updated_source, None
 
 
 def build_task_authoring_hud_html(
@@ -1408,37 +1447,152 @@ if curr_sess:
 
         with st.expander("🖼️ Insert Exam Image", expanded=False):
             st.caption("PNG and JPEG images are stored in this paper's `assets/` folder. They render in the browser preview and are included with `paper.tex` in the export ZIP.")
-            image_file = st.file_uploader(
-                "Image file",
-                type=["png", "jpg", "jpeg"],
-                key="paper_image_uploader",
-            )
-            image_width = st.slider(
-                "Display width (% of text width)",
-                min_value=10,
-                max_value=100,
-                value=65,
-                key="paper_image_width",
-            )
+            
+            col_img_up, col_img_w = st.columns([1.6, 1])
+            with col_img_up:
+                image_file = st.file_uploader(
+                    "Image file (PNG/JPG)",
+                    type=["png", "jpg", "jpeg"],
+                    key="paper_image_uploader",
+                )
+            with col_img_w:
+                image_width = st.slider(
+                    "Display width (% of text width)",
+                    min_value=10,
+                    max_value=100,
+                    value=65,
+                    key="paper_image_width",
+                )
+
             image_placement = st.radio(
-                "Place image",
-                options=["After an exact phrase", "At end of paper"],
+                "Placement method",
+                options=["Click to select line in paper.tex", "At end of paper", "After an exact phrase"],
                 horizontal=True,
                 key="paper_image_placement",
             )
-            image_anchor = st.text_input(
-                "Exact phrase in paper.tex",
-                placeholder="Paste a unique phrase from the question text",
-                disabled=image_placement == "At end of paper",
-                key="paper_image_anchor",
-            )
-            if st.button("Insert image into paper.tex", type="primary", key="insert_paper_image_btn", disabled=not image_file):
+
+            raw_tex_lines = curr_sess.latex_source.splitlines()
+            total_tex_lines = len(raw_tex_lines)
+            
+            target_line_num = None
+            pos_choice = "after"
+            image_anchor = ""
+
+            if image_placement == "Click to select line in paper.tex":
+                if "img_insert_line" not in st.session_state or st.session_state.img_insert_line > total_tex_lines:
+                    st.session_state.img_insert_line = min(20, total_tex_lines) if total_tex_lines > 0 else 1
+
+                col_pos_sel, col_line_pick = st.columns([1.1, 1.4])
+                with col_pos_sel:
+                    pos_choice_label = st.radio(
+                        "Position relative to selected line",
+                        options=["Insert AFTER line", "Insert BEFORE line"],
+                        horizontal=True,
+                        key="paper_img_pos_choice"
+                    )
+                    pos_choice = "after" if "AFTER" in pos_choice_label else "before"
+                
+                with col_line_pick:
+                    manual_line = st.number_input(
+                        "Selected Line # (or click row below)",
+                        min_value=1,
+                        max_value=max(1, total_tex_lines),
+                        value=st.session_state.img_insert_line,
+                        step=1,
+                        key="paper_img_line_num_input"
+                    )
+                    if manual_line != st.session_state.img_insert_line:
+                        st.session_state.img_insert_line = manual_line
+
+                target_line_num = st.session_state.img_insert_line
+
+                # Interactive TeX Line Clicker Table
+                st.markdown("**👇 Click on any line in the TeX source code to select the insertion position:**")
+                df_source = pd.DataFrame({
+                    "Line #": list(range(1, total_tex_lines + 1)),
+                    "LaTeX Code": raw_tex_lines
+                })
+                
+                sel_event = st.dataframe(
+                    df_source,
+                    use_container_width=True,
+                    hide_index=True,
+                    height=280,
+                    selection_mode="single-row",
+                    on_select="rerun",
+                    key="paper_tex_line_clicker_df",
+                    column_config={
+                        "Line #": st.column_config.NumberColumn("Line #", width="small"),
+                        "LaTeX Code": st.column_config.TextColumn("LaTeX Source Content", width="large"),
+                    }
+                )
+
+                if sel_event and hasattr(sel_event, "selection") and sel_event.selection and sel_event.selection.rows:
+                    clicked_row = sel_event.selection.rows[0]
+                    clicked_line = clicked_row + 1
+                    if clicked_line != st.session_state.img_insert_line:
+                        st.session_state.img_insert_line = clicked_line
+                        target_line_num = clicked_line
+                        st.rerun()
+
+                # Live Context Preview Box
+                if 1 <= target_line_num <= total_tex_lines:
+                    ctx_start = max(0, target_line_num - 3)
+                    ctx_end = min(total_tex_lines, target_line_num + 2)
+                    
+                    preview_snippets = []
+                    img_name_disp = html.escape(image_file.name) if image_file else "uploaded_image.png"
+                    marker_badge = (
+                        f"<div style='background: #dbeafe; color: #1e40af; border: 1.5px dashed #3b82f6; "
+                        f"border-radius: 6px; padding: 5px 12px; margin: 5px 0; font-weight: 700; "
+                        f"font-family: sans-serif; display: flex; align-items: center; gap: 8px;'>"
+                        f"<span>🖼️</span> <span>[Image: <strong>{img_name_disp}</strong> will be inserted here at {image_width}% width]</span>"
+                        f"</div>"
+                    )
+                    
+                    for idx in range(ctx_start, ctx_end):
+                        curr_l = idx + 1
+                        line_text = html.escape(raw_tex_lines[idx])
+                        line_num_badge = f"<span style='color: #64748b; font-weight: 600;'>{curr_l:3d} |</span> "
+                        
+                        if pos_choice == "before" and curr_l == target_line_num:
+                            preview_snippets.append(marker_badge)
+                        
+                        is_target = (curr_l == target_line_num)
+                        bg_style = "background: #f1f5f9; padding: 2px 4px; border-radius: 4px;" if is_target else ""
+                        preview_snippets.append(f"<div style='{bg_style}'>{line_num_badge}{line_text if line_text else '<em>(blank line)</em>'}</div>")
+                        
+                        if pos_choice == "after" and curr_l == target_line_num:
+                            preview_snippets.append(marker_badge)
+
+                    pos_desc = f"AFTER Line {target_line_num}" if pos_choice == "after" else f"BEFORE Line {target_line_num}"
+                    st.markdown(
+                        f"<div style='background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-top: 10px; font-family: monospace; font-size: 0.86rem; line-height: 1.5;'>"
+                        f"<div style='font-family: sans-serif; font-weight: 700; color: #0f172a; margin-bottom: 8px; display: flex; justify-content: space-between;'>"
+                        f"<span>📍 Insertion Point: <span style='color: #2563eb;'>{pos_desc}</span></span>"
+                        f"<span style='font-size: 0.8rem; color: #64748b; font-weight: normal;'>Displaying context around line {target_line_num}</span>"
+                        f"</div>"
+                        + "".join(preview_snippets) +
+                        "</div>",
+                        unsafe_allow_html=True
+                    )
+
+            elif image_placement == "After an exact phrase":
+                image_anchor = st.text_input(
+                    "Exact phrase in paper.tex",
+                    placeholder="Paste a unique phrase from the question text",
+                    key="paper_image_anchor",
+                )
+
+            if st.button("🖼️ Insert image into paper.tex", type="primary", key="insert_paper_image_btn", disabled=not image_file, use_container_width=True):
                 image_macro_placeholder = "__IMAGE_MACRO__"
                 updated_source, insert_error = insert_exam_image(
-                    curr_sess.latex_source,
-                    image_macro_placeholder,
-                    image_placement,
-                    image_anchor,
+                    latex_source=curr_sess.latex_source,
+                    image_macro=image_macro_placeholder,
+                    placement=image_placement,
+                    phrase=image_anchor,
+                    line_number=target_line_num,
+                    position=pos_choice,
                 )
                 if insert_error:
                     st.error(insert_error)
@@ -1454,7 +1608,7 @@ if curr_sess:
                         curr_sess.latex_source = updated_source.replace(image_macro_placeholder, image_macro, 1)
                         st.session_state.orchestrator.session_manager.save_session(curr_sess)
                         st.session_state.current_session = curr_sess
-                        st.success(f"Inserted {asset['original_name']} at {image_width}% width.")
+                        st.success(f"✅ Successfully inserted {asset['original_name']} ({image_width}% width) into paper.tex!")
                         st.rerun()
                     except ValueError as exc:
                         st.error(str(exc))

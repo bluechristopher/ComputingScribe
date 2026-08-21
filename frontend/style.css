@@ -255,9 +255,9 @@ section.main,
 [data-testid="stMain"] [data-testid="stRadio"] span,
 [data-testid="stMain"] div[role="radiogroup"] label,
 [data-testid="stMain"] [data-testid="stMarkdownContainer"]:not(button *):not(button) > p:not(.main-header *):not(.station-box-active *):not(button *):not(button),
-[data-testid="stMain"] p:not(button *):not(button):not(.main-header *):not(.main-header):not([data-baseweb="tag"] *):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble *):not(.marks-bracket *),
-[data-testid="stMain"] span:not(button *):not(button):not(.main-header *):not(.main-header):not([data-baseweb="tag"] *):not([data-baseweb="tag"]):not([data-baseweb="tag"] span):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble):not(.subtask-mark-bubble *):not(.marks-bracket):not(.marks-bracket *):not(.badge-pill):not(.badge-pill *):not(.badge-latex):not(.badge-latex *):not(.badge-gemini):not(.badge-fairness),
-[data-testid="stMain"] div:not(button *):not(button):not([data-testid="stButton"]):not(.main-header):not(.main-header *):not([data-baseweb="tag"]):not([data-baseweb="tag"] *):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble):not(.subtask-mark-bubble *):not(.marks-bracket):not(.marks-bracket *):not(.badge-pill):not(.badge-pill *):not(.badge-latex):not(.badge-gemini):not(.badge-fairness),
+[data-testid="stMain"] p:not(button *):not(button):not(.main-header *):not(.main-header):not([data-baseweb="tag"] *):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble *):not(.marks-bracket *):not(.objective-chip *):not(.objective-chip),
+[data-testid="stMain"] span:not(button *):not(button):not(.main-header *):not(.main-header):not([data-baseweb="tag"] *):not([data-baseweb="tag"]):not([data-baseweb="tag"] span):not([data-testid="stMultiSelect"] *):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble):not(.subtask-mark-bubble *):not(.marks-bracket):not(.marks-bracket *):not(.badge-pill):not(.badge-pill *):not(.badge-latex):not(.badge-latex *):not(.badge-gemini):not(.badge-fairness):not(.objective-chip):not(.objective-chip *),
+[data-testid="stMain"] div:not(button *):not(button):not([data-testid="stButton"]):not(.main-header):not(.main-header *):not([data-baseweb="tag"]):not([data-baseweb="tag"] *):not([data-testid="stMultiSelect"] *):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble):not(.subtask-mark-bubble *):not(.marks-bracket):not(.marks-bracket *):not(.badge-pill):not(.badge-pill *):not(.badge-latex):not(.badge-gemini):not(.badge-fairness):not(.objective-chip):not(.objective-chip *),
 [data-testid="stMain"] li:not(button *) {
     color: #0f172a !important;
 }
@@ -407,8 +407,8 @@ section.main,
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
 
-[data-testid="stMain"] [data-baseweb="select"] span,
-[data-testid="stMain"] [data-baseweb="select"] div,
+[data-testid="stMain"] [data-baseweb="select"] span:not([data-baseweb="tag"] *):not([data-baseweb="tag"]),
+[data-testid="stMain"] [data-baseweb="select"] div:not([data-baseweb="tag"] *):not([data-baseweb="tag"]),
 [data-testid="stMain"] [data-baseweb="select"] input {
     color: #0f172a !important;
     font-weight: 600 !important;
@@ -417,7 +417,7 @@ section.main,
     overflow: visible !important;
 }
 
-[data-testid="stMain"] [data-baseweb="select"] svg {
+[data-testid="stMain"] [data-baseweb="select"] svg:not([data-baseweb="tag"] svg):not([data-baseweb="tag"] *) {
     fill: #0f172a !important;
 }
 
@@ -425,41 +425,75 @@ section.main,
     min-width: 130px !important;
 }
 
-/* Multi-Select Topic Selection Bubbles / Tags */
+/* Multi-Select Topic Selection Bubbles / Tags & Learning Objective Chips */
 [data-baseweb="tag"],
 span[data-baseweb="tag"],
 div[data-baseweb="tag"],
+[data-testid="stMultiSelect"] [data-baseweb="tag"],
+[data-testid="stMultiSelect"] span[data-baseweb="tag"],
 [data-testid="stMain"] [data-baseweb="tag"],
-[data-testid="stSidebar"] [data-baseweb="tag"] {
+[data-testid="stSidebar"] [data-baseweb="tag"],
+.objective-chip,
+[data-testid="stMain"] .objective-chip {
     background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%) !important;
-    border: 1px solid #60a5fa !important;
-    border-radius: 6px !important;
-    padding: 3px 8px !important;
+    border: 1.5px solid #60a5fa !important;
+    border-radius: 8px !important;
+    padding: 3px 10px !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
 }
 
-/* Ensure ALL text inside topic selection bubbles is pure crisp white */
+.objective-chip,
+[data-testid="stMain"] .objective-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    border-radius: 20px !important;
+    padding: 6px 14px !important;
+    margin: 4px 6px 4px 0 !important;
+    font-size: 0.86rem !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+}
+
+/* Ensure ALL text & icons inside topic selection bubbles and objective chips is pure crisp white */
 [data-baseweb="tag"] *,
 [data-baseweb="tag"] span,
 [data-baseweb="tag"] div,
 [data-baseweb="tag"] p,
 span[data-baseweb="tag"] span,
 div[data-baseweb="tag"] div,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] *,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] div,
 [data-testid="stMain"] [data-baseweb="tag"] *,
 [data-testid="stMain"] [data-baseweb="tag"] span,
 [data-testid="stMain"] [data-baseweb="tag"] div,
 [data-testid="stSidebar"] [data-baseweb="tag"] *,
-[data-testid="stSidebar"] [data-baseweb="tag"] span {
+[data-testid="stSidebar"] [data-baseweb="tag"] span,
+.objective-chip *,
+.objective-chip span,
+.objective-chip div,
+.objective-chip p,
+[data-testid="stMain"] .objective-chip *,
+[data-testid="stMain"] .objective-chip span,
+[data-testid="stMain"] .objective-chip div {
     color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     font-weight: 700 !important;
+    fill: #ffffff !important;
 }
 
 /* Delete / Cross 'x' icon inside multiselect tag bubble */
 [data-baseweb="tag"] svg,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] svg,
 [data-testid="stMain"] [data-baseweb="tag"] svg,
-[data-baseweb="tag"] svg path {
+[data-baseweb="tag"] svg path,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] svg path,
+[data-testid="stMain"] [data-baseweb="tag"] svg path {
     fill: #ffffff !important;
     color: #ffffff !important;
+    stroke: #ffffff !important;
 }
 
 /* Inline Code Badges in Main Panel */
@@ -946,11 +980,14 @@ code, pre, .inline-code, span.inline-code {
 div[data-baseweb="tag"],
 span[data-baseweb="tag"],
 [data-testid="stMultiSelect"] [data-baseweb="tag"],
-[data-testid="stMultiSelect"] span[data-baseweb="tag"] {
+[data-testid="stMultiSelect"] span[data-baseweb="tag"],
+[data-testid="stMain"] [data-baseweb="tag"],
+[data-testid="stSidebar"] [data-baseweb="tag"] {
     background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important; /* Rich Blue Background */
     border: 1.5px solid #3b82f6 !important;
     border-radius: 8px !important;
     color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     font-weight: 750 !important;
     font-size: 0.85rem !important;
     padding: 3px 8px !important;
@@ -963,35 +1000,57 @@ div[data-baseweb="tag"] *,
 span[data-baseweb="tag"] *,
 [data-testid="stMultiSelect"] [data-baseweb="tag"] *,
 [data-testid="stMultiSelect"] [data-baseweb="tag"] span,
-[data-testid="stMultiSelect"] [data-baseweb="tag"] div {
+[data-testid="stMultiSelect"] [data-baseweb="tag"] div,
+[data-testid="stMain"] [data-baseweb="tag"] *,
+[data-testid="stMain"] [data-baseweb="tag"] span,
+[data-testid="stMain"] [data-baseweb="tag"] div,
+[data-testid="stSidebar"] [data-baseweb="tag"] *,
+[data-testid="stSidebar"] [data-baseweb="tag"] span {
     color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     font-weight: 750 !important;
     fill: #ffffff !important;
 }
 
 [data-baseweb="tag"] svg,
 .stMultiSelect [data-baseweb="tag"] svg,
-[data-testid="stMultiSelect"] [data-baseweb="tag"] svg {
+[data-testid="stMultiSelect"] [data-baseweb="tag"] svg,
+[data-testid="stMain"] [data-baseweb="tag"] svg,
+[data-baseweb="tag"] svg path,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] svg path,
+[data-testid="stMain"] [data-baseweb="tag"] svg path {
     color: #ffffff !important;
     fill: #ffffff !important;
+    stroke: #ffffff !important;
 }
 
-.objective-chip {
+.objective-chip,
+[data-testid="stMain"] .objective-chip {
     display: inline-flex !important;
     align-items: center !important;
     background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important; /* Blue Background */
     color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     border: 1.5px solid #3b82f6 !important;
     border-radius: 20px !important;
-    padding: 5px 14px !important;
-    margin: 4px !important;
-    font-size: 0.85rem !important;
+    padding: 6px 14px !important;
+    margin: 4px 6px 4px 0 !important;
+    font-size: 0.86rem !important;
     font-weight: 750 !important;
+    line-height: 1.4 !important;
     box-shadow: 0 2px 6px rgba(30, 58, 138, 0.35) !important;
 }
 
-.objective-chip * {
+.objective-chip *,
+[data-testid="stMain"] .objective-chip *,
+.objective-chip span,
+.objective-chip div,
+.objective-chip p,
+[data-testid="stMain"] .objective-chip span,
+[data-testid="stMain"] .objective-chip div {
     color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-weight: 750 !important;
 }
 
 /* ==============================================================================
@@ -1192,16 +1251,26 @@ button:disabled:hover {
     font-weight: 750 !important;
 }
 
-/* Selected syllabus tags retain their contrast while becoming less visually heavy. */
-[data-baseweb="tag"], .objective-chip {
-    background: linear-gradient(135deg, #164e87 0%, #166b9a 58%, #087b82 100%) !important;
-    border-color: #125f88 !important;
-    border-radius: 5px !important;
-    box-shadow: none !important;
+/* Selected syllabus tags and objective chips maintain high-contrast crisp white typography */
+[data-baseweb="tag"],
+[data-testid="stMultiSelect"] [data-baseweb="tag"],
+[data-testid="stMain"] [data-baseweb="tag"],
+.objective-chip,
+[data-testid="stMain"] .objective-chip {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
+    border: 1.5px solid #3b82f6 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
-.objective-chip {
-    padding: 5px 10px !important;
+[data-baseweb="tag"] *,
+[data-testid="stMultiSelect"] [data-baseweb="tag"] *,
+[data-testid="stMain"] [data-baseweb="tag"] *,
+.objective-chip *,
+[data-testid="stMain"] .objective-chip * {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    fill: #ffffff !important;
 }
 
 @media (max-width: 720px) {
