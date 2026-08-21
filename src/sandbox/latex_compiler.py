@@ -77,7 +77,12 @@ class LaTeXSyntaxValidator:
                 source = source.replace(r"\begin{document}", exam_image_macro + "\n\\begin{document}", 1)
             fixes.append("Injected missing \\ExamImage macro definition into preamble.")
 
-        # 3. Fix unescaped underscores outside verbatim/lstlisting/minted/math blocks
+        # 3. Ensure \usepackage{underscore} is present in preamble
+        if r"\usepackage{underscore}" not in source and r"\documentclass" in source:
+            source = source.replace(r"\begin{document}", r"\usepackage{underscore}" + "\n\\begin{document}", 1)
+            fixes.append("Added \\usepackage{underscore} to preamble.")
+
+        # 4. Fix unescaped underscores outside verbatim/lstlisting and clean backslashes inside verbatim/lstlisting
         lines = source.splitlines()
         in_code_block = False
         repaired_lines = []
@@ -97,7 +102,11 @@ class LaTeXSyntaxValidator:
                 continue
 
             if in_code_block:
-                repaired_lines.append(line)
+                # Inside verbatim/lstlisting: code must be pure Python without LaTeX escapes
+                clean_code_line = line.replace(r"\_", "_").replace(r"\%", "%").replace(r"\&", "&").replace(r"\#", "#")
+                if clean_code_line != line:
+                    fixes.append("Cleaned accidental LaTeX escapes inside verbatim/lstlisting code block.")
+                repaired_lines.append(clean_code_line)
                 continue
 
             if stripped.startswith("%") or r"\documentclass" in line or r"\usepackage" in line:
@@ -108,16 +117,15 @@ class LaTeXSyntaxValidator:
             line = re.sub(r"\\Marks\s*\[\s*(\d+)\s*\]", r"\\Marks{\1}", line)
             line = re.sub(r"\\Marks\s+(\d+)", r"\\Marks{\1}", line)
 
-            # Fix unescaped underscores in plain text words outside math equations
-            # Split line on math delimiters
+            # Fix unescaped underscores in plain text words and inside \code{...} outside math equations
             parts = re.split(r"(\$[^\$]+\$)", line)
             new_parts = []
             for part in parts:
                 if part.startswith("$") and part.endswith("$") and len(part) > 1:
                     new_parts.append(part)
                 else:
+                    # Escape all unescaped underscores in text mode (including inside \code{...})
                     subbed = re.sub(r"(?<!\\)_", r"\_", part)
-                    subbed = subbed.replace(r"\_\_", "__")
                     new_parts.append(subbed)
             repaired_line = "".join(new_parts)
             if repaired_line != line:

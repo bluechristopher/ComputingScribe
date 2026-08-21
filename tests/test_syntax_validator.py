@@ -50,5 +50,29 @@ class TestLaTeXSyntaxValidator(unittest.TestCase):
             self.assertIn('raw\\_data.csv', res.repaired_source)
             self.assertIn('[Syntax Verification]: PASSED', res.compilation_log)
 
+    def test_dunder_methods_and_verbatim_cleaning(self):
+        t = (
+            "\\documentclass{article}\n"
+            "\\begin{document}\n"
+            "Define \\code{__init__(self, sku, name, weight_kg)} and \\code{__str__} and \\code{__len__(self)}.\n"
+            "Also test \\code{__eq__} and \\code{__hash__}.\n"
+            "\\begin{verbatim}\n"
+            "p\\_laptop = Product('L001', 'Laptop', 2.5)\n"
+            "inv.add\\_stock(p\\_laptop, 'LT001')\n"
+            "\\end{verbatim}\n"
+            "\\fancyfoot[R]{\\textbf{[Turn over}}\n"
+            "\\end{document}"
+        )
+        sanitized, fixes = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(t)
+        self.assertIn("\\code{\\_\\_init\\_\\_(self, sku, name, weight\\_kg)}", sanitized)
+        self.assertIn("\\code{\\_\\_str\\_\\_}", sanitized)
+        self.assertIn("\\code{\\_\\_len\\_\\_(self)}", sanitized)
+        self.assertIn("\\code{\\_\\_eq\\_\\_}", sanitized)
+        self.assertIn("\\code{\\_\\_hash\\_\\_}", sanitized)
+        self.assertIn("p_laptop = Product('L001', 'Laptop', 2.5)", sanitized)
+        self.assertIn("inv.add_stock(p_laptop, 'LT001')", sanitized)
+        self.assertIn("\\textbf{[Turn over}", sanitized)
+        self.assertIn("\\usepackage{underscore}", sanitized)
+
 if __name__ == '__main__':
     unittest.main()

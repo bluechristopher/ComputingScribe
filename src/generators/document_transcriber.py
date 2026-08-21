@@ -116,6 +116,7 @@ SOURCE TEXT TO TRANSCRIBE:
 {extracted_text}
 ---
 
+
 PAGE PURPOSE ANALYSIS & FILTERING:
 1. Examine each page of the uploaded document to identify its purpose:
    - EXCLUDE & IGNORE:
@@ -130,7 +131,8 @@ HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
 1. STRICT RETENTION OF ORIGINAL PHRASING & TEXT (HIGHEST PRIORITY):
    - You MUST retain as much of the author's ORIGINAL PHRASING, exact sentences, vocabulary, descriptions, problem scenarios, algorithm specifications, numbers, variable names, and mark allocations as humanly possible.
    - DO NOT rephrase, paraphrase, rewrite, summarize, simplify, or reword any part of the questions or scenario background.
-   - Preserve the author's exact sentences and wording verbatim; your sole responsibility is structuring and typesetting the text into valid Cambridge LaTeX syntax (such as converting headings into \\maintask/\\subtask or \\item/\\begin{{parts}}, formatting tables, wrapping code in \\code, and right-aligning \\Marks{{<n>}}).
+   - Preserve the author's exact sentences and wording verbatim; your sole responsibility is structuring and typesetting the text into valid Cambridge LaTeX syntax.
+
 2. If PRACTICAL paper:
    - At the VERY TOP of the paper (before Task 1), ALWAYS include this exact general instruction:
      \\noindent Your program code and output for each of Task 1 to 4 should be saved in a single \\texttt{{.ipynb}} file. For example, your program code and output for Task 1 should be saved as:\\par\\vspace{{0.4em}}
@@ -146,16 +148,21 @@ HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
    - PYTHON SIGNATURE CONVENTION: Strip all parameter data types and return type arrows (e.g. normalize `def search(arr: list, target: int) -> bool:` or `search(arr, target) --> Boolean` into clean standard `def search(arr, target):` or `search(arr, target)`). Do not output `--> <Type>` or `: <Type>` in Python headers.
    - For Database Schemas:
      * Format table definitions with primary keys underlined using \\uline{{...}} and foreign keys dashed-underlined using \\dashuline{{...}}.
-   - For Code/Identifiers: Use \\code{{...}} or \\texttt{{...}}.
+   - For Inline Code/Identifiers in prose: Use \\code{{...}} or \\texttt{{...}} and escape underscores as \\_ (e.g. \\code{{\\_\\_init\\_\\_(self, ...)}}, \\code{{\\_\\_str\\_\\_}}, \\code{{weight\\_kg}}).
+   - Inside \\begin{{lstlisting}} or \\begin{{verbatim}} blocks: write pure normal Python without LaTeX backslash escaping.
+   - For wide tables: Use \\begin{{tabularx}}{{\\linewidth}}{{...}} with `X` columns to prevent margin overflow.
 
 3. If THEORY paper:
    - STRICT PROHIBITION: DO NOT USE \\maintask, \\tasksubtaskintro, \\taskfooter, Jupyter notebook names (.ipynb), #Task comments, or In [1]: boxes! These belong strictly to Practical programming exams and must NOT appear in Theory papers.
    - Wrap questions in \\begin{{questions}} ... \\end{{questions}}.
    - Use \\item for main questions, \\begin{{parts}} \\item ... \\end{{parts}} for subparts, \\begin{{subparts}} for sub-subparts.
    - Use \\begin{{pseudocode}} ... \\end{{pseudocode}} for pseudocode listings (with 2-digit line numbers).
-   - Use tabular environments for decision tables, trace tables, and comparison grids.
+   - Use standard tabular environments for decision tables, trace tables, and comparison grids.
    - ALWAYS place \\Marks{{<n>}} directly at the end of each question part on the SAME line (do not insert `\\\\` or blank lines before `\\Marks{{<n>}}`).
    - Insert \\newpage and \\TurnOver between pages where appropriate.
+   - For wide tables: Use \\begin{{tabularx}}{{\\linewidth}}{{...}} with `X` columns.
+   - For inline identifiers with underscores in prose: Escape underscores as \\_ (e.g. \\code{{\\_\\_init\\_\\_}}, \\code{{cust\\_id}}).
+   - Inside \\begin{{verbatim}} or pseudocode blocks: Write clean code without backslash escapes.
 
 4. Output ONLY valid JSON matching this schema:
 {{

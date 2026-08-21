@@ -328,10 +328,205 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
      * Start with \\maintask{{X}} (which automatically outputs "Task X" and "Name your Jupyter Notebook as: TASKX_<your name>_<centre number>_<index number>.ipynb").
      * Provide an EXTENDED, REAL-WORLD SCENARIO narrative background for the technical challenge.
      * Before the subtasks, include \\tasksubtaskintro{{X}} EXACTLY ONCE per task (which outputs the subtask comment instructions and the left-aligned In [1]: #Task X.1 Program code / Output: box). Do NOT repeat this instruction box more than once in a task.
+                data = json.loads(response.text)
+                return ExamBlueprint(**data)
+            except Exception as e:
+                print(f"[QuestionAuthor] Blueprint generation with Gemini failed/skipped: {e}")
+
+        # Fallback blueprint
+        return self._generate_fallback_blueprint(prompt, paper_type, target_marks)
+
+    def _generate_fallback_blueprint(self, prompt: str, paper_type: str, total_marks: int) -> ExamBlueprint:
+        if paper_type == "practical":
+            return ExamBlueprint(
+                title="H2 Computing Practical Examination (Paper 2 / 9569)",
+                paper_type="practical",
+                syllabus_code="9569",
+                paper_number="02",
+                total_marks=total_marks,
+                learning_objectives=[
+                    "Implement Linear & Non-Linear ADTs in Python (Stacks, Queues, Linked Lists, BST)",
+                    "Perform CSV/JSON file stream processing and validation",
+                    "Design OOP class hierarchies with encapsulation and inheritance",
+                    "Implement divide-and-conquer sorting (Quicksort/Merge sort) and recursive searching"
+                ],
+                sections=[
+                    {
+                        "number": 1,
+                        "title": "Task 1: Abstract Data Types & Pointer Management",
+                        "topic": "Section 1: Data and Data Structures (Stack / Circular Queue)",
+                        "marks": 25,
+                        "subparts": [
+                            {"label": "Task 1.1", "description": "Implement push() / enqueue() method with bounds checking", "marks": 6},
+                            {"label": "Task 1.2", "description": "Implement pop() / dequeue() with underflow handling", "marks": 6},
+                            {"label": "Task 1.3", "description": "Write driver execution code and test cases", "marks": 13}
+                        ]
+                    },
+                    {
+                        "number": 2,
+                        "title": "Task 2: Structured Dataset Processing and File I/O",
+                        "topic": "Section 3: System Design & Implementation (CSV File Processing)",
+                        "marks": 25,
+                        "subparts": [
+                            {"label": "Task 2.1", "description": "Read CANDIDATES.csv into structured dictionaries", "marks": 8},
+                            {"label": "Task 2.2", "description": "Filter and aggregate candidate cohort statistics", "marks": 10},
+                            {"label": "Task 2.3", "description": "Output distinction summary report to formatted text file", "marks": 7}
+                        ]
+                    },
+                    {
+                        "number": 3,
+                        "title": "Task 3: Object-Oriented Programming & Hierarchy",
+                        "topic": "Section 3: System Design & Implementation (OOP & Polymorphism)",
+                        "marks": 20,
+                        "subparts": [
+                            {"label": "Task 3.1", "description": "Define superclass AssessmentItem with constructor and getters", "marks": 6},
+                            {"label": "Task 3.2", "description": "Define subclass PracticalAssessment overriding calculateScore()", "marks": 8},
+                            {"label": "Task 3.3", "description": "Instantiate polymorphically and verify method dispatch", "marks": 6}
+                        ]
+                    },
+                    {
+                        "number": 4,
+                        "title": "Task 4: Sorting, Searching & Algorithm Efficiency",
+                        "topic": "Section 2: Algorithms & Complexity (Quicksort / Binary Search)",
+                        "marks": 24,
+                        "subparts": [
+                            {"label": "Task 4.1", "description": "Implement recursive Quicksort partitioning function", "marks": 12},
+                            {"label": "Task 4.2", "description": "Execute test harness with normal, extreme, and abnormal inputs", "marks": 12}
+                        ]
+                    }
+                ],
+                dataset_required=True,
+                dataset_description="CANDIDATES.csv file containing candidate assessment data"
+            )
+        else:
+            return ExamBlueprint(
+                title="H2 Computing Written Examination (Paper 1 / 9569)",
+                paper_type="theory",
+                syllabus_code="9569",
+                paper_number="01",
+                total_marks=total_marks,
+                learning_objectives=[
+                    "Analyze logical specifications and complete decision tables",
+                    "Trace recursive algorithm execution and determine Big-O time complexity",
+                    "Design relational database schemas and convert to Third Normal Form (3NF)",
+                    "Explain network protocols (TCP/IP, OSI), IP subnetting, and public key cryptography",
+                    "Evaluate societal, ethical, and PDPA compliance implications of computing systems"
+                ],
+                sections=[
+                    {
+                        "number": 1,
+                        "title": "Question 1: Decision Logic & Test Case Design",
+                        "topic": "Section 2: Algorithms & Problem Solving",
+                        "marks": 18,
+                        "subparts": [
+                            {"label": "(a)", "description": "Complete initial decision table for customer order rules", "marks": 6},
+                            {"label": "(b)", "description": "Simplify decision table removing redundancies", "marks": 4},
+                            {"label": "(c)", "description": "Write structured pseudocode implementing order validation", "marks": 8}
+                        ]
+                    },
+                    {
+                        "number": 2,
+                        "title": "Question 2: Recursion, Trace Tables & Big-O Complexity",
+                        "topic": "Section 2: Algorithms & Complexity",
+                        "marks": 20,
+                        "subparts": [
+                            {"label": "(a)", "description": "Construct trace table showing call stack execution for Mystery(4)", "marks": 8},
+                            {"label": "(b)", "description": "State base case condition and determine time complexity O(n)", "marks": 4},
+                            {"label": "(c)", "description": "Rewrite algorithm iteratively using DO...UNTIL construct", "marks": 8}
+                        ]
+                    },
+                    {
+                        "number": 3,
+                        "title": "Question 3: Relational Database Normalisation & SQL DDL/DML",
+                        "topic": "Section 3: System Design & Implementation",
+                        "marks": 22,
+                        "subparts": [
+                            {"label": "(a)", "description": "Identify repeating groups and convert relation to 1NF, 2NF, and 3NF", "marks": 10},
+                            {"label": "(b)", "description": "Write SQL CREATE TABLE statements with PRIMARY & FOREIGN KEY constraints", "marks": 6},
+                            {"label": "(c)", "description": "Formulate SQL SELECT query with INNER JOIN, GROUP BY, and HAVING", "marks": 6}
+                        ]
+                    },
+                    {
+                        "number": 4,
+                        "title": "Question 4: Computer Networks, IP Subnetting & Security",
+                        "topic": "Section 3: System Design & Networks",
+                        "marks": 20,
+                        "subparts": [
+                            {"label": "(a)", "description": "Map TCP/IP protocol suite layers to OSI 7-layer architecture", "marks": 6},
+                            {"label": "(b)", "description": "Calculate network address, broadcast address, and usable host range from CIDR /26", "marks": 6},
+                            {"label": "(c)", "description": "Explain digital signature generation and verification process", "marks": 8}
+                        ]
+                    },
+                    {
+                        "number": 5,
+                        "title": "Question 5: Computing Ethics, PDPA & Artificial Intelligence",
+                        "topic": "Section 4: Ethics, Legislation & Emerging Tech",
+                        "marks": 20,
+                        "subparts": [
+                            {"label": "(a)", "description": "Evaluate PDPA data protection obligations for candidate data handling", "marks": 6},
+                            {"label": "(b)", "description": "Discuss algorithmic bias and fairness considerations in AI/ML grading models", "marks": 8},
+                            {"label": "(c)", "description": "Propose cybersecurity countermeasures against SQL injection and phishing", "marks": 6}
+                        ]
+                    }
+                ],
+                dataset_required=False,
+                dataset_description=None
+            )
+
+    def author_latex_paper(
+        self,
+        blueprint: ExamBlueprint,
+        companion_dataset: Optional[Any] = None,
+        institution: str = "Cambridge International Center",
+        exam_year: str = "2026",
+        exam_series: str = "SPECIMEN"
+    ) -> str:
+        """
+        Generates full compilable LaTeX paper using the authentic Cambridge preamble.
+        """
+        template_name = "cambridge_practical_template.tex" if blueprint.paper_type == "practical" else "cambridge_theory_template.tex"
+        template_path = TEMPLATES_DIR / template_name
+        
+        with open(template_path, "r", encoding="utf-8") as f:
+            template_code = f.read()
+
+        # Build prompt for Gemini to generate the body LaTeX
+        dataset_info = ""
+        if companion_dataset:
+            dataset_info = f"""
+Companion Dataset Information:
+Filename: {companion_dataset.filename}
+Columns: {', '.join(companion_dataset.columns)}
+Sample data preview:
+{companion_dataset.csv_content[:500]}
+"""
+
+        body_prompt = f"""
+You are an expert Cambridge Computer Science paper author.
+Generate the complete examination question body in rigid LaTeX syntax for the following blueprint.
+
+Paper Type: {blueprint.paper_type.upper()}
+Syllabus: {blueprint.syllabus_code} Paper {blueprint.paper_number}
+Total Raw Marks: {blueprint.total_marks}
+
+Blueprint:
+{blueprint.model_dump_json(indent=2)}
+
+{dataset_info}
+
+CRITICAL FORMATTING & CONTEXTUAL RULES:
+1. For PRACTICAL papers:
+   - At the VERY TOP of the paper (before Task 1), ALWAYS include this exact general instruction:
+     \\noindent Your program code and output for each of Task 1 to 4 should be saved in a single \\texttt{{.ipynb}} file. For example, your program code and output for Task 1 should be saved as:\\par\\vspace{{0.4em}}
+     \\noindent\\texttt{{TASK1\\_<your name>\\_<centre number>\\_<index number>.ipynb}}\\par\\vspace{{1.0em}}
+   - For each Task X:
+     * Start with \\maintask{{X}} (which automatically outputs "Task X" and "Name your Jupyter Notebook as: TASKX_<your name>_<centre number>_<index number>.ipynb").
+     * Provide an EXTENDED, REAL-WORLD SCENARIO narrative background for the technical challenge.
+     * Before the subtasks, include \\tasksubtaskintro{{X}} EXACTLY ONCE per task (which outputs the subtask comment instructions and the left-aligned In [1]: #Task X.1 Program code / Output: box). Do NOT repeat this instruction box more than once in a task.
      * Use \\subtask{{X.1}}, \\subtask{{X.2}}, \\subtask{{X.3}}, etc. for subtask headers.
      * Structure subtask instructions with clear, concise bullet points (using \\begin{{itemize}} \\item ... \\end{{itemize}}).
      * PYTHON SIGNATURE CONVENTION: In Python questions, write plain function headers WITHOUT type annotations or return arrows (e.g. write `def search(arr, target):` NOT `def search(arr: list, target: int) -> bool:` or `--> Boolean`). Explain parameter roles and return values in natural English.
-     * ALWAYS use \\Marks{{<n>}} directly at the end of each question part on the SAME line (e.g. `\\item Implement the search algorithm. \\Marks{{4}}`). Never insert a newline `\\\\` or blank line before `\\Marks{{<n>}}`.
+     * ALWAYS use \\Marks{{<n>}} directly at the end of each question part on the SAME line (e.g. `\\item Implement the search algorithm. \\Marks{{4}}`). Never insert a newline `\\\\` or blank line before \\Marks{{<n>}}.
      * At the end of Task X, include: \\taskfooter{{X}} (which prints "Save your Jupyter Notebook for Task X.").
      * Include \\newpage and \\TurnOver between major tasks.
 
@@ -343,13 +538,15 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
    - Use \\begin{{subparts}} \\item ... \\end{{subparts}} for question sub-subparts.
    - Use \\begin{{pseudocode}} ... \\end{{pseudocode}} for pseudocode listings.
    - Use standard tabular environments for decision tables, trace tables, and comparison matrices.
-   - ALWAYS place \\Marks{{<n>}} directly at the end of the question text on the SAME line (e.g. `\\item Complete the truth table. \\Marks{{3}}`). Never insert `\\\\` before `\\Marks{{<n>}}`.
+   - ALWAYS place \\Marks{{<n>}} directly at the end of the question text on the SAME line (e.g. `\\item Complete the truth table. \\Marks{{3}}`). Never insert `\\\\` before \\Marks{{<n>}}.
    - Include \\newpage and \\TurnOver between pages where appropriate.
 
-3. General LaTeX Rules:
+3. General LaTeX & Code Formatting Rules:
    - DO NOT output \\documentclass or \\begin{{document}} or \\end{{document}} - ONLY output the inner body to replace % __AGENT_BODY_SLOT__.
-   - Properly escape special characters: use \\_ for underscores, \\% for percents, \\& for ampersands, \\# for hashes.
-   - Use \\code{{...}} for inline identifiers.
+   - INLINE CODE & IDENTIFIERS: When referencing variables, methods, or filenames in prose or in \\code{{...}}, ALWAYS escape underscores (e.g. \\code{{\\_\\_init\\_\\_(self, ...)}}, \\code{{\\_\\_str\\_\\_}}, \\code{{\\_\\_len\\_\\_}}, \\code{{p\\_laptop}}, \\code{{test\\_cases.csv}}).
+   - VERBATIM / LSTLISTING CODE BLOCKS: Inside \\begin{{lstlisting}} or \\begin{{verbatim}}, write pure normal Python without LaTeX backslashes (e.g. write `p_laptop = Product('L001', 'Laptop', 2.5)`).
+   - TABLES: For test case tables, trace tables, or multi-column grids, use \\begin{{tabularx}}{{\\linewidth}}{{...}} with `X` columns to prevent tables from overflowing the page margin.
+   - Properly escape special characters in prose: use \\_ for underscores, \\% for percents, \\& for ampersands, \\# for hashes.
 """
         client = AppConfig.get_gemini_client()
         latex_body = ""
