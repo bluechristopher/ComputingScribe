@@ -52,7 +52,7 @@
 % --- Precise Right-Aligned Marks Macro (same line when space allows; wraps only under pressure) ---
 \newcommand{\Marks}[1]{\unskip\penalty50\hbox{}\hfill\hbox{[#1]}}
 
-\providecommand{\code}[1]{{\ttfamily\upshape #1}}
+\providecommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}
 
 \lstset{
   basicstyle=\ttfamily\upshape\small,

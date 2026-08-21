@@ -40,7 +40,7 @@
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.4em}
 
-\newcommand{\code}[1]{{\ttfamily\upshape #1}}
+\newcommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}
 
 \lstset{
   basicstyle=\ttfamily\upshape\small,

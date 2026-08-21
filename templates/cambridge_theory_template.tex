@@ -91,7 +91,7 @@
 \newcommand{\Marks}[1]{\unskip\penalty50\hbox{}\hfill\hbox{[#1]}}
 
 % --- Inline Code Macro ---
-\providecommand{\code}[1]{{\ttfamily\upshape #1}}
+\providecommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}
 
 % --- Cambridge List Structure Setup ---
 % Level 0: Main Question numbers (1, 2, ...)

@@ -306,7 +306,10 @@ class EduScribeOrchestrator:
             teacher_style=teacher_style
         )
         if task and "latex_code" in task:
-            sanitized_code, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(task["latex_code"])
+            sanitized_code, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(
+                task["latex_code"],
+                document_mode=False,
+            )
             task["latex_code"] = sanitized_code
         return task
 
@@ -323,7 +326,10 @@ class EduScribeOrchestrator:
             paper_type=paper_type
         )
         if refined and "latex_code" in refined:
-            sanitized_code, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(refined["latex_code"])
+            sanitized_code, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(
+                refined["latex_code"],
+                document_mode=False,
+            )
             refined["latex_code"] = sanitized_code
         return refined
 

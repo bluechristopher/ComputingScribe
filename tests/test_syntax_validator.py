@@ -64,15 +64,37 @@ class TestLaTeXSyntaxValidator(unittest.TestCase):
             "\\end{document}"
         )
         sanitized, fixes = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(t)
-        self.assertIn("\\code{\\_\\_init\\_\\_(self, sku, name, weight\\_kg)}", sanitized)
-        self.assertIn("\\code{\\_\\_str\\_\\_}", sanitized)
-        self.assertIn("\\code{\\_\\_len\\_\\_(self)}", sanitized)
-        self.assertIn("\\code{\\_\\_eq\\_\\_}", sanitized)
-        self.assertIn("\\code{\\_\\_hash\\_\\_}", sanitized)
+        self.assertIn("\\code{__init__(self, sku, name, weight_kg)}", sanitized)
+        self.assertIn("\\code{__str__}", sanitized)
+        self.assertIn("\\code{__len__(self)}", sanitized)
+        self.assertIn("\\code{__eq__}", sanitized)
+        self.assertIn("\\code{__hash__}", sanitized)
         self.assertIn("p_laptop = Product('L001', 'Laptop', 2.5)", sanitized)
         self.assertIn("inv.add_stock(p_laptop, 'LT001')", sanitized)
         self.assertIn("\\textbf{[Turn over}", sanitized)
         self.assertIn("\\usepackage{underscore}", sanitized)
+
+    def test_fragment_sanitization_never_creates_nested_document(self):
+        fragment = (
+            "\\documentclass{article}\n"
+            "\\usepackage{graphicx}\n"
+            "\\begin{document}\n"
+            "\\item Use \\code{candidate_id}.\n"
+            "\\begin{tabular}{|l|c|r|}\n"
+            "Long descriptive value & A & 10 \\\\ \n"
+            "\\end{tabular}\n"
+            "\\end{document}"
+        )
+        sanitized, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(
+            fragment,
+            document_mode=False,
+        )
+        self.assertNotIn("\\documentclass", sanitized)
+        self.assertNotIn("\\begin{document}", sanitized)
+        self.assertNotIn("\\end{document}", sanitized)
+        self.assertIn("\\code{candidate_id}", sanitized)
+        self.assertIn("\\begin{tabularx}{\\linewidth}{|X|X|X|}", sanitized)
+        self.assertIn("\\end{tabularx}", sanitized)
 
 if __name__ == '__main__':
     unittest.main()

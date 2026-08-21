@@ -11,6 +11,7 @@ from typing import Dict, Any, Optional
 
 from src.ingestion.document_parser import DocumentParser
 from config.gcp_config import AppConfig, TEMPLATES_DIR
+from src.sandbox.latex_compiler import LaTeXSyntaxValidator
 
 class DocumentTranscriber:
     def __init__(self):
@@ -192,6 +193,14 @@ HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
         # Fallback if offline/parsing error
         if not latex_body:
             latex_body, ms_body, total_marks = self._generate_fallback_transcription(extracted_text, detected_type)
+        latex_body, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(
+            latex_body,
+            document_mode=False,
+        )
+        ms_body, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(
+            ms_body,
+            document_mode=False,
+        )
         latex_body = self._normalize_marks_spacing(latex_body)
 
         # 3. Inject into Golden Template

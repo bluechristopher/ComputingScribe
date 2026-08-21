@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 from config.gcp_config import AppConfig
+from src.sandbox.latex_compiler import LaTeXSyntaxValidator
 
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent.parent / "templates"
 
@@ -278,64 +279,6 @@ Return a valid JSON object matching this schema:
                 dataset_description=None
             )
 
-    def author_latex_paper(
-        self,
-        blueprint: ExamBlueprint,
-        companion_dataset: Optional[Any] = None,
-        institution: str = "Cambridge International Center",
-        exam_year: str = "2026",
-        exam_series: str = "SPECIMEN"
-    ) -> str:
-        """
-        Generates full compilable LaTeX paper using the authentic Cambridge preamble.
-        """
-        template_name = "cambridge_practical_template.tex" if blueprint.paper_type == "practical" else "cambridge_theory_template.tex"
-        template_path = TEMPLATES_DIR / template_name
-        
-        with open(template_path, "r", encoding="utf-8") as f:
-            template_code = f.read()
-
-        # Build prompt for Gemini to generate the body LaTeX
-        dataset_info = ""
-        if companion_dataset:
-            dataset_info = f"""
-Companion Dataset Information:
-Filename: {companion_dataset.filename}
-Columns: {', '.join(companion_dataset.columns)}
-Sample data preview:
-{companion_dataset.csv_content[:500]}
-"""
-
-        body_prompt = f"""
-You are an expert Cambridge Computer Science paper author.
-Generate the complete examination question body in rigid LaTeX syntax for the following blueprint.
-
-Paper Type: {blueprint.paper_type.upper()}
-Syllabus: {blueprint.syllabus_code} Paper {blueprint.paper_number}
-Total Raw Marks: {blueprint.total_marks}
-
-Blueprint:
-{blueprint.model_dump_json(indent=2)}
-
-{dataset_info}
-
-CRITICAL FORMATTING & CONTEXTUAL RULES:
-1. For PRACTICAL papers:
-   - At the VERY TOP of the paper (before Task 1), ALWAYS include this exact general instruction:
-     \\noindent Your program code and output for each of Task 1 to 4 should be saved in a single \\texttt{{.ipynb}} file. For example, your program code and output for Task 1 should be saved as:\\par\\vspace{{0.4em}}
-     \\noindent\\texttt{{TASK1\\_<your name>\\_<centre number>\\_<index number>.ipynb}}\\par\\vspace{{1.0em}}
-   - For each Task X:
-     * Start with \\maintask{{X}} (which automatically outputs "Task X" and "Name your Jupyter Notebook as: TASKX_<your name>_<centre number>_<index number>.ipynb").
-     * Provide an EXTENDED, REAL-WORLD SCENARIO narrative background for the technical challenge.
-     * Before the subtasks, include \\tasksubtaskintro{{X}} EXACTLY ONCE per task (which outputs the subtask comment instructions and the left-aligned In [1]: #Task X.1 Program code / Output: box). Do NOT repeat this instruction box more than once in a task.
-                data = json.loads(response.text)
-                return ExamBlueprint(**data)
-            except Exception as e:
-                print(f"[QuestionAuthor] Blueprint generation with Gemini failed/skipped: {e}")
-
-        # Fallback blueprint
-        return self._generate_fallback_blueprint(prompt, paper_type, target_marks)
-
     def _generate_fallback_blueprint(self, prompt: str, paper_type: str, total_marks: int) -> ExamBlueprint:
         if paper_type == "practical":
             return ExamBlueprint(
@@ -543,7 +486,7 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
 
 3. General LaTeX & Code Formatting Rules:
    - DO NOT output \\documentclass or \\begin{{document}} or \\end{{document}} - ONLY output the inner body to replace % __AGENT_BODY_SLOT__.
-   - INLINE CODE & IDENTIFIERS: When referencing variables, methods, or filenames in prose or in \\code{{...}}, ALWAYS escape underscores (e.g. \\code{{\\_\\_init\\_\\_(self, ...)}}, \\code{{\\_\\_str\\_\\_}}, \\code{{\\_\\_len\\_\\_}}, \\code{{p\\_laptop}}, \\code{{test\\_cases.csv}}).
+   - INLINE CODE & IDENTIFIERS: Put identifiers in \\code{{...}} and write their characters literally inside that macro (e.g. \\code{{__init__(self, ...)}}, \\code{{p_laptop}}, \\code{{test_cases.csv}}). Do not nest formatting commands inside \\code.
    - VERBATIM / LSTLISTING CODE BLOCKS: Inside \\begin{{lstlisting}} or \\begin{{verbatim}}, write pure normal Python without LaTeX backslashes (e.g. write `p_laptop = Product('L001', 'Laptop', 2.5)`).
    - TABLES: For test case tables, trace tables, or multi-column grids, use \\begin{{tabularx}}{{\\linewidth}}{{...}} with `X` columns to prevent tables from overflowing the page margin.
    - Properly escape special characters in prose: use \\_ for underscores, \\% for percents, \\& for ampersands, \\# for hashes.
@@ -562,6 +505,10 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
 
         if not latex_body:
             latex_body = self._generate_fallback_latex_body(blueprint, companion_dataset)
+        latex_body, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(
+            latex_body,
+            document_mode=False,
+        )
         latex_body = self._normalize_marks_spacing(latex_body)
 
         # Inject into golden template
@@ -623,6 +570,10 @@ Output ONLY the LaTeX body to replace % __AGENT_BODY_SLOT__.
 
         if not ms_body:
             ms_body = self._generate_fallback_mark_scheme_body(blueprint)
+        ms_body, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(
+            ms_body,
+            document_mode=False,
+        )
 
         full_ms = template_code
         full_ms = full_ms.replace("((INSTITUTION))", institution)

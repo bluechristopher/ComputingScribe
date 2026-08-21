@@ -45,7 +45,11 @@ class LaTeXSyntaxValidator:
     Operates independently of local pdflatex binaries to guarantee zero syntax errors.
     """
     @classmethod
-    def sanitize_and_repair_deterministically(cls, latex_source: str) -> Tuple[str, list]:
+    def sanitize_and_repair_deterministically(
+        cls,
+        latex_source: str,
+        document_mode: bool = True,
+    ) -> Tuple[str, list]:
         """
         Applies deterministic regex and AST-level repairs for common LaTeX formatting defects:
         1. Fixes unescaped underscores in plain text / variable names outside code listings & math.
@@ -57,19 +61,45 @@ class LaTeXSyntaxValidator:
         fixes = []
         source = latex_source
 
-        # 1. Ensure basic document structure
-        if r"\documentclass" not in source:
-            source = r"\documentclass[11pt,a4paper]{article}" + "\n" + source
-            fixes.append("Added missing \\documentclass declaration.")
-        if r"\begin{document}" not in source:
-            source = r"\begin{document}" + "\n" + source
-            fixes.append("Added missing \\begin{document}.")
-        if r"\end{document}" not in source:
-            source = source.rstrip() + "\n\\end{document}\n"
-            fixes.append("Added missing \\end{document}.")
+        # Question bodies are fragments. Adding document scaffolding to them would
+        # create an invalid nested document once the paper template assembles them.
+        if not document_mode:
+            source = re.sub(r"\\documentclass(?:\[[^\]]*\])?\{[^}]*\}\s*", "", source)
+            source = re.sub(r"^\s*\\usepackage(?:\[[^\]]*\])?\{[^}]*\}\s*$", "", source, flags=re.MULTILINE)
+            source = source.replace(r"\begin{document}", "").replace(r"\end{document}", "")
+
+            # Model-generated simple tabulars are a common source of margin
+            # overflow. Convert only basic l/c/r tables to width-aware tabularx;
+            # complex table specifications are preserved untouched.
+            def widen_simple_table(match):
+                alignment = match.group(1)
+                body = match.group(2)
+                if not re.fullmatch(r"[|lcr\s]+", alignment):
+                    return match.group(0)
+                widened = re.sub(r"[lcr]", "X", alignment)
+                fixes.append("Converted a simple tabular to tabularx so cells wrap within the text width.")
+                return f"\\begin{{tabularx}}{{\\linewidth}}{{{widened}}}{body}\\end{{tabularx}}"
+
+            source = re.sub(
+                r"\\begin\{tabular\}\{([^}]*)\}(.*?)\\end\{tabular\}",
+                widen_simple_table,
+                source,
+                flags=re.DOTALL,
+            )
+
+        if document_mode:
+            if r"\documentclass" not in source:
+                source = r"\documentclass[11pt,a4paper]{article}" + "\n" + source
+                fixes.append("Added missing \\documentclass declaration.")
+            if r"\begin{document}" not in source:
+                source = r"\begin{document}" + "\n" + source
+                fixes.append("Added missing \\begin{document}.")
+            if r"\end{document}" not in source:
+                source = source.rstrip() + "\n\\end{document}\n"
+                fixes.append("Added missing \\end{document}.")
 
         # 2. Check \ExamImage macro definition if \ExamImage is used
-        if r"\ExamImage" in source and r"\newcommand{\ExamImage}" not in source:
+        if document_mode and r"\ExamImage" in source and r"\newcommand{\ExamImage}" not in source:
             exam_image_macro = r"\newcommand{\ExamImage}[2]{\par\begin{center}\includegraphics[width=#2]{#1}\end{center}\par}"
             if r"\usepackage{graphicx}" in source:
                 source = source.replace(r"\usepackage{graphicx}", r"\usepackage{graphicx}" + "\n" + exam_image_macro, 1)
@@ -78,7 +108,7 @@ class LaTeXSyntaxValidator:
             fixes.append("Injected missing \\ExamImage macro definition into preamble.")
 
         # 3. Ensure \usepackage{underscore} is present in preamble
-        if r"\usepackage{underscore}" not in source and r"\documentclass" in source:
+        if document_mode and r"\usepackage{underscore}" not in source and r"\documentclass" in source:
             source = source.replace(r"\begin{document}", r"\usepackage{underscore}" + "\n\\begin{document}", 1)
             fixes.append("Added \\usepackage{underscore} to preamble.")
 
@@ -117,15 +147,24 @@ class LaTeXSyntaxValidator:
             line = re.sub(r"\\Marks\s*\[\s*(\d+)\s*\]", r"\\Marks{\1}", line)
             line = re.sub(r"\\Marks\s+(\d+)", r"\\Marks{\1}", line)
 
-            # Fix unescaped underscores in plain text words and inside \code{...} outside math equations
+            # Fix unescaped underscores in plain text words while preserving the
+            # literal contents of the template's \code{...} macro.
             parts = re.split(r"(\$[^\$]+\$)", line)
             new_parts = []
             for part in parts:
                 if part.startswith("$") and part.endswith("$") and len(part) > 1:
                     new_parts.append(part)
                 else:
-                    # Escape all unescaped underscores in text mode (including inside \code{...})
-                    subbed = re.sub(r"(?<!\\)_", r"\_", part)
+                    protected_code = []
+
+                    def protect_code(match):
+                        protected_code.append(match.group(0))
+                        return f"@@CODE{len(protected_code) - 1}@@"
+
+                    protected_part = re.sub(r"\\code\{[^{}]*\}", protect_code, part)
+                    subbed = re.sub(r"(?<!\\)_", r"\_", protected_part)
+                    for index, code in enumerate(protected_code):
+                        subbed = subbed.replace(f"@@CODE{index}@@", code)
                     new_parts.append(subbed)
             repaired_line = "".join(new_parts)
             if repaired_line != line:
@@ -134,7 +173,27 @@ class LaTeXSyntaxValidator:
 
         source = "\n".join(repaired_lines)
 
-        # 4. Check and balance environments
+        # Balance only surplus opening braces outside literal code and comments.
+        # Appending the missing closers immediately before \end{document} repairs
+        # the common truncated-model-output case without touching valid commands.
+        brace_source = re.sub(
+            r"\\begin\{(verbatim|lstlisting|minted|python)\}.*?\\end\{\1\}",
+            "",
+            source,
+            flags=re.DOTALL,
+        )
+        brace_source = "\n".join(line.split("%", 1)[0] for line in brace_source.splitlines())
+        brace_source = brace_source.replace(r"\{", "").replace(r"\}", "")
+        missing_closers = brace_source.count("{") - brace_source.count("}")
+        if missing_closers > 0:
+            closers = "}" * missing_closers
+            if document_mode and r"\end{document}" in source:
+                source = source.replace(r"\end{document}", closers + "\n\\end{document}", 1)
+            else:
+                source = source.rstrip() + closers + "\n"
+            fixes.append(f"Added {missing_closers} missing closing brace(s).")
+
+        # 5. Check and balance environments
         env_stack = []
         unclosed_envs = []
         env_pattern = re.compile(r"\\(begin|end)\{([a-zA-Z0-9\*]+)\}")
@@ -158,10 +217,10 @@ class LaTeXSyntaxValidator:
         unclosed_envs.extend(reversed(env_stack))
         if unclosed_envs:
             closing_tags = "\n".join([f"\\end{{{e}}}" for e in unclosed_envs])
-            if r"\end{document}" in source:
+            if document_mode and r"\end{document}" in source:
                 source = source.replace(r"\end{document}", f"{closing_tags}\n\\end{{document}}")
             else:
-                source = source.rstrip() + f"\n{closing_tags}\n\\end{{document}}\n"
+                source = source.rstrip() + f"\n{closing_tags}\n"
             fixes.append(f"Auto-closed unclosed environments: {', '.join(unclosed_envs)}.")
 
         return source, list(set(fixes))
@@ -173,11 +232,19 @@ class LaTeXSyntaxValidator:
         Returns a detailed SyntaxValidationReport.
         """
         issues = []
+        # Literal code/output environments do not interpret braces, dollars, or
+        # LaTeX commands. Mask their contents before performing TeX checks.
+        syntax_source = re.sub(
+            r"\\begin\{(verbatim|lstlisting|minted|python)\}.*?\\end\{\1\}",
+            lambda match: f"\\begin{{{match.group(1)}}}\\end{{{match.group(1)}}}",
+            latex_source,
+            flags=re.DOTALL,
+        )
         
         # 1. Environment Balance Check
         env_stack = []
         env_pattern = re.compile(r"\\(begin|end)\{([a-zA-Z0-9\*]+)\}")
-        for match in env_pattern.finditer(latex_source):
+        for match in env_pattern.finditer(syntax_source):
             action, env_name = match.groups()
             if action == "begin":
                 env_stack.append(env_name)
@@ -200,7 +267,7 @@ class LaTeXSyntaxValidator:
                 issues.append(f"Unclosed environments: {', '.join(unclosed)}")
 
         # 2. Curly Brace Balance Check (ignoring \{ and \})
-        sanitized_no_escapes = latex_source.replace(r"\{", "").replace(r"\}", "")
+        sanitized_no_escapes = syntax_source.replace(r"\{", "").replace(r"\}", "")
         lines = [line.split("%")[0] for line in sanitized_no_escapes.splitlines()]
         code_without_comments = "\n".join(lines)
         open_braces = code_without_comments.count("{")
@@ -209,7 +276,7 @@ class LaTeXSyntaxValidator:
             issues.append(f"Unbalanced curly braces: {open_braces} open '{{' vs {close_braces} close '}}'")
 
         # 3. Math Mode Delimiter Check
-        no_escaped_dollars = latex_source.replace(r"\$", "")
+        no_escaped_dollars = syntax_source.replace(r"\$", "")
         dollar_count = 0
         for line in no_escaped_dollars.splitlines():
             clean_line = line.split("%")[0]
@@ -218,11 +285,17 @@ class LaTeXSyntaxValidator:
             issues.append(f"Unmatched math mode '$' delimiter ({dollar_count} total dollar signs)")
 
         # 4. Mandatory Structure Check
-        if r"\documentclass" not in latex_source:
+        if syntax_source.count(r"\documentclass") != 1:
+            issues.append("Expected exactly one \\documentclass declaration")
+        if r"\documentclass" not in syntax_source:
             issues.append("Missing \\documentclass declaration")
-        if r"\begin{document}" not in latex_source:
+        if syntax_source.count(r"\begin{document}") != 1:
+            issues.append("Expected exactly one \\begin{document}")
+        if r"\begin{document}" not in syntax_source:
             issues.append("Missing \\begin{document}")
-        if r"\end{document}" not in latex_source:
+        if syntax_source.count(r"\end{document}") != 1:
+            issues.append("Expected exactly one \\end{document}")
+        if r"\end{document}" not in syntax_source:
             issues.append("Missing \\end{document}")
 
         is_valid = len(issues) == 0
@@ -350,10 +423,13 @@ INSTRUCTIONS:
         if not self.pdflatex_cmd:
             pdf_path = self._generate_fallback_pdf(current_source, working_dir, job_name)
             pdf_bytes = pdf_path.read_bytes() if pdf_path and pdf_path.exists() else None
-            logs_accumulated.append(f"[PDF Engine]: Rendered standalone high-fidelity PDF ({pdf_path.name}). Verified LaTeX source saved to {tex_file.name}.")
+            if syntax_report.is_valid:
+                logs_accumulated.append(f"[PDF Engine]: Rendered standalone high-fidelity PDF ({pdf_path.name}). Verified LaTeX source saved to {tex_file.name}.")
+            else:
+                logs_accumulated.append(f"[Export Readiness]: BLOCKED by unresolved static syntax issues. Source saved to {tex_file.name} as a draft.")
 
             return LaTeXCompilationResult(
-                success=True,
+                success=syntax_report.is_valid,
                 pdf_bytes=pdf_bytes,
                 pdf_path=pdf_path,
                 compilation_log="\n".join(logs_accumulated),

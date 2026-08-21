@@ -90,7 +90,7 @@
 \newcommand{\Marks}[1]{\unskip\penalty50\hbox{}\hfill\hbox{[#1]}}
 
 % --- Inline Code Macro (Supports nested commands) ---
-\providecommand{\code}[1]{{\ttfamily\upshape #1}}
+\providecommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}
 
 % --- Listings Global Setup for Straight Quotes ---
 \lstset{
