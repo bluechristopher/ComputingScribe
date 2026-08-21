@@ -368,31 +368,78 @@ section.main,
     font-weight: 500 !important;
 }
 
-/* Main Panel Expanders - Light Metallic Sheen */
+/* ==============================================================================
+   MAIN PANEL EXPANDERS (HIGH-CONTRAST DARK BLUE HEADER & CRISP WHITE TYPOGRAPHY)
+   ============================================================================== */
 [data-testid="stMain"] [data-testid="stExpander"],
 [data-testid="stMain"] details {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 45%, #edf2f7 80%, #ffffff 100%) !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 14px !important;
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
-}
-
-[data-testid="stMain"] [data-testid="stExpander"]:hover {
-    border-color: #94a3b8 !important;
-    box-shadow: 0 6px 22px rgba(15, 23, 42, 0.08), inset 0 1px 1px rgba(255, 255, 255, 1) !important;
+    background: #ffffff !important;
+    border: 1.5px solid #2563eb !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08) !important;
+    overflow: hidden !important;
+    margin-bottom: 1rem !important;
 }
 
 [data-testid="stMain"] [data-testid="stExpander"] summary,
-[data-testid="stMain"] [data-testid="stExpander"] summary * {
-    color: #0f172a !important;
-    font-weight: 700 !important;
+[data-testid="stMain"] details summary,
+[data-testid="stMain"] .streamlit-expanderHeader,
+[data-testid="stMain"] summary[aria-expanded] {
+    background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-bottom: 1.5px solid #2563eb !important;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 12px 18px !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
+}
+
+[data-testid="stMain"] [data-testid="stExpander"]:not([open]) summary,
+[data-testid="stMain"] details:not([open]) summary,
+[data-testid="stMain"] summary[aria-expanded="false"] {
+    border-radius: 10px !important;
+    border-bottom: none !important;
+}
+
+[data-testid="stMain"] [data-testid="stExpander"] summary:hover,
+[data-testid="stMain"] details summary:hover,
+[data-testid="stMain"] .streamlit-expanderHeader:hover,
+[data-testid="stMain"] summary[aria-expanded]:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+[data-testid="stMain"] [data-testid="stExpander"] summary *,
+[data-testid="stMain"] details summary *,
+[data-testid="stMain"] .streamlit-expanderHeader *,
+[data-testid="stMain"] summary[aria-expanded] * {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-weight: 750 !important;
+    font-size: 1.02rem !important;
+}
+
+[data-testid="stMain"] [data-testid="stExpander"] summary:hover *,
+[data-testid="stMain"] details summary:hover *,
+[data-testid="stMain"] .streamlit-expanderHeader:hover *,
+[data-testid="stMain"] summary[aria-expanded]:hover * {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+[data-testid="stMain"] [data-testid="stExpander"] summary svg,
+[data-testid="stMain"] details summary svg {
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
+    color: #ffffff !important;
 }
 
 [data-testid="stMain"] [data-testid="stExpanderDetails"] {
     background: #ffffff !important;
-    border-top: 1px solid #e2e8f0 !important;
-    border-bottom-left-radius: 14px !important;
-    border-bottom-right-radius: 14px !important;
+    padding: 16px 20px !important;
+    border-top: none !important;
 }
 
 /* Main Panel Inputs, Textarea & Selectbox Bars */
@@ -1197,6 +1244,69 @@ button[data-testid="baseButton-primary"]:hover:not(:disabled),
     box-shadow: none !important;
 }
 
+/* Secondary, Popover & Download Buttons (Crisp White Card + Indigo Blue Text & Border) */
+.stButton > button[kind="secondary"],
+button[data-testid="baseButton-secondary"],
+[data-testid="stMain"] .stButton > button:not([kind="primary"]):not([type="primary"]),
+[data-testid="stMain"] button:not([kind="primary"]):not([type="primary"]),
+[data-testid="stDownloadButton"] > button,
+[data-testid="stPopover"] > button,
+[data-testid="stPopoverButton"],
+div[data-testid="stPopover"] button {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #1e3a8a !important;
+    -webkit-text-fill-color: #1e3a8a !important;
+    border: 1.5px solid #60a5fa !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+    transition: all 0.2s ease !important;
+}
+
+.stButton > button[kind="secondary"] *,
+button[data-testid="baseButton-secondary"] *,
+[data-testid="stMain"] .stButton > button:not([kind="primary"]):not([type="primary"]) *,
+[data-testid="stMain"] button:not([kind="primary"]):not([type="primary"]) *,
+[data-testid="stDownloadButton"] > button *,
+[data-testid="stPopover"] > button *,
+[data-testid="stPopoverButton"] *,
+div[data-testid="stPopover"] button * {
+    color: #1e3a8a !important;
+    -webkit-text-fill-color: #1e3a8a !important;
+    font-weight: 700 !important;
+}
+
+.stButton > button[kind="secondary"]:hover,
+button[data-testid="baseButton-secondary"]:hover,
+[data-testid="stMain"] .stButton > button:not([kind="primary"]):not([type="primary"]):hover,
+[data-testid="stMain"] button:not([kind="primary"]):not([type="primary"]):hover,
+[data-testid="stDownloadButton"] > button:hover,
+[data-testid="stPopover"] > button:hover,
+[data-testid="stPopoverButton"]:hover,
+div[data-testid="stPopover"] button:hover {
+    background-color: #eff6ff !important;
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+    -webkit-text-fill-color: #1d4ed8 !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important;
+    transform: translateY(-1px) !important;
+}
+
+.stButton > button[kind="secondary"]:hover *,
+button[data-testid="baseButton-secondary"]:hover *,
+[data-testid="stMain"] .stButton > button:not([kind="primary"]):not([type="primary"]):hover *,
+[data-testid="stMain"] button:not([kind="primary"]):not([type="primary"]):hover *,
+[data-testid="stDownloadButton"] > button:hover *,
+[data-testid="stPopover"] > button:hover *,
+[data-testid="stPopoverButton"]:hover *,
+div[data-testid="stPopover"] button:hover * {
+    color: #1d4ed8 !important;
+    -webkit-text-fill-color: #1d4ed8 !important;
+}
+
 [data-testid="stMain"] .stButton > button:not([kind="primary"]):hover:not(:disabled),
 [data-testid="stDownloadButton"] > button:hover:not(:disabled) {
     background: #edf5fc !important;
@@ -1236,20 +1346,7 @@ button:disabled:hover {
     background: linear-gradient(180deg, rgba(210, 239, 255, 0.84), rgba(255, 255, 255, 0)) !important;
 }
 
-/* Give collapsible sections an obvious affordance without turning them into cards. */
-[data-testid="stMain"] [data-testid="stExpander"],
-[data-testid="stMain"] details {
-    background: var(--ui-surface) !important;
-    border: 1px solid var(--ui-border) !important;
-    border-radius: 6px !important;
-    box-shadow: none !important;
-}
 
-[data-testid="stMain"] [data-testid="stExpander"] summary,
-[data-testid="stMain"] details summary {
-    color: var(--ui-ink) !important;
-    font-weight: 750 !important;
-}
 
 /* Selected syllabus tags and objective chips maintain high-contrast crisp white typography */
 [data-baseweb="tag"],

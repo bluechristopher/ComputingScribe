@@ -1294,8 +1294,8 @@ if curr_sess:
     with sess_head_c1:
         st.markdown(
             f"<div style='display: flex; align-items: center; gap: 10px; margin: 10px 0;'>"
-            f"<span style='font-size: 1.35rem; font-weight: 800; color: #f8fafc;'>📝 {curr_sess.title}</span>"
-            f"<span style='font-size: 0.75rem; background: #334155; color: #94a3b8; padding: 3px 8px; border-radius: 6px; font-family: monospace;'>ID: {curr_sess.session_id}</span>"
+            f"<span style='font-size: 1.35rem; font-weight: 800; color: #0f172a;'>📝 {curr_sess.title}</span>"
+            f"<span style='font-size: 0.8rem; background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; font-weight: 700; padding: 3px 10px; border-radius: 6px; font-family: monospace;'>ID: {curr_sess.session_id}</span>"
             f"</div>",
             unsafe_allow_html=True
         )

@@ -286,10 +286,12 @@ INSTRUCTIONS:
             try:
                 model = client.GenerativeModel(AppConfig.DEFAULT_MODEL)
                 response = model.generate_content(prompt)
-                repaired = response.text.replace("```latex", "").replace("```", "").strip()
-                return repaired
+                if response and hasattr(response, "text") and response.text:
+                    repaired = response.text.replace("```latex", "").replace("```", "").strip()
+                    if len(repaired) > 50 and ("\\documentclass" in repaired or "\\begin{document}" in repaired):
+                        return repaired
             except Exception as e:
-                print(f"[LaTeXCompiler] Gemini self-healing failed: {e}")
+                print(f"[LaTeXCompiler] Gemini self-healing note: {e}")
 
         # Basic deterministic fallback repair
         healed, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(broken_source)
