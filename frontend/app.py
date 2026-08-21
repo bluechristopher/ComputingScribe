@@ -13,6 +13,7 @@ import time
 import base64
 import re
 import json
+from datetime import datetime
 from typing import Optional, List, Dict, Any
 from pathlib import Path
 
@@ -32,6 +33,9 @@ from src.agent.preference_learner import PreferenceLearner
 from src.agent.session_manager import SessionManager, ExamSession
 from src.sandbox.code_executor import CodeExecutor
 from src.sandbox.latex_renderer import LaTeXVisualRenderer
+
+CURRENT_YEAR = str(datetime.now().year)
+SERIES_OPTIONS = ["Prelim", "A-Level", "Practice Paper", "Promo", "WA", "Specimen", "Mid-Year Exam", "Other / Custom..."]
 
 # Page Configuration
 st.set_page_config(
@@ -583,7 +587,7 @@ if "Full Paper" in author_mode:
         with col_top_cust:
             custom_topics_input = st.text_input(
                 "➕ Custom Topic(s) (Optional)",
-                placeholder="e.g. Trie ADT, A* Search, REST APIs",
+                placeholder="",
                 help="Type custom topics separated by commas."
             )
         
@@ -598,13 +602,19 @@ if "Full Paper" in author_mode:
         st.caption(f"📌 **Active Assessed Topics**: `{category}`")
 
         # Metadata Fields
-        col_inst, col_yr, col_ser = st.columns([1.5, 0.8, 1.1])
+        col_inst, col_yr, col_ser = st.columns([1.5, 0.8, 1.2])
         with col_inst:
             institution = st.text_input("Institution Name", value="HelloWorld Junior College", key="full_inst")
         with col_yr:
-            exam_year = st.text_input("Exam Year", value="2027", key="full_yr")
+            exam_year = st.text_input("Exam Year", value=CURRENT_YEAR, key="full_yr")
         with col_ser:
-            exam_series = st.selectbox("Series", options=["A-Level", "Prelim", "Practice Paper", "Promo", "WA", "Specimen"], index=1, key="full_ser")
+            sel_series = st.selectbox("Series", options=SERIES_OPTIONS, index=0, key="full_ser_sel")
+            if sel_series == "Other / Custom...":
+                exam_series = st.text_input("Type Custom Series", value="", placeholder="e.g. End-of-Year Exam", key="full_ser_custom")
+                if not exam_series.strip():
+                    exam_series = "Exam"
+            else:
+                exam_series = sel_series
 
         default_sample_prompt = (
             "Create a contextual H2 Computing Paper 2 practical task on implementing a Stack abstract data type in Python (push, pop, underflow check) and processing CANDIDATES.csv to calculate distinction metrics and generate a report."
@@ -865,13 +875,19 @@ elif "Question-by-Question" in author_mode:
             
             # Metadata Fields for Assembled Paper
             with st.expander("⚙️ Assembled Paper Cover & Header Metadata", expanded=False):
-                col_b_inst, col_b_yr, col_b_ser = st.columns([1.5, 0.8, 1.1])
+                col_b_inst, col_b_yr, col_b_ser = st.columns([1.5, 0.8, 1.2])
                 with col_b_inst:
                     b_institution = st.text_input("Institution Name", value="HelloWorld Junior College", key="studio_inst")
                 with col_b_yr:
-                    b_exam_year = st.text_input("Exam Year", value="2027", key="studio_yr")
+                    b_exam_year = st.text_input("Exam Year", value=CURRENT_YEAR, key="studio_yr")
                 with col_b_ser:
-                    b_exam_series = st.selectbox("Series", options=["A-Level", "Prelim", "Practice Paper", "Promo", "WA", "Specimen"], index=1, key="studio_ser")
+                    b_sel_series = st.selectbox("Series", options=SERIES_OPTIONS, index=0, key="studio_ser_sel")
+                    if b_sel_series == "Other / Custom...":
+                        b_exam_series = st.text_input("Type Custom Series", value="", placeholder="e.g. End-of-Year Exam", key="studio_ser_custom")
+                        if not b_exam_series.strip():
+                            b_exam_series = "Exam"
+                    else:
+                        b_exam_series = b_sel_series
 
             # Live Preview of Full Assembled LaTeX Source
             with st.expander("👁️ Inspect Full Assembled LaTeX Document Code", expanded=False):
@@ -938,13 +954,19 @@ elif "Document Transcriber" in author_mode:
         with col_t2:
             st.info("💡 **Autonomous Normalization**: Detects and enforces `\\maintask{X}`, `\\tasksubtaskintro{X}`, subtask structures, `\\Marks{n}`, monospace code formatting, and 4-page signature booklet padding.")
 
-        col_inst, col_yr, col_ser = st.columns([1.5, 0.8, 1.1])
+        col_inst, col_yr, col_ser = st.columns([1.5, 0.8, 1.2])
         with col_inst:
             t_institution = st.text_input("Institution Name", value="Singapore Junior College", key="trans_inst")
         with col_yr:
-            t_exam_year = st.text_input("Exam Year", value="2026", key="trans_yr")
+            t_exam_year = st.text_input("Exam Year", value=CURRENT_YEAR, key="trans_yr")
         with col_ser:
-            t_exam_series = st.selectbox("Series", options=["A-Level", "Prelim", "Practice Paper", "Promo", "WA", "Specimen"], index=0, key="trans_ser")
+            t_sel_series = st.selectbox("Series", options=SERIES_OPTIONS, index=0, key="trans_ser_sel")
+            if t_sel_series == "Other / Custom...":
+                t_exam_series = st.text_input("Type Custom Series", value="", placeholder="e.g. End-of-Year Exam", key="trans_ser_custom")
+                if not t_exam_series.strip():
+                    t_exam_series = "Exam"
+            else:
+                t_exam_series = t_sel_series
 
         skip_healing_trans = st.checkbox(
             "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
