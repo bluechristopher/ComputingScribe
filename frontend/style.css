@@ -532,19 +532,20 @@ div[data-baseweb="tag"] div,
     box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3) !important;
 }
 
-/* Primary Action Buttons (Deep Blue Background + Vibrant Orange Text + Large Gemini Logo) */
-/* Primary Action Buttons (Deep Blue Background + Vibrant Orange Text + Large Gemini Logo) */
+/* Primary Action Buttons (Deep Blue Background + Pure Crisp White Text + Gemini Logo) */
 button[data-testid="baseButton-primary"],
 .stButton > button[kind="primary"],
 .stButton > button[type="primary"],
 [data-testid="stMain"] button[data-testid="baseButton-primary"],
 [data-testid="stMain"] .stButton > button[kind="primary"],
-[data-testid="stMain"] .stButton > button[type="primary"] {
+[data-testid="stMain"] .stButton > button[type="primary"],
+.compile-build-box button,
+.compile-build-box .stButton > button {
     background-color: #1e40af !important; /* Deep Rich Blue Background */
-    color: #fb923c !important; /* Vibrant Orange Text */
-    border: 2px solid #60a5fa !important; /* Vibrant Sky Blue Border */
-    font-weight: 850 !important;
-    font-size: 1.1rem !important;
+    color: #ffffff !important; /* Pure Crisp White Text */
+    border: 2px solid #60a5fa !important; /* Sky Blue Border */
+    font-weight: 800 !important;
+    font-size: 1.05rem !important;
     border-radius: 10px !important;
     padding: 10px 24px !important;
     display: inline-flex !important;
@@ -562,9 +563,9 @@ button[data-testid="baseButton-primary"]::before,
 [data-testid="stMain"] .stButton > button[type="primary"]::before {
     content: '' !important;
     display: inline-block !important;
-    width: 26px !important;
-    height: 26px !important;
-    margin-right: 12px !important;
+    width: 24px !important;
+    height: 24px !important;
+    margin-right: 10px !important;
     flex-shrink: 0 !important;
     background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/1d/Google_Gemini_icon_2025.svg') !important;
     background-size: contain !important;
@@ -592,25 +593,31 @@ button[data-testid="baseButton-primary"] div,
 [data-testid="stMain"] .stButton > button[kind="primary"] span,
 [data-testid="stMain"] .stButton > button[type="primary"] *,
 [data-testid="stMain"] .stButton > button[type="primary"] p,
-[data-testid="stMain"] .stButton > button[type="primary"] span {
-    color: #fb923c !important; /* Vibrant Orange Text */
-    font-weight: 850 !important;
+[data-testid="stMain"] .stButton > button[type="primary"] span,
+.compile-build-box button *,
+.compile-build-box .stButton > button * {
+    color: #ffffff !important; /* Pure Crisp White Text */
+    font-weight: 800 !important;
 }
 
 button[data-testid="baseButton-primary"]:hover,
 .stButton > button[kind="primary"]:hover,
-.stButton > button[type="primary"]:hover {
-    background-color: #1d4ed8 !important;
-    color: #fed7aa !important; /* Lighter Orange on hover */
-    border-color: #bfdbfe !important;
+.stButton > button[type="primary"]:hover,
+.compile-build-box button:hover,
+.compile-build-box .stButton > button:hover {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #93c5fd !important;
     box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
     transform: translateY(-1px) !important;
 }
 
 button[data-testid="baseButton-primary"]:hover *,
 .stButton > button[kind="primary"]:hover *,
-.stButton > button[type="primary"]:hover * {
-    color: #fed7aa !important;
+.stButton > button[type="primary"]:hover *,
+.compile-build-box button:hover *,
+.compile-build-box .stButton > button:hover * {
+    color: #ffffff !important;
 }
 
 /* Secondary & Download Buttons */

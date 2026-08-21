@@ -517,23 +517,36 @@ class EduScribeOrchestrator:
         self,
         latex_source: str,
         mark_scheme_source: Optional[str] = None,
-        paper_type: str = "practical"
+        paper_type: str = "practical",
+        compiler_error: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Audits and repairs LaTeX source code without compiling, using pure Gemini reasoning logic.
         Checks for unescaped characters, mismatched environments, missing brackets, and Cambridge compliance.
+        Optionally receives specific compiler error logs to pinpoint and repair errors with high precision.
         """
         paper_format_rules = """
 - For PRACTICAL papers: Ensure top general .ipynb instruction is present, tasks start with \\maintask{X}, \\tasksubtaskintro{X} is present before subtasks, subtasks use \\subtask{X.y}, \\taskfooter{X} at end, plain Python headers (def func(args):).
 - For THEORY papers: Ensure \\begin{questions} ... \\end{questions} wraps main questions, subparts use \\begin{parts} \\item ... \\end{parts}, sub-subparts use \\begin{subparts}, pseudocode uses \\begin{pseudocode}, marks use \\Marks{<n>}. Strictly NO \\maintask, \\tasksubtaskintro, \\taskfooter, or .ipynb references.
 """
+        error_section = ""
+        if compiler_error and compiler_error.strip():
+            error_section = f"""
+USER / COMPILER ERROR LOG REPORTED:
+```
+{compiler_error.strip()}
+```
+CRITICAL TARGETED DIRECTIVE:
+The user reported the specific compiler / LaTeX error above. Thoroughly diagnose the root cause of this exact error in the LaTeX source, repair it with pinpoint accuracy, and document the resolution in the fixes applied list.
+"""
+
         lint_prompt = f"""
 You are a World-Class TeX/LaTeX Compiler Expert and Cambridge Computer Science Examiner.
 Perform a comprehensive static analysis, syntax audit, and automatic repair on the following LaTeX examination document WITHOUT compiling.
 
 TARGET PAPER TYPE: {paper_type.upper()}
 {paper_format_rules}
-
+{error_section}
 LATEX QUESTION PAPER SOURCE:
 ```latex
 {latex_source}

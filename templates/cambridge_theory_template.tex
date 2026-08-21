@@ -15,10 +15,10 @@
 \usepackage[a4paper,
   left=1.65cm,
   right=1.65cm,
-  top=2.2cm,
+  top=1.8cm,
   bottom=2.2cm,
   headheight=14pt,
-  headsep=12pt,
+  headsep=10pt,
   footskip=22pt
 ]{geometry}
 
@@ -79,8 +79,8 @@
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.45em}
 
-% --- Precise Right-Aligned Marks Macro (Aligned to the last line of question text) ---
-\newcommand{\Marks}[1]{\unskip\nolinebreak\hspace*{1em}\hfill\mbox{[#1]}}
+% --- Precise Right-Aligned Marks Macro (Right-aligned on same line, or wrapped right-aligned if no space) ---
+\newcommand{\Marks}[1]{\unskip\penalty0\null\hfill\mbox{[#1]}}
 
 % --- Inline Code Macro ---
 \providecommand{\code}[1]{{\ttfamily #1}}
@@ -124,28 +124,26 @@
   itemindent=0pt,
   align=left,
   topsep=0.4em,
-  itemsep=0.6em,
-  parsep=0.35em
+  itemsep=0.5em,
+  parsep=0.45em
 }
 
-% Cambridge-style Scenario Bullets
+% Tight bullet points inside questions
 \newlist{tightitemize}{itemize}{1}
 \setlist[tightitemize]{
   label=\textbullet,
   leftmargin=0.8cm,
   labelwidth=0.4cm,
   labelsep=0.4cm,
-  topsep=0.4em,
+  topsep=0.3em,
   itemsep=0.2em,
   parsep=0.2em
 }
 
-% --- Pseudocode Listing Environment ---
-\usepackage{etoolbox}
-\def\padtwo#1{\ifnum#1<10 0\arabic{#1}\else\arabic{#1}\fi}
+% --- Pseudocode Line-Numbered Listing Environment (01, 02, ...) ---
+\newcommand{\padtwo}[1]{\ifnum#1<10 0#1\else#1\fi}
 
-\lstnewenvironment{pseudocode}[1][]
-{
+\lstnewenvironment{pseudocode}[1][]{
   \lstset{
     basicstyle=\ttfamily\fontsize{10.5pt}{13pt}\selectfont,
     numbers=left,
@@ -178,14 +176,14 @@
 \newcommand{\TurnOver}{\fancyfoot[R]{\fontsize{9.5pt}{11pt}\selectfont\textbf{[Turn over}}}
 \newcommand{\NoTurnOver}{\fancyfoot[R]{}}
 
-% --- Ensure total pages is a multiple of 4 with BLANK PAGE ---
+% --- Ensure total pages is a multiple of 4 with BLANK PAGE immediately below page number ---
 \newcommand{\PadToMultipleOfFour}{%
   \clearpage
   \NoTurnOver
   \loop
     \ifnum\numexpr\value{page}-((\value{page}-1)/4)*4\relax=1
     \else
-      \par\vspace*{-3.0em}%
+      \vspace*{1.2em}%
       {\centering\fontsize{12pt}{14pt}\selectfont\textbf{BLANK PAGE}\par}%
       \clearpage
   \repeat

@@ -15,10 +15,10 @@
 \usepackage[a4paper,
   left=1.65cm,
   right=1.65cm,
-  top=2.2cm,
+  top=1.8cm,
   bottom=2.2cm,
   headheight=14pt,
-  headsep=12pt,
+  headsep=10pt,
   footskip=22pt
 ]{geometry}
 
@@ -78,8 +78,8 @@
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.5em}
 
-% --- Precise Right-Aligned Marks Macro (Aligned to the last line of question text) ---
-\newcommand{\Marks}[1]{\unskip\nolinebreak\hspace*{1em}\hfill\mbox{[#1]}}
+% --- Precise Right-Aligned Marks Macro (Right-aligned on same line, or wrapped right-aligned if no space) ---
+\newcommand{\Marks}[1]{\unskip\penalty0\null\hfill\mbox{[#1]}}
 
 % --- Inline Code Macro (Supports nested commands) ---
 \providecommand{\code}[1]{{\ttfamily #1}}
@@ -173,14 +173,14 @@
 \newcommand{\TurnOver}{\fancyfoot[R]{\fontsize{9.5pt}{11pt}\selectfont\textbf{[Turn over}}}
 \newcommand{\NoTurnOver}{\fancyfoot[R]{}}
 
-% --- Ensure total pages is a multiple of 4 with BLANK PAGE ---
+% --- Ensure total pages is a multiple of 4 with BLANK PAGE immediately below page number ---
 \newcommand{\PadToMultipleOfFour}{%
   \clearpage
   \NoTurnOver
   \loop
     \ifnum\numexpr\value{page}-((\value{page}-1)/4)*4\relax=1
     \else
-      \par\vspace*{-3.0em}%
+      \vspace*{1.2em}%
       {\centering\fontsize{12pt}{14pt}\selectfont\textbf{BLANK PAGE}\par}%
       \clearpage
   \repeat

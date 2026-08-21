@@ -633,7 +633,7 @@ if "Full Paper" in author_mode:
         with col_opt:
             skip_healing_full = st.checkbox(
                 "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
-                value=False,
+                value=True,
                 key="full_skip_healing",
                 help="Executes a single-pass compilation without calling iterative Gemini auto-repair loops if minor compiler warnings occur."
             )
@@ -905,7 +905,7 @@ elif "Question-by-Question" in author_mode:
 
             skip_healing_studio = st.checkbox(
                 "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
-                value=False,
+                value=True,
                 key="studio_skip_healing",
                 help="Executes single-pass compilation without calling iterative Gemini auto-repair loops if minor compiler warnings occur."
             )
@@ -970,7 +970,7 @@ elif "Document Transcriber" in author_mode:
 
         skip_healing_trans = st.checkbox(
             "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
-            value=False,
+            value=True,
             key="trans_skip_healing",
             help="Executes single-pass compilation without calling iterative Gemini auto-repair loops if minor compiler warnings occur."
         )
@@ -1089,26 +1089,36 @@ if curr_sess:
             )
 
     # Post-generation Zero-Compile AI TeX Audit & Repair Action Bar
-    col_lint_btn, col_lint_hint = st.columns([1.4, 2.6])
-    with col_lint_btn:
-        if st.button("🤖 Gemini AI TeX Audit & Fix (Zero-Compile)", key="top_ai_lint_btn", type="secondary", use_container_width=True, help="Scans working LaTeX document with Gemini 3.7 Flash, fixes unescaped characters, unclosed environments, and syntax errors without pdflatex compilation."):
-            with st.spinner("🤖 Gemini 3.7 Flash is auditing and repairing LaTeX syntax (zero-compile)..."):
-                lint_result = st.session_state.orchestrator.ai_lint_and_repair_document(
-                    latex_source=curr_sess.latex_source,
-                    mark_scheme_source=curr_sess.mark_scheme_source,
-                    paper_type=curr_sess.paper_type
-                )
-                curr_sess.latex_source = lint_result["repaired_latex_source"]
-                if lint_result.get("repaired_mark_scheme_source"):
-                    curr_sess.mark_scheme_source = lint_result["repaired_mark_scheme_source"]
-                st.session_state.orchestrator.session_manager.save_session(curr_sess)
-                st.session_state.current_session = curr_sess
-                st.session_state["last_lint_summary"] = lint_result.get("audit_summary", "Audit completed successfully.")
-                st.session_state["last_lint_fixes"] = lint_result.get("fixes_applied", [])
-                st.success(f"✅ AI TeX Audit & Fix Complete! {lint_result.get('audit_summary', '')}")
-                st.rerun()
-    with col_lint_hint:
-        st.caption("⚡ **Zero-Compile AI Linter**: Audits syntax, unescaped `_`/`%`/`#`, unmatched `\\begin{...}`, and Cambridge tags using pure Gemini reasoning without invoking pdflatex.")
+    with st.expander("🤖 Gemini AI TeX Audit & Fix (Zero-Compile & Error Repair)", expanded=False):
+        st.caption("⚡ **Zero-Compile AI Linter**: Audits syntax, unescaped `_`/`%`/`#`, unmatched `\\begin{...}`, and Cambridge tags using pure Gemini reasoning without invoking pdflatex. You can paste any compiler error log below:")
+        col_top_err, col_top_act = st.columns([3, 1])
+        with col_top_err:
+            top_pasted_err = st.text_area(
+                "Paste Compiler Error / Log / Issue (Optional)",
+                placeholder="e.g. ! LaTeX Error: File ulem.sty not found or ! Missing $ inserted or paste terminal compiler log...",
+                height=70,
+                key="top_ai_lint_err_input"
+            )
+        with col_top_act:
+            st.write("")
+            st.write("")
+            if st.button("✨ Run AI TeX Audit & Fix", key="top_ai_lint_btn", type="primary", use_container_width=True):
+                with st.spinner("🤖 Gemini 3.7 Flash is auditing and repairing LaTeX syntax (zero-compile)..."):
+                    lint_result = st.session_state.orchestrator.ai_lint_and_repair_document(
+                        latex_source=curr_sess.latex_source,
+                        mark_scheme_source=curr_sess.mark_scheme_source,
+                        paper_type=curr_sess.paper_type,
+                        compiler_error=top_pasted_err
+                    )
+                    curr_sess.latex_source = lint_result["repaired_latex_source"]
+                    if lint_result.get("repaired_mark_scheme_source"):
+                        curr_sess.mark_scheme_source = lint_result["repaired_mark_scheme_source"]
+                    st.session_state.orchestrator.session_manager.save_session(curr_sess)
+                    st.session_state.current_session = curr_sess
+                    st.session_state["last_lint_summary"] = lint_result.get("audit_summary", "Audit completed successfully.")
+                    st.session_state["last_lint_fixes"] = lint_result.get("fixes_applied", [])
+                    st.success(f"✅ AI TeX Audit & Fix Complete! {lint_result.get('audit_summary', '')}")
+                    st.rerun()
 
     if st.session_state.get("last_lint_summary"):
         with st.expander(f"✨ AI TeX Audit Report: {st.session_state.get('last_lint_summary')}", expanded=True):
@@ -1239,57 +1249,56 @@ if curr_sess:
     # TAB 2: Exam Question Paper (Clean KaTeX Questions Preview & Copy LaTeX)
     # --------------------------------------------------------------------------
     with tab2:
-        col_hdr, col_btn_down = st.columns([1.3, 1.7])
+        col_hdr, col_btn_down = st.columns([1.6, 1.4])
         with col_hdr:
             st.markdown("### 📄 Question Paper (KaTeX Live Preview)")
             st.caption("Clean pedagogical view of questions, subtasks, Jupyter cells, and mark brackets.")
         with col_btn_down:
-            col_d1, col_d2, col_d3 = st.columns([1, 1, 1.2])
-            with col_d1:
-                st.download_button(
-                    "⬇️ paper.tex",
-                    data=curr_sess.latex_source,
-                    file_name="paper.tex",
-                    mime="text/x-tex",
-                    use_container_width=True
-                )
-            with col_d2:
-                pdf_file = Path(curr_sess.pdf_path) if curr_sess.pdf_path else None
-                if pdf_file and pdf_file.exists():
-                    st.download_button(
-                        "⬇️ paper.pdf",
-                        data=pdf_file.read_bytes(),
-                        file_name=f"{curr_sess.syllabus_code}_{curr_sess.paper_number}_paper.pdf",
-                        mime="application/pdf",
-                        type="primary",
-                        use_container_width=True
-                    )
-            with col_d3:
-                if st.button("🤖 AI Fix TeX", key="tab2_ai_lint_btn", use_container_width=True, help="Run zero-compile Gemini static linter and syntax repair."):
-                    with st.spinner("🤖 Gemini is checking and fixing LaTeX syntax (zero-compile)..."):
-                        lint_res = st.session_state.orchestrator.ai_lint_and_repair_document(
-                            latex_source=curr_sess.latex_source,
-                            mark_scheme_source=curr_sess.mark_scheme_source,
-                            paper_type=curr_sess.paper_type
-                        )
-                        curr_sess.latex_source = lint_res["repaired_latex_source"]
-                        if lint_res.get("repaired_mark_scheme_source"):
-                            curr_sess.mark_scheme_source = lint_res["repaired_mark_scheme_source"]
-                        st.session_state.orchestrator.session_manager.save_session(curr_sess)
-                        st.session_state.current_session = curr_sess
-                        st.session_state["last_lint_summary"] = lint_res.get("audit_summary", "Audit completed successfully.")
-                        st.session_state["last_lint_fixes"] = lint_res.get("fixes_applied", [])
-                        st.success(f"✅ Repaired: {lint_res.get('audit_summary', '')}")
-                        st.rerun()
+            st.download_button(
+                "⬇️ Download paper.tex",
+                data=curr_sess.latex_source,
+                file_name="paper.tex",
+                mime="text/x-tex",
+                type="primary",
+                use_container_width=True
+            )
 
-        # 1-Click Copy Full LaTeX for Overleaf Box
-        with st.expander("📋 Copy Full LaTeX Source Code (for Overleaf / TeXLive / VS Code)", expanded=False):
-            st.caption("Click the copy icon in the top right of the code box to paste directly into Overleaf:")
-            st.code(curr_sess.latex_source, language="latex")
+        # AI Fix TeX Action with Optional Error Message Input
+        with st.expander("🤖 Gemini AI TeX Audit & Fix (Zero-Compile & Error Repair)", expanded=False):
+            st.caption("Zero-compile static linter: audits syntax and repairs specific compiler errors using Gemini 3.7 Flash.")
+            tab2_pasted_err = st.text_area(
+                "Paste Compiler Error / Log / Issue (Optional)",
+                placeholder="e.g. ! LaTeX Error: File ulem.sty not found or ! Missing $ inserted or paste terminal compiler log...",
+                height=75,
+                key="tab2_ai_lint_err_input"
+            )
+            if st.button("✨ Run AI TeX Audit & Fix on paper.tex", key="tab2_ai_lint_btn", type="primary", use_container_width=True):
+                with st.spinner("🤖 Gemini is checking and fixing LaTeX syntax (zero-compile)..."):
+                    lint_res = st.session_state.orchestrator.ai_lint_and_repair_document(
+                        latex_source=curr_sess.latex_source,
+                        mark_scheme_source=curr_sess.mark_scheme_source,
+                        paper_type=curr_sess.paper_type,
+                        compiler_error=tab2_pasted_err
+                    )
+                    curr_sess.latex_source = lint_res["repaired_latex_source"]
+                    if lint_res.get("repaired_mark_scheme_source"):
+                        curr_sess.mark_scheme_source = lint_res["repaired_mark_scheme_source"]
+                    st.session_state.orchestrator.session_manager.save_session(curr_sess)
+                    st.session_state.current_session = curr_sess
+                    st.session_state["last_lint_summary"] = lint_res.get("audit_summary", "Audit completed successfully.")
+                    st.session_state["last_lint_fixes"] = lint_res.get("fixes_applied", [])
+                    st.success(f"✅ Repaired: {lint_res.get('audit_summary', '')}")
+                    st.rerun()
 
         # Clean KaTeX Questions Rendering (No Cover/Header noise)
         rendered_html = LaTeXVisualRenderer.render_questions_only_html(curr_sess.latex_source, title=curr_sess.title)
         components.html(rendered_html, height=850, scrolling=True)
+
+        # Easy 1-Click Copy LaTeX Code at the Bottom
+        st.markdown("---")
+        st.markdown("### 📋 Copy Full LaTeX Source Code (`paper.tex`)")
+        st.caption("Click the copy icon in the top right corner of the box below to instantly copy the complete LaTeX code for Overleaf, TeXLive, or VS Code:")
+        st.code(curr_sess.latex_source, language="latex")
 
         st.markdown("---")
         st.markdown("### 💬 Conversational Paper Editor & Refinement Workbench")
@@ -1323,38 +1332,28 @@ if curr_sess:
     # TAB 3: Mark Scheme & Rubrics (Clean KaTeX View & Copy LaTeX)
     # --------------------------------------------------------------------------
     with tab3:
-        col_mshdr, col_msbtn = st.columns([1.5, 1])
+        col_mshdr, col_msbtn = st.columns([1.6, 1.4])
         with col_mshdr:
             st.markdown("### 📝 Official Cambridge Mark Scheme (KaTeX Live Preview)")
             st.caption("Granular partial credit rubrics with Assessment Objective (AO) allocations.")
         with col_msbtn:
-            col_msd1, col_msd2 = st.columns(2)
-            with col_msd1:
-                st.download_button(
-                    "⬇️ mark_scheme.tex",
-                    data=curr_sess.mark_scheme_source,
-                    file_name="mark_scheme.tex",
-                    mime="text/x-tex",
-                    use_container_width=True
-                )
-            with col_msd2:
-                sess_dir = BASE_DIR / "data_store" / "sessions" / curr_sess.session_id
-                ms_pdf = sess_dir / "mark_scheme.pdf"
-                if ms_pdf.exists():
-                    st.download_button(
-                        "⬇️ mark_scheme.pdf",
-                        data=ms_pdf.read_bytes(),
-                        file_name=f"{curr_sess.syllabus_code}_{curr_sess.paper_number}_mark_scheme.pdf",
-                        mime="application/pdf",
-                        type="primary",
-                        use_container_width=True
-                    )
-
-        with st.expander("📋 Copy Mark Scheme LaTeX Source Code (for Overleaf / TeXLive)", expanded=False):
-            st.code(curr_sess.mark_scheme_source, language="latex")
+            st.download_button(
+                "⬇️ Download mark_scheme.tex",
+                data=curr_sess.mark_scheme_source,
+                file_name="mark_scheme.tex",
+                mime="text/x-tex",
+                type="primary",
+                use_container_width=True
+            )
 
         ms_rendered_html = LaTeXVisualRenderer.render_questions_only_html(curr_sess.mark_scheme_source, title="Mark Scheme")
         components.html(ms_rendered_html, height=850, scrolling=True)
+
+        # Easy 1-Click Copy Mark Scheme LaTeX Code at the Bottom
+        st.markdown("---")
+        st.markdown("### 📋 Copy Mark Scheme LaTeX Source Code (`mark_scheme.tex`)")
+        st.caption("Click the copy icon in the top right corner of the box below to copy the mark scheme LaTeX code:")
+        st.code(curr_sess.mark_scheme_source, language="latex")
 
     # --------------------------------------------------------------------------
     # TAB 4: Demographic Datasets & Starter Code
