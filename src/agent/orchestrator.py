@@ -418,7 +418,8 @@ class EduScribeOrchestrator:
         paper_number: str = "02",
         session_id: Optional[str] = None,
         progress: Optional[ExamGenerationProgress] = None,
-        skip_self_healing: bool = False
+        skip_self_healing: bool = False,
+        user_instructions: str = ""
     ) -> ExamSession:
         """
         Transcribes an uploaded Word (.docx) or PDF (.pdf) exam document into
@@ -438,7 +439,8 @@ class EduScribeOrchestrator:
             exam_year=exam_year,
             exam_series=exam_series,
             syllabus_code=syllabus_code,
-            paper_number=paper_number
+            paper_number=paper_number,
+            user_instructions=user_instructions
         )
 
         detected_type = transcription["detected_paper_type"]

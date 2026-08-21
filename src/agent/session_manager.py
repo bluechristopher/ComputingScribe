@@ -6,8 +6,11 @@ Provides packaging utilities to create downloadable .zip bundles.
 
 import os
 import json
+import re
 import shutil
 import zipfile
+import hashlib
+import mimetypes
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 from datetime import datetime, timezone
@@ -31,6 +34,7 @@ class ExamSession:
         mark_scheme_source: str = "",
         generated_datasets: Optional[List[Dict[str, str]]] = None,
         starter_files: Optional[List[Dict[str, str]]] = None,
+        image_assets: Optional[List[Dict[str, str]]] = None,
         questions: Optional[List[Dict[str, Any]]] = None,
         status: str = "draft",
         compilation_logs: str = "",
@@ -51,6 +55,7 @@ class ExamSession:
         self.mark_scheme_source = mark_scheme_source
         self.generated_datasets = generated_datasets or []
         self.starter_files = starter_files or []
+        self.image_assets = image_assets or []
         self.questions = questions or []
         self.status = status
         self.compilation_logs = compilation_logs
@@ -74,6 +79,7 @@ class ExamSession:
             "mark_scheme_source": self.mark_scheme_source,
             "generated_datasets": self.generated_datasets,
             "starter_files": self.starter_files,
+            "image_assets": self.image_assets,
             "questions": self.questions,
             "status": self.status,
             "compilation_logs": self.compilation_logs,
@@ -99,6 +105,7 @@ class ExamSession:
             mark_scheme_source=data.get("mark_scheme_source", ""),
             generated_datasets=data.get("generated_datasets", []),
             starter_files=data.get("starter_files", []),
+            image_assets=data.get("image_assets", []),
             questions=data.get("questions", []),
             status=data.get("status", "draft"),
             compilation_logs=data.get("compilation_logs", ""),
@@ -173,6 +180,31 @@ class SessionManager:
                 print(f"[SessionManager] Firestore save note: {e}")
 
         return True
+
+    def save_image_asset(self, session: ExamSession, original_name: str, content: bytes, mime_type: str = "") -> Dict[str, str]:
+        """Stores a browser- and LaTeX-compatible image under its session assets folder."""
+        suffix = Path(original_name).suffix.lower()
+        if suffix not in {".png", ".jpg", ".jpeg"}:
+            raise ValueError("Only PNG and JPEG images are supported.")
+
+        stem = re.sub(r"[^A-Za-z0-9_-]+", "-", Path(original_name).stem).strip("-") or "image"
+        digest = hashlib.sha256(content).hexdigest()[:12]
+        filename = f"{stem}-{digest}{suffix}"
+        session_dir = self._get_session_dir(session.session_id)
+        asset_dir = session_dir / "assets"
+        asset_dir.mkdir(exist_ok=True)
+        (asset_dir / filename).write_bytes(content)
+
+        asset = {
+            "filename": filename,
+            "path": f"assets/{filename}",
+            "mime_type": mime_type or mimetypes.guess_type(filename)[0] or "image/png",
+            "original_name": original_name,
+        }
+        session.image_assets = [item for item in session.image_assets if item.get("filename") != filename]
+        session.image_assets.append(asset)
+        self.save_session(session)
+        return asset
 
     def get_session(self, session_id: str) -> Optional[ExamSession]:
         """Loads a session from Firestore or local storage."""

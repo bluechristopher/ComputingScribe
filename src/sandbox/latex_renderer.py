@@ -7,11 +7,15 @@ pseudocode, mathematics, and right-aligned mark brackets.
 
 import re
 import html
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 class LaTeXVisualRenderer:
     @staticmethod
-    def render_questions_only_html(latex_source: str, title: str = "Question Paper") -> str:
+    def render_questions_only_html(
+        latex_source: str,
+        title: str = "Question Paper",
+        image_data_urls: Optional[Dict[str, str]] = None,
+    ) -> str:
         """
         Renders examination questions, subtasks, Jupyter cells, pseudocode,
         tables, and marks using KaTeX, omitting document-level cover/header boilerplate.
@@ -31,7 +35,7 @@ class LaTeXVisualRenderer:
         body_text = re.sub(r"\\setcounter\{[^}]*\}\{[^}]*\}", "", body_text)
 
         # Process the clean questions content
-        content_html = LaTeXVisualRenderer._process_latex_document(body_text)
+        content_html = LaTeXVisualRenderer._process_latex_document(body_text, image_data_urls or {})
 
         html_doc = f"""<!DOCTYPE html>
 <html>
@@ -352,6 +356,13 @@ class LaTeXVisualRenderer:
             clear: both;
             display: table;
         }}
+
+        .exam-image {{
+            display: block;
+            margin: 16px auto;
+            max-width: 100%;
+            height: auto;
+        }}
     </style>
 </head>
 <body>
@@ -361,7 +372,7 @@ class LaTeXVisualRenderer:
         return html_doc
 
     @staticmethod
-    def _process_latex_document(tex_text: str) -> str:
+    def _process_latex_document(tex_text: str, image_data_urls: Dict[str, str]) -> str:
         """Robust LaTeX document parser converting blocks into semantic HTML."""
         # 1. Handle Multiline Jupyter Cells first
         def replace_jupyter(match):
@@ -428,7 +439,20 @@ class LaTeXVisualRenderer:
 
         tex_text = re.sub(r"\\begin\{testcases\}(.*?)\\end\{testcases\}", replace_testcases, tex_text, flags=re.DOTALL)
 
-        # 5. Process remaining text line-by-line
+        # 5. Resolve session images stored as \ExamImage{assets/name.png}{0.65\linewidth}.
+        def replace_exam_image(match):
+            asset_path = match.group(1).strip()
+            width_spec = match.group(2).strip()
+            data_url = image_data_urls.get(asset_path) or image_data_urls.get(asset_path.rsplit("/", 1)[-1])
+            if not data_url:
+                return f"<p><em>Image asset unavailable: {html.escape(asset_path)}</em></p>"
+            width_match = re.fullmatch(r"([0-9]+(?:\.[0-9]+)?)\\linewidth", width_spec)
+            width_style = f"width: {float(width_match.group(1)) * 100:.1f}%;" if width_match else "width: auto;"
+            return f"<img class='exam-image' src='{html.escape(data_url, quote=True)}' style='{width_style}' alt='Exam image'>"
+
+        tex_text = re.sub(r"\\ExamImage\{([^}]+)\}\{([^}]+)\}", replace_exam_image, tex_text)
+
+        # 6. Process remaining text line-by-line
         lines = tex_text.splitlines()
         html_out = []
         in_list = False

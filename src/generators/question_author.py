@@ -28,6 +28,14 @@ class QuestionAuthor:
     def __init__(self):
         pass
 
+    @staticmethod
+    def _normalize_marks_spacing(latex_source: str) -> str:
+        """Keep mark brackets in the same paragraph as the final question text."""
+        latex_source = re.sub(r"[ \t]*\\\\[ \t]*\n[ \t]*(\\Marks\{)", r" \1", latex_source)
+        latex_source = re.sub(r"\n[ \t]*\n[ \t]*(\\Marks\{)", r" \1", latex_source)
+        latex_source = re.sub(r"([^\n])\n[ \t]*(\\Marks\{)", r"\1 \2", latex_source)
+        return latex_source
+
     def propose_blueprint(
         self,
         prompt: str,
@@ -357,6 +365,7 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
 
         if not latex_body:
             latex_body = self._generate_fallback_latex_body(blueprint, companion_dataset)
+        latex_body = self._normalize_marks_spacing(latex_body)
 
         # Inject into golden template
         full_tex = template_code
@@ -508,6 +517,8 @@ Return a JSON object matching this schema:
                     generation_config={"response_mime_type": "application/json"}
                 )
                 data = json.loads(response.text)
+                if data.get("latex_code"):
+                    data["latex_code"] = self._normalize_marks_spacing(data["latex_code"])
                 return data
             except Exception as e:
                 print(f"[QuestionAuthor] Gemini single task authoring failed: {e}")
@@ -567,7 +578,7 @@ Write driver program code to execute the system with sample test data and displa
             "title": f"{'Task' if paper_type == 'practical' else 'Question'} {task_number}: Technical Challenge ({category})",
             "topic": category,
             "marks": total_marks,
-            "latex_code": fb_latex.strip(),
+            "latex_code": self._normalize_marks_spacing(fb_latex.strip()),
             "mark_scheme_code": fb_ms.strip(),
             "paper_type": paper_type
         }
@@ -624,6 +635,8 @@ Return a valid JSON object matching this schema with the updated code:
                     generation_config={"response_mime_type": "application/json"}
                 )
                 data = json.loads(response.text)
+                if data.get("latex_code"):
+                    data["latex_code"] = self._normalize_marks_spacing(data["latex_code"])
                 return data
             except Exception as e:
                 print(f"[QuestionAuthor] Task refinement failed: {e}")
@@ -631,6 +644,7 @@ Return a valid JSON object matching this schema with the updated code:
         # Fallback refinement: append refinement note comment
         updated = dict(current_task)
         updated["latex_code"] = current_task.get("latex_code", "") + f"\n% Refined with: {refinement_prompt}\n"
+        updated["latex_code"] = self._normalize_marks_spacing(updated["latex_code"])
         return updated
 
     def renumber_task(
@@ -671,7 +685,7 @@ Return a valid JSON object matching this schema with the updated code:
         latex = re.sub(rf"TASK{old_num}\\_", f"TASK{new_number}\\_", latex)
         latex = re.sub(rf"Task\s+{old_num}\.([0-9]+)", rf"Task {new_number}.\1", latex)
         latex = re.sub(rf"Task\s+{old_num}\b", f"Task {new_number}", latex)
-        updated["latex_code"] = latex
+        updated["latex_code"] = self._normalize_marks_spacing(latex)
 
         # Renumber Mark Scheme Code
         ms = updated.get("mark_scheme_code", "")
@@ -724,6 +738,7 @@ INSTRUCTIONS:
                 )
                 data = json.loads(response.text)
                 if data.get("latex_source") and data.get("mark_scheme_source"):
+                    data["latex_source"] = self._normalize_marks_spacing(data["latex_source"])
                     return data
             except Exception as e:
                 print(f"[QuestionAuthor] refine_full_paper error: {e}")
@@ -769,9 +784,9 @@ INSTRUCTIONS:
                 clean_code = re.sub(r"\\end\{questions\}", "", clean_code).strip()
                 if clean_code and not clean_code.startswith(r"\item") and not clean_code.startswith(r"\question"):
                     clean_code = f"\\item {clean_code}"
-                body_parts.append(clean_code)
+                body_parts.append(self._normalize_marks_spacing(clean_code))
             else:
-                body_parts.append(raw_code)
+                body_parts.append(self._normalize_marks_spacing(raw_code))
 
         separator = "\n\n\\newpage\n\\TurnOver\n\n"
         if paper_type == "theory":
@@ -788,6 +803,7 @@ INSTRUCTIONS:
                 combined_body = general_ipynb_instruction + practical_body
             else:
                 combined_body = practical_body
+        combined_body = self._normalize_marks_spacing(combined_body)
 
         # Build Full LaTeX Paper
         full_paper = paper_template

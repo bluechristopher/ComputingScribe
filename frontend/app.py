@@ -13,6 +13,7 @@ import time
 import base64
 import re
 import json
+import html
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from pathlib import Path
@@ -36,6 +37,114 @@ from src.sandbox.latex_renderer import LaTeXVisualRenderer
 
 CURRENT_YEAR = str(datetime.now().year)
 SERIES_OPTIONS = ["Prelim", "A-Level", "Practice Paper", "Promo", "WA", "Specimen", "Mid-Year Exam", "Other / Custom..."]
+EXAM_IMAGE_MACRO = r"\newcommand{\ExamImage}[2]{\par\begin{center}\includegraphics[width=#2]{#1}\end{center}\par}"
+
+
+def build_session_image_data_urls(session: ExamSession) -> Dict[str, str]:
+    """Loads local session assets as data URLs for the isolated HTML preview iframe."""
+    assets_dir = BASE_DIR / "data_store" / "sessions" / session.session_id / "assets"
+    data_urls: Dict[str, str] = {}
+    for asset in getattr(session, "image_assets", []):
+        filename = Path(asset.get("filename", "")).name
+        if not filename:
+            continue
+        asset_path = assets_dir / filename
+        if not asset_path.exists():
+            continue
+        mime_type = asset.get("mime_type", "image/png")
+        data_url = f"data:{mime_type};base64,{base64.b64encode(asset_path.read_bytes()).decode('ascii')}"
+        data_urls[filename] = data_url
+        data_urls[asset.get("path", f"assets/{filename}")] = data_url
+    return data_urls
+
+
+def insert_exam_image(latex_source: str, image_macro: str, placement: str, phrase: str = "") -> tuple[Optional[str], Optional[str]]:
+    """Adds an image after a uniquely matched source phrase or at the end of the paper."""
+    if r"\newcommand{\ExamImage}" not in latex_source:
+        if r"\usepackage{graphicx}" in latex_source:
+            latex_source = latex_source.replace(
+                r"\usepackage{graphicx}",
+                r"\usepackage{graphicx}" + "\n" + EXAM_IMAGE_MACRO,
+                1,
+            )
+        else:
+            latex_source = latex_source.replace(r"\begin{document}", EXAM_IMAGE_MACRO + "\n\\begin{document}", 1)
+
+    if placement == "At end of paper":
+        return latex_source.rstrip() + f"\n\n{image_macro}\n", None
+
+    phrase = phrase.strip()
+    if not phrase:
+        return None, "Enter the exact phrase after which the image should appear."
+    occurrences = latex_source.count(phrase)
+    if occurrences != 1:
+        return None, f"The phrase must occur exactly once in paper.tex; it currently occurs {occurrences} times."
+
+    phrase_end = latex_source.find(phrase) + len(phrase)
+    line_end = latex_source.find("\n", phrase_end)
+    if line_end == -1:
+        line_end = len(latex_source)
+    return latex_source[:line_end] + f"\n\n{image_macro}" + latex_source[line_end:], None
+
+
+def build_task_authoring_hud_html(
+    task_number: int,
+    paper_type: str,
+    marks: int,
+    topics: List[str],
+    start_ms: int,
+    is_done: bool = False,
+    final_duration_str: str = "",
+) -> str:
+    """Compact, self-animating progress HUD for a single-question authoring request."""
+    task_label = f"Task {task_number}" if paper_type == "practical" else f"Question {task_number}"
+    paper_label = "Paper 2 Practical" if paper_type == "practical" else "Paper 1 Theory"
+    topic_label = ", ".join(topics) if topics else "General Computing"
+    stages = [
+        ("Brief", "Reading the teaching intent"),
+        ("Blueprint", "Balancing subtasks and marks"),
+        ("Author", "Writing the assessment content"),
+        ("Format", "Checking Cambridge LaTeX structure"),
+    ]
+    stage_html = "".join(
+        f"<div class='task-stage' data-stage='{idx}'><span class='task-stage-num'>{idx + 1}</span><div><strong>{name}</strong><small>{detail}</small></div></div>"
+        for idx, (name, detail) in enumerate(stages)
+    )
+    state_text = "Draft ready for review" if is_done else "Gemini is composing a structured assessment draft"
+    timer_text = final_duration_str if is_done and final_duration_str else "0.0s"
+    return f"""<!doctype html>
+<html><head><meta charset='utf-8'><style>
+* {{ box-sizing:border-box; }}
+body {{ margin:0; padding:2px; font-family:Inter,Segoe UI,sans-serif; color:#10213f; background:transparent; }}
+.task-hud {{ overflow:hidden; border:1px solid #b9cbe3; border-radius:8px; background:#fff; box-shadow:0 8px 20px rgba(15,48,92,.10); }}
+.task-head {{ position:relative; overflow:hidden; padding:13px 16px; background:#102a56; color:#fff; display:flex; justify-content:space-between; gap:16px; align-items:center; }}
+.task-head::after {{ content:''; position:absolute; inset:0; background:linear-gradient(100deg,transparent 25%,rgba(121,205,255,.24) 48%,transparent 70%); transform:translateX(-130%); animation:scan 2.4s linear infinite; }}
+.task-head > * {{ position:relative; z-index:1; }}
+.task-kicker {{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#9bd7ff; font-weight:800; }}
+.task-title {{ margin-top:3px; font-size:16px; font-weight:800; }}
+.task-timer {{ font:700 15px 'Courier New',monospace; white-space:nowrap; border:1px solid rgba(162,220,255,.65); padding:6px 10px; border-radius:4px; background:rgba(4,20,49,.48); }}
+.task-meta {{ display:flex; gap:7px; flex-wrap:wrap; padding:10px 16px; background:#eef6ff; border-bottom:1px solid #d8e4f3; }}
+.task-meta span {{ color:#1c436f; font-size:11px; font-weight:700; border-left:3px solid #2b91ce; padding-left:7px; }}
+.task-stages {{ display:grid; grid-template-columns:repeat(4,1fr); gap:0; }}
+.task-stage {{ min-height:77px; padding:12px 10px; display:flex; gap:8px; align-items:flex-start; border-right:1px solid #deebf7; background:#fff; transition:.2s ease; }}
+.task-stage:last-child {{ border-right:0; }}
+.task-stage-num {{ width:22px; height:22px; flex:0 0 22px; border-radius:50%; display:grid; place-items:center; background:#e7eff8; color:#54708f; font-size:11px; font-weight:800; }}
+.task-stage strong {{ display:block; font-size:12px; color:#19365b; }} .task-stage small {{ display:block; font-size:10px; line-height:1.25; margin-top:3px; color:#607893; }}
+.task-stage.active {{ background:#e8f6ff; box-shadow:inset 0 3px #1587c4; }} .task-stage.active .task-stage-num {{ background:#1587c4; color:#fff; animation:stagePulse 1s ease-in-out infinite; }}
+.task-stage.done {{ background:#f0fdf7; }} .task-stage.done .task-stage-num {{ background:#12a574; color:#fff; }}
+.task-foot {{ padding:9px 16px; display:flex; align-items:center; gap:8px; background:#f8fbff; color:#365878; font-size:12px; font-weight:650; }}
+.task-loader {{ width:7px; height:7px; background:#1592cf; border-radius:50%; animation:dot 1.1s ease-in-out infinite; }}
+@keyframes scan {{ to {{ transform:translateX(130%); }} }} @keyframes stagePulse {{ 50% {{ transform:scale(1.13); box-shadow:0 0 0 5px rgba(21,135,196,.15); }} }} @keyframes dot {{ 50% {{ transform:scale(1.7); opacity:.35; }} }}
+</style></head><body><section class='task-hud'>
+  <div class='task-head'><div><div class='task-kicker'>Single-question authoring</div><div class='task-title'>{html.escape(task_label)} · {html.escape(paper_label)}</div></div><div id='task-timer' class='task-timer'>⏱ {timer_text}</div></div>
+  <div class='task-meta'><span>{marks} marks requested</span><span>{html.escape(topic_label)}</span><span>LaTeX and mark scheme included</span></div>
+  <div class='task-stages'>{stage_html}</div>
+  <div class='task-foot'><span class='task-loader'></span><span id='task-status'>{state_text}</span></div>
+</section><script>
+const done = {'true' if is_done else 'false'}; const start = {start_ms}; const stages = [...document.querySelectorAll('.task-stage')];
+function activate(index) {{ stages.forEach((el,i)=>el.classList.toggle('active',!done && i===index)); stages.forEach((el,i)=>el.classList.toggle('done',done || (!done && i<index))); }}
+if (done) {{ activate(stages.length); }} else {{ let active=0; activate(active); setInterval(()=>{{ active=(active+1)%stages.length; activate(active); }}, 1450); setInterval(()=>{{ const elapsed=(Date.now()-start)/1000; document.getElementById('task-timer').textContent='⏱ '+elapsed.toFixed(1)+'s'; }},100); }}
+</script></body></html>"""
 
 # Page Configuration
 st.set_page_config(
@@ -581,7 +690,7 @@ if "Full Paper" in author_mode:
             selected_topics = st.multiselect(
                 "🎯 Syllabus Topics (Select multiple)",
                 options=available_topics,
-                default=[available_topics[8], available_topics[2]] if paper_type == "practical" else [available_topics[5], available_topics[4]],
+                default=[],
                 help="Select one or more topics to assess in this exam paper."
             )
         with col_top_cust:
@@ -640,7 +749,7 @@ if "Full Paper" in author_mode:
         with col_hint:
             st.caption("💡 *Tip: Adding the word `'contextual'` triggers extended real-world scenarios and step-by-step bulleted subtasks.*")
 
-        generate_btn = st.button("Author & Compile Exam Package", type="primary", use_container_width=True)
+        generate_btn = st.button("Generate Exam Package", type="primary", use_container_width=True)
 
     if generate_btn:
         # Smoothly scroll the page down to the pipeline container
@@ -745,7 +854,7 @@ elif "Question-by-Question" in author_mode:
             s_selected_topics = st.multiselect(
                 "Syllabus Topic(s)",
                 options=s_available_topics,
-                default=[s_available_topics[8]] if s_paper_type == "practical" else [s_available_topics[5]],
+                default=[],
                 key="studio_multitopics"
             )
         with col_s_cust:
@@ -774,17 +883,42 @@ elif "Question-by-Question" in author_mode:
         draft_btn = st.button("✨ Draft Single Question with Gemini", type="primary", use_container_width=True)
         if draft_btn and s_prompt:
             t0 = time.time()
-            with st.spinner("🤖 Gemini 3.7 Flash is drafting your question..."):
-                task_draft = st.session_state.orchestrator.author_single_task(
-                    prompt=s_prompt,
-                    paper_type=s_paper_type,
-                    category=s_category,
-                    task_number=int(s_task_num),
-                    total_marks=int(s_marks)
+            authoring_progress = st.empty()
+            start_ms = int(t0 * 1000)
+            with authoring_progress.container():
+                components.html(
+                    build_task_authoring_hud_html(
+                        task_number=int(s_task_num),
+                        paper_type=s_paper_type,
+                        marks=int(s_marks),
+                        topics=s_all_topics,
+                        start_ms=start_ms,
+                    ),
+                    height=215,
                 )
-                st.session_state.studio_current_draft = task_draft
-                dur = round(time.time() - t0, 1)
-                st.success(f"✨ Task {s_task_num} authored in {dur}s! Inspect preview below.")
+            task_draft = st.session_state.orchestrator.author_single_task(
+                prompt=s_prompt,
+                paper_type=s_paper_type,
+                category=s_category,
+                task_number=int(s_task_num),
+                total_marks=int(s_marks)
+            )
+            st.session_state.studio_current_draft = task_draft
+            dur = round(time.time() - t0, 1)
+            with authoring_progress.container():
+                components.html(
+                    build_task_authoring_hud_html(
+                        task_number=int(s_task_num),
+                        paper_type=s_paper_type,
+                        marks=int(s_marks),
+                        topics=s_all_topics,
+                        start_ms=start_ms,
+                        is_done=True,
+                        final_duration_str=f"{dur:.1f}s",
+                    ),
+                    height=215,
+                )
+            st.success(f"✨ {('Task' if s_paper_type == 'practical' else 'Question')} {s_task_num} authored in {dur}s. Review the draft below.")
 
         # Display Current Single Task Draft & Refinement Area
         if st.session_state.studio_current_draft:
@@ -912,7 +1046,7 @@ elif "Question-by-Question" in author_mode:
 
             # Compile & Build Button styled with blue background & light blue text
             st.markdown("<div class='compile-build-box'>", unsafe_allow_html=True)
-            if st.button("🔨 Compile & Build Final Exam Package (All Assembled Questions)", use_container_width=True, key="studio_compile_btn"):
+            if st.button("Build Exam Package", type="primary", use_container_width=True, key="studio_compile_btn"):
                 with st.spinner("Assembling full LaTeX document for all questions and compiling in sandbox..."):
                     compiled_sess = st.session_state.orchestrator.compile_assembled_session(
                         tasks_list=q_list,
@@ -953,6 +1087,15 @@ elif "Document Transcriber" in author_mode:
             )
         with col_t2:
             st.info("💡 **Autonomous Normalization**: Detects and enforces `\\maintask{X}`, `\\tasksubtaskintro{X}`, subtask structures, `\\Marks{n}`, monospace code formatting, and 4-page signature booklet padding.")
+
+        transcription_prompt = st.text_area(
+            "Optional Transcription Instructions",
+            value="",
+            placeholder="e.g. Preserve the source structure exactly; do not add extra required structure. Or: convert each task into the Cambridge required structure with clear subtasks.",
+            height=110,
+            key="transcription_prompt",
+            help="Add specific guidance before transcription, such as whether to preserve the uploaded structure or force Cambridge practical/theory formatting."
+        )
 
         col_inst, col_yr, col_ser = st.columns([1.5, 0.8, 1.2])
         with col_inst:
@@ -1016,6 +1159,7 @@ elif "Document Transcriber" in author_mode:
                 institution=t_institution,
                 exam_year=t_exam_year,
                 exam_series=t_exam_series,
+                user_instructions=transcription_prompt,
                 progress=progress_listener,
                 skip_self_healing=skip_healing_trans
             )
@@ -1076,12 +1220,11 @@ if curr_sess:
         tasks_count = len(curr_sess.blueprint.get("sections", [])) if isinstance(curr_sess.blueprint, dict) else len(curr_sess.questions) or 4
         st.markdown(f"<div class='metric-box'><div class='metric-value' style='color: #0f172a; font-weight: 800;'>{tasks_count}</div><div class='metric-label' style='color: #475569; font-weight: 600;'>Tasks / Questions</div></div>", unsafe_allow_html=True)
     with m5:
-        # Download Complete .ZIP Archive Button
-        zip_path = BASE_DIR / "data_store" / "sessions" / curr_sess.session_id / f"{curr_sess.session_id}_package.zip"
-        if zip_path.exists():
+        bundle_bytes = st.session_state.orchestrator.session_manager.export_bundle_zip(curr_sess.session_id)
+        if bundle_bytes:
             st.download_button(
                 "📦 Download .ZIP Bundle",
-                data=zip_path.read_bytes(),
+                data=bundle_bytes,
                 file_name=f"{curr_sess.syllabus_code}_{curr_sess.paper_number}_complete_package.zip",
                 mime="application/zip",
                 type="primary",
@@ -1263,6 +1406,70 @@ if curr_sess:
                 use_container_width=True
             )
 
+        with st.expander("🖼️ Insert Exam Image", expanded=False):
+            st.caption("PNG and JPEG images are stored in this paper's `assets/` folder. They render in the browser preview and are included with `paper.tex` in the export ZIP.")
+            image_file = st.file_uploader(
+                "Image file",
+                type=["png", "jpg", "jpeg"],
+                key="paper_image_uploader",
+            )
+            image_width = st.slider(
+                "Display width (% of text width)",
+                min_value=10,
+                max_value=100,
+                value=65,
+                key="paper_image_width",
+            )
+            image_placement = st.radio(
+                "Place image",
+                options=["After an exact phrase", "At end of paper"],
+                horizontal=True,
+                key="paper_image_placement",
+            )
+            image_anchor = st.text_input(
+                "Exact phrase in paper.tex",
+                placeholder="Paste a unique phrase from the question text",
+                disabled=image_placement == "At end of paper",
+                key="paper_image_anchor",
+            )
+            if st.button("Insert image into paper.tex", type="primary", key="insert_paper_image_btn", disabled=not image_file):
+                image_macro_placeholder = "__IMAGE_MACRO__"
+                updated_source, insert_error = insert_exam_image(
+                    curr_sess.latex_source,
+                    image_macro_placeholder,
+                    image_placement,
+                    image_anchor,
+                )
+                if insert_error:
+                    st.error(insert_error)
+                else:
+                    try:
+                        asset = st.session_state.orchestrator.session_manager.save_image_asset(
+                            curr_sess,
+                            image_file.name,
+                            image_file.getvalue(),
+                            image_file.type,
+                        )
+                        image_macro = rf"\ExamImage{{{asset['path']}}}{{{image_width / 100:.2f}\linewidth}}"
+                        curr_sess.latex_source = updated_source.replace(image_macro_placeholder, image_macro, 1)
+                        st.session_state.orchestrator.session_manager.save_session(curr_sess)
+                        st.session_state.current_session = curr_sess
+                        st.success(f"Inserted {asset['original_name']} at {image_width}% width.")
+                        st.rerun()
+                    except ValueError as exc:
+                        st.error(str(exc))
+
+        tex_bundle = st.session_state.orchestrator.session_manager.export_bundle_zip(curr_sess.session_id)
+        if tex_bundle:
+            st.download_button(
+                "⬇️ Download paper.tex + images (.zip)",
+                data=tex_bundle,
+                file_name=f"{curr_sess.syllabus_code}_{curr_sess.paper_number}_tex_assets.zip",
+                mime="application/zip",
+                use_container_width=True,
+                key="paper_tex_assets_download",
+            )
+
         # AI Fix TeX Action with Optional Error Message Input
         with st.expander("🤖 Gemini AI TeX Audit & Fix (Zero-Compile & Error Repair)", expanded=False):
             st.caption("Zero-compile static linter: audits syntax and repairs specific compiler errors using Gemini 3.7 Flash.")
@@ -1291,7 +1498,11 @@ if curr_sess:
                     st.rerun()
 
         # Clean KaTeX Questions Rendering (No Cover/Header noise)
-        rendered_html = LaTeXVisualRenderer.render_questions_only_html(curr_sess.latex_source, title=curr_sess.title)
+        rendered_html = LaTeXVisualRenderer.render_questions_only_html(
+            curr_sess.latex_source,
+            title=curr_sess.title,
+            image_data_urls=build_session_image_data_urls(curr_sess),
+        )
         components.html(rendered_html, height=850, scrolling=True)
 
         # Easy 1-Click Copy LaTeX Code at the Bottom

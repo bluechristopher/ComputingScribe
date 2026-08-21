@@ -939,7 +939,7 @@ code, pre, .inline-code, span.inline-code {
 }
 
 /* ==============================================================================
-   8. SYLLABUS TOPICS CHIPS & MULTISELECT TAGS (BLUE BG + RADIANT GOLD TEXT)
+   8. SYLLABUS TOPICS CHIPS & MULTISELECT TAGS (BLUE BG + WHITE TEXT)
    ============================================================================== */
 [data-baseweb="tag"],
 .stMultiSelect [data-baseweb="tag"],
@@ -950,7 +950,7 @@ span[data-baseweb="tag"],
     background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important; /* Rich Blue Background */
     border: 1.5px solid #3b82f6 !important;
     border-radius: 8px !important;
-    color: #fbbf24 !important; /* Radiant Gold Text */
+    color: #ffffff !important;
     font-weight: 750 !important;
     font-size: 0.85rem !important;
     padding: 3px 8px !important;
@@ -964,23 +964,23 @@ span[data-baseweb="tag"] *,
 [data-testid="stMultiSelect"] [data-baseweb="tag"] *,
 [data-testid="stMultiSelect"] [data-baseweb="tag"] span,
 [data-testid="stMultiSelect"] [data-baseweb="tag"] div {
-    color: #fbbf24 !important; /* Radiant Gold Text */
+    color: #ffffff !important;
     font-weight: 750 !important;
-    fill: #fbbf24 !important;
+    fill: #ffffff !important;
 }
 
 [data-baseweb="tag"] svg,
 .stMultiSelect [data-baseweb="tag"] svg,
 [data-testid="stMultiSelect"] [data-baseweb="tag"] svg {
-    color: #fde047 !important; /* Bright Gold Cross Icon */
-    fill: #fde047 !important;
+    color: #ffffff !important;
+    fill: #ffffff !important;
 }
 
 .objective-chip {
     display: inline-flex !important;
     align-items: center !important;
     background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important; /* Blue Background */
-    color: #fbbf24 !important; /* Radiant Gold Text */
+    color: #ffffff !important;
     border: 1.5px solid #3b82f6 !important;
     border-radius: 20px !important;
     padding: 5px 14px !important;
@@ -991,7 +991,7 @@ span[data-baseweb="tag"] *,
 }
 
 .objective-chip * {
-    color: #fbbf24 !important; /* Gold Text */
+    color: #ffffff !important;
 }
 
 /* ==============================================================================
@@ -1036,4 +1036,190 @@ span[data-baseweb="tag"] *,
 [data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) * {
     color: #1e3a8a !important;
     font-weight: 700 !important;
+}
+
+/* ============================================================================
+   10. ACCESSIBLE WORKSPACE REFINEMENT
+   A restrained control system for repeated exam-authoring tasks.
+   ============================================================================ */
+:root {
+    --ui-ink: #172033;
+    --ui-muted: #52627a;
+    --ui-canvas: #f5f7fb;
+    --ui-surface: #ffffff;
+    --ui-border: #c7d2e1;
+    --ui-focus: #0b73ce;
+    --ui-primary: #123f73;
+    --ui-primary-hover: #0c315c;
+    --ui-primary-gradient: linear-gradient(135deg, #0b3b70 0%, #155f9d 54%, #087f8c 100%);
+    --ui-primary-gradient-hover: linear-gradient(135deg, #082e59 0%, #104d84 54%, #056d78 100%);
+    --ui-success: #087a55;
+}
+
+.stApp, section.main, [data-testid="stMain"], [data-testid="stMainBlockContainer"], .main {
+    background: var(--ui-canvas) !important;
+}
+
+[data-testid="stMain"] .block-container {
+    max-width: 1540px;
+}
+
+/* Inputs are deliberately quiet until the user interacts with them. */
+[data-testid="stMain"] input,
+[data-testid="stMain"] textarea,
+[data-testid="stMain"] [data-baseweb="select"] > div,
+[data-testid="stMain"] [data-baseweb="base-input"],
+[data-testid="stMain"] [data-testid="stNumberInput"] input {
+    background: var(--ui-surface) !important;
+    color: var(--ui-ink) !important;
+    border: 1px solid var(--ui-border) !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stMain"] input:hover,
+[data-testid="stMain"] textarea:hover,
+[data-testid="stMain"] [data-baseweb="select"] > div:hover,
+[data-testid="stMain"] [data-baseweb="base-input"]:hover {
+    border-color: #8094b0 !important;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[data-baseweb="select"]:focus-within,
+[data-testid="stMain"] label:has(input:focus-visible) {
+    outline: 3px solid rgba(11, 115, 206, 0.32) !important;
+    outline-offset: 2px !important;
+}
+
+/* Buttons communicate hierarchy by colour and placement, not decoration. */
+.stButton > button,
+[data-testid="stDownloadButton"] > button {
+    min-height: 40px !important;
+    border-radius: 6px !important;
+    font-size: 0.92rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0 !important;
+}
+
+button[data-testid="baseButton-primary"],
+.stButton > button[kind="primary"],
+.stButton > button[type="primary"],
+.compile-build-box button {
+    background: var(--ui-primary-gradient) !important;
+    color: #ffffff !important;
+    border: 1px solid #0b527f !important;
+    box-shadow: 0 3px 8px rgba(13, 70, 116, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+button[data-testid="baseButton-primary"]::before,
+.stButton > button[kind="primary"]::before,
+.stButton > button[type="primary"]::before {
+    content: none !important;
+    display: none !important;
+}
+
+button[data-testid="baseButton-primary"]:hover:not(:disabled),
+.stButton > button[kind="primary"]:hover:not(:disabled),
+.stButton > button[type="primary"]:hover:not(:disabled),
+.compile-build-box button:hover:not(:disabled) {
+    background: var(--ui-primary-gradient-hover) !important;
+    border-color: #083e68 !important;
+    box-shadow: 0 5px 12px rgba(13, 70, 116, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+    transform: translateY(-1px) !important;
+}
+
+[data-testid="stMain"] .stButton > button:not([kind="primary"]),
+[data-testid="stDownloadButton"] > button {
+    background: #ffffff !important;
+    color: #174a80 !important;
+    border: 1px solid #7894b5 !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stMain"] .stButton > button:not([kind="primary"]):hover:not(:disabled),
+[data-testid="stDownloadButton"] > button:hover:not(:disabled) {
+    background: #edf5fc !important;
+    color: #0c315c !important;
+    border-color: #174a80 !important;
+    transform: none !important;
+}
+
+button:disabled,
+button:disabled:hover {
+    background: #e4e9f0 !important;
+    color: #69788d !important;
+    border-color: #c7d2e1 !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+/* Compact navigation that remains usable at narrow widths. */
+[data-testid="stTabs"] [role="tablist"] {
+    gap: 3px !important;
+    border-bottom: 1px solid var(--ui-border) !important;
+    overflow-x: auto !important;
+}
+
+[data-testid="stTabs"] [role="tab"] {
+    color: #40536e !important;
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    min-height: 42px !important;
+    padding: 0 13px !important;
+}
+
+[data-testid="stTabs"] [role="tab"][aria-selected="true"] {
+    color: #0d567f !important;
+    border-bottom: 3px solid #0b73ce !important;
+    background: linear-gradient(180deg, rgba(210, 239, 255, 0.84), rgba(255, 255, 255, 0)) !important;
+}
+
+/* Give collapsible sections an obvious affordance without turning them into cards. */
+[data-testid="stMain"] [data-testid="stExpander"],
+[data-testid="stMain"] details {
+    background: var(--ui-surface) !important;
+    border: 1px solid var(--ui-border) !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stMain"] [data-testid="stExpander"] summary,
+[data-testid="stMain"] details summary {
+    color: var(--ui-ink) !important;
+    font-weight: 750 !important;
+}
+
+/* Selected syllabus tags retain their contrast while becoming less visually heavy. */
+[data-baseweb="tag"], .objective-chip {
+    background: linear-gradient(135deg, #164e87 0%, #166b9a 58%, #087b82 100%) !important;
+    border-color: #125f88 !important;
+    border-radius: 5px !important;
+    box-shadow: none !important;
+}
+
+.objective-chip {
+    padding: 5px 10px !important;
+}
+
+@media (max-width: 720px) {
+    [data-testid="stMain"] .block-container {
+        padding-left: 0.85rem !important;
+        padding-right: 0.85rem !important;
+    }
+
+    [data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label {
+        width: 100% !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
 }

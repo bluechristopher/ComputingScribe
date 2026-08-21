@@ -28,6 +28,7 @@
 \renewcommand{\familydefault}{\sfdefault}
 
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{needspace.sty}{\usepackage{needspace}}{\providecommand{\Needspace}[1]{}}
 \usepackage{enumitem}
 \usepackage{calc}
 \usepackage{tabularx}
@@ -39,17 +40,21 @@
 \usepackage{xcolor}
 \usepackage{amsmath}
 
+% Session image asset: centred; the second argument may be e.g. 0.65\linewidth.
+\newcommand{\ExamImage}[2]{\par\begin{center}\includegraphics[width=#2]{#1}\end{center}\par}
+\usepackage{textcomp}
+
 \linespread{1.08}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.5em}
 
-% --- Precise Right-Aligned Marks Macro (Right-aligned on same line, or wrapped right-aligned if no space) ---
-\newcommand{\Marks}[1]{\unskip\penalty0\null\hfill\mbox{[#1]}}
+% --- Precise Right-Aligned Marks Macro (same line when space allows; wraps only under pressure) ---
+\newcommand{\Marks}[1]{\unskip\penalty50\hbox{}\hfill\hbox{[#1]}}
 
-\providecommand{\code}[1]{{\ttfamily #1}}
+\providecommand{\code}[1]{{\ttfamily\upshape #1}}
 
 \lstset{
-  basicstyle=\ttfamily\small,
+  basicstyle=\ttfamily\upshape\small,
   upquote=true,
   breaklines=true,
   frame=single,

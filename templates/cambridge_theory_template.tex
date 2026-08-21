@@ -36,13 +36,13 @@
     % LuaLaTeX engine
     \usepackage{fontspec}
     \setmainfont{Arial}
-    \setmonofont{Courier New}
+    \setmonofont{Courier New}[Ligatures=NoCommon]
   }%
 }{%
   % XeLaTeX engine
   \usepackage{fontspec}
   \setmainfont{Arial}
-  \setmonofont{Courier New}
+  \setmonofont{Courier New}[Ligatures=NoCommon]
 }
 \makeatother
 
@@ -56,9 +56,16 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz}
+\usepackage{textcomp}
+
+% Session image asset: centred; the second argument may be e.g. 0.65\linewidth.
+\newcommand{\ExamImage}[2]{\par\begin{center}\includegraphics[width=#2]{#1}\end{center}\par}
 
 % Safe fallback for upquote
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+
+% Keep short question/subpart blocks together near page breaks when available.
+\IfFileExists{needspace.sty}{\usepackage{needspace}}{\providecommand{\Needspace}[1]{}}
 
 % Safe fallback for ulem (underlining)
 \IfFileExists{ulem.sty}{%
@@ -79,11 +86,11 @@
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.45em}
 
-% --- Precise Right-Aligned Marks Macro (Right-aligned on same line, or wrapped right-aligned if no space) ---
-\newcommand{\Marks}[1]{\unskip\penalty0\null\hfill\mbox{[#1]}}
+% --- Precise Right-Aligned Marks Macro (same line when space allows; wraps only under pressure) ---
+\newcommand{\Marks}[1]{\unskip\penalty50\hbox{}\hfill\hbox{[#1]}}
 
 % --- Inline Code Macro ---
-\providecommand{\code}[1]{{\ttfamily #1}}
+\providecommand{\code}[1]{{\ttfamily\upshape #1}}
 
 % --- Cambridge List Structure Setup ---
 % Level 0: Main Question numbers (1, 2, ...)
@@ -145,7 +152,7 @@
 
 \lstnewenvironment{pseudocode}[1][]{
   \lstset{
-    basicstyle=\ttfamily\fontsize{10.5pt}{13pt}\selectfont,
+    basicstyle=\ttfamily\upshape\fontsize{10.5pt}{13pt}\selectfont,
     numbers=left,
     numberstyle=\ttfamily\fontsize{10.5pt}{13pt}\selectfont\padtwo,
     numbersep=1.2em,
@@ -183,7 +190,7 @@
   \loop
     \ifnum\numexpr\value{page}-((\value{page}-1)/4)*4\relax=1
     \else
-      \vspace*{1.2em}%
+      \vspace*{-0.6em}%
       {\centering\fontsize{12pt}{14pt}\selectfont\textbf{BLANK PAGE}\par}%
       \clearpage
   \repeat
