@@ -16,7 +16,7 @@ from src.ingestion.document_parser import DocumentParser
 from src.generators.dataset_generator import DatasetGenerator, SyntheticDataset
 from src.generators.question_author import QuestionAuthor, ExamBlueprint
 from src.generators.document_transcriber import DocumentTranscriber
-from src.sandbox.latex_compiler import LaTeXCompiler, LaTeXCompilationResult
+from src.sandbox.latex_compiler import LaTeXCompiler, LaTeXCompilationResult, LaTeXSyntaxValidator
 from config.gcp_config import AppConfig, LOCAL_SESSIONS_DIR
 
 class ExamGenerationProgress:
@@ -55,6 +55,10 @@ class EduScribeOrchestrator:
         self.teacher_id = teacher_id
         self.preference_learner = PreferenceLearner(teacher_id=teacher_id)
 
+    def rename_session(self, session_id: str, new_title: str) -> Optional[ExamSession]:
+        """Renames an existing session's title in storage."""
+        return self.session_manager.rename_session(session_id, new_title)
+
     def ingest_past_papers(self, uploaded_files: List[Any]) -> int:
         """Parses and indexes past papers into the RAG retriever."""
         indexed_count = 0
@@ -77,7 +81,8 @@ class EduScribeOrchestrator:
         exam_series: str = "PRELIM",
         progress: Optional[ExamGenerationProgress] = None,
         session_id: Optional[str] = None,
-        skip_self_healing: bool = False
+        skip_self_healing: bool = False,
+        session_title: Optional[str] = None
     ) -> ExamSession:
         """
         Generates a complete, verified Cambridge exam package from user prompt.
@@ -150,7 +155,7 @@ class EduScribeOrchestrator:
         # -------------------------------------------------------------
         # Station 5: Golden TeX Authoring Agent
         # -------------------------------------------------------------
-        prog.notify("Station 5: Golden TeX Authoring Agent", "Drafting Cambridge-compliant LaTeX exam paper and granular mark scheme...")
+        prog.notify("Station 5: Golden TeX Authoring Agent", "Drafting Cambridge-compliant LaTeX question paper with Gemini 3.7 Flash...")
         latex_paper_source = self.question_author.author_latex_paper(
             blueprint=blueprint,
             companion_dataset=companion_dataset,
@@ -159,6 +164,7 @@ class EduScribeOrchestrator:
             exam_series=exam_series
         )
 
+        prog.notify("Station 5: Golden TeX Authoring Agent", "Synthesizing granular Cambridge mark scheme and marking rubrics...")
         mark_scheme_source = self.question_author.author_mark_scheme(
             blueprint=blueprint,
             latex_paper_source=latex_paper_source,
@@ -171,9 +177,9 @@ class EduScribeOrchestrator:
         # Station 6: Self-Healing Sandbox Agent
         # -------------------------------------------------------------
         if skip_self_healing:
-            prog.notify("Station 6: Fast Compilation Sandbox", "Executing single-pass compilation (self-healing skipped to conserve API credits)...")
+            prog.notify("Station 6: Fast Compilation Sandbox", "Validating LaTeX syntax and compiling question paper in headless TeX sandbox...")
         else:
-            prog.notify("Station 6: Self-Healing Sandbox Agent", "Executing headless pdflatex compilation and 3-pass Gemini self-healing verification...")
+            prog.notify("Station 6: Self-Healing Sandbox Agent", "Executing headless pdflatex compilation & 3-pass Gemini self-healing verification...")
         
         compilation_result = self.latex_compiler.compile(
             latex_source=latex_paper_source,
@@ -182,6 +188,7 @@ class EduScribeOrchestrator:
             skip_self_healing=skip_self_healing
         )
 
+        prog.notify("Station 6: Self-Healing Sandbox Agent", "Validating and compiling Cambridge mark scheme in TeX sandbox...")
         # Compile mark scheme as well
         ms_result = self.latex_compiler.compile(
             latex_source=mark_scheme_source,
@@ -194,9 +201,10 @@ class EduScribeOrchestrator:
         # Station 7: Artifact Packaging Agent
         # -------------------------------------------------------------
         prog.notify("Station 7: Artifact Packaging Agent", "Persisting session state in Firestore and building downloadable .zip export bundle...")
+        resolved_title = (session_title or "").strip() or f"{blueprint.title} ({paper_type.capitalize()})"
         session = ExamSession(
             session_id=sess_id,
-            title=f"{blueprint.title} ({paper_type.capitalize()})",
+            title=resolved_title,
             teacher_id=self.teacher_id,
             paper_type=paper_type,
             category=category,
@@ -227,9 +235,9 @@ class EduScribeOrchestrator:
         task_number: int = 1,
         total_marks: int = 25
     ) -> Dict[str, Any]:
-        """Authors a single isolated task/question."""
+        """Authors a single isolated task/question with verified syntax."""
         teacher_style = self.preference_learner.get_style_for_category(category)
-        return self.question_author.author_single_task(
+        task = self.question_author.author_single_task(
             prompt=prompt,
             paper_type=paper_type,
             category=category,
@@ -237,6 +245,10 @@ class EduScribeOrchestrator:
             total_marks=total_marks,
             teacher_style=teacher_style
         )
+        if task and "latex_code" in task:
+            sanitized_code, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(task["latex_code"])
+            task["latex_code"] = sanitized_code
+        return task
 
     def refine_single_task(
         self,
@@ -244,12 +256,16 @@ class EduScribeOrchestrator:
         refinement_prompt: str,
         paper_type: str = "practical"
     ) -> Dict[str, Any]:
-        """Refines a single task based on conversational feedback."""
-        return self.question_author.refine_single_task(
+        """Refines a single task based on conversational feedback with verified syntax."""
+        refined = self.question_author.refine_single_task(
             current_task=current_task,
             refinement_prompt=refinement_prompt,
             paper_type=paper_type
         )
+        if refined and "latex_code" in refined:
+            sanitized_code, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(refined["latex_code"])
+            refined["latex_code"] = sanitized_code
+        return refined
 
     def renumber_task(
         self,
@@ -302,7 +318,8 @@ class EduScribeOrchestrator:
         exam_year: str = "2027",
         exam_series: str = "PRELIM",
         session_id: Optional[str] = None,
-        skip_self_healing: bool = False
+        skip_self_healing: bool = False,
+        session_title: Optional[str] = None
     ) -> ExamSession:
         """Assembles a list of authored tasks into a unified, compilable ExamSession."""
         sess_id = session_id or f"sess_{uuid.uuid4().hex[:8]}"
@@ -381,9 +398,10 @@ class EduScribeOrchestrator:
             ]
         }
 
+        resolved_title = (session_title or "").strip() or f"Assembled H2 Computing {paper_type.capitalize()} Paper ({len(tasks_list)} Tasks)"
         session = ExamSession(
             session_id=sess_id,
-            title=f"Assembled H2 Computing {paper_type.capitalize()} Paper ({len(tasks_list)} Tasks)",
+            title=resolved_title,
             teacher_id=self.teacher_id,
             paper_type=paper_type,
             category="assembled_paper",
@@ -419,7 +437,8 @@ class EduScribeOrchestrator:
         session_id: Optional[str] = None,
         progress: Optional[ExamGenerationProgress] = None,
         skip_self_healing: bool = False,
-        user_instructions: str = ""
+        user_instructions: str = "",
+        session_title: Optional[str] = None
     ) -> ExamSession:
         """
         Transcribes an uploaded Word (.docx) or PDF (.pdf) exam document into
@@ -482,9 +501,10 @@ class EduScribeOrchestrator:
             ]
         }
 
+        resolved_title = (session_title or "").strip() or f"Transcribed Cambridge {detected_type.capitalize()} Paper ({filename})"
         session = ExamSession(
             session_id=sess_id,
-            title=f"Transcribed Cambridge {detected_type.capitalize()} Paper ({filename})",
+            title=resolved_title,
             teacher_id=self.teacher_id,
             paper_type=detected_type,
             category="transcribed_paper",

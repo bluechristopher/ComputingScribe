@@ -503,9 +503,14 @@ with st.sidebar:
 
     saved_sessions = _fetch_cached_sessions(st.session_state.teacher_id)
     if saved_sessions:
-        session_options = {f"{s['title'][:28]}... ({s['paper_type']})": s["session_id"] for s in saved_sessions}
+        session_map = {s["session_id"]: s for s in saved_sessions}
+        session_options = {
+            f"{s['title'][:30]}{'...' if len(s['title']) > 30 else ''} ({s['paper_type'].upper()})": s["session_id"]
+            for s in saved_sessions
+        }
         selected_label = st.selectbox("Saved Drafts", options=list(session_options.keys()))
         selected_sess_id = session_options[selected_label]
+        selected_sess_meta = session_map.get(selected_sess_id, {})
         
         col_res, col_del = st.columns(2)
         with col_res:
@@ -514,7 +519,7 @@ with st.sidebar:
                 if loaded:
                     st.session_state.current_session = loaded
                     st.session_state.studio_questions = loaded.questions or []
-                    st.success(f"Restored {loaded.session_id}")
+                    st.success(f"Restored {loaded.title}")
                     st.rerun()
         with col_del:
             if st.button("🗑️ Delete", use_container_width=True):
@@ -524,6 +529,20 @@ with st.sidebar:
                     st.session_state.current_session = None
                 st.warning("Session deleted.")
                 st.rerun()
+
+        with st.expander("✏️ Rename Selected Session", expanded=False):
+            new_name_val = st.text_input("Edit Session Name", value=selected_sess_meta.get("title", ""), key=f"side_rename_input_{selected_sess_id}")
+            if st.button("💾 Save Name", key=f"side_rename_btn_{selected_sess_id}", use_container_width=True):
+                if new_name_val.strip():
+                    renamed = session_mgr.rename_session(selected_sess_id, new_name_val.strip())
+                    if renamed:
+                        _fetch_cached_sessions.clear()
+                        if st.session_state.current_session and st.session_state.current_session.session_id == selected_sess_id:
+                            st.session_state.current_session = renamed
+                        st.success(f"Renamed to: '{new_name_val.strip()}'")
+                        st.rerun()
+                else:
+                    st.error("Title cannot be blank.")
     else:
         st.caption("No historical sessions found.")
 
@@ -764,6 +783,14 @@ if "Full Paper" in author_mode:
             else:
                 exam_series = sel_series
 
+        session_custom_title = st.text_input(
+            "Session Name / Title (Optional)",
+            value="",
+            placeholder="e.g. 2027 Prelim Paper 2 - Linear ADTs & Data Processing",
+            help="Custom name for this exam session. If blank, an automatic descriptive title is generated.",
+            key="full_custom_title"
+        )
+
         default_sample_prompt = (
             "Create a contextual H2 Computing Paper 2 practical task on implementing a Stack abstract data type in Python (push, pop, underflow check) and processing CANDIDATES.csv to calculate distinction metrics and generate a report."
             if paper_type == "practical" else
@@ -852,7 +879,8 @@ if "Full Paper" in author_mode:
                 exam_year=exam_year,
                 exam_series=exam_series,
                 progress=progress_handler,
-                skip_self_healing=skip_healing_full
+                skip_self_healing=skip_healing_full,
+                session_title=session_custom_title
             )
             st.session_state.current_session = session
             st.session_state.compilation_logs = logs
@@ -1061,6 +1089,12 @@ elif "Question-by-Question" in author_mode:
                             b_exam_series = "Exam"
                     else:
                         b_exam_series = b_sel_series
+                b_custom_title = st.text_input(
+                    "Session Name / Title (Optional)",
+                    value="",
+                    placeholder="e.g. Assembled Topical Test - Linear ADTs & Trees",
+                    key="studio_custom_title"
+                )
 
             # Live Preview of Full Assembled LaTeX Source
             with st.expander("👁️ Inspect Full Assembled LaTeX Document Code", expanded=False):
@@ -1095,7 +1129,8 @@ elif "Question-by-Question" in author_mode:
                         institution=b_institution if 'b_institution' in locals() else "HelloWorld Junior College",
                         exam_year=b_exam_year if 'b_exam_year' in locals() else "2027",
                         exam_series=b_exam_series if 'b_exam_series' in locals() else "Prelim",
-                        skip_self_healing=skip_healing_studio
+                        skip_self_healing=skip_healing_studio,
+                        session_title=b_custom_title if 'b_custom_title' in locals() else None
                     )
                     st.session_state.current_session = compiled_sess
                     st.success("🎉 Full Exam Package Assembled and Compiled Successfully!")
@@ -1150,6 +1185,14 @@ elif "Document Transcriber" in author_mode:
             else:
                 t_exam_series = t_sel_series
 
+        t_custom_title = st.text_input(
+            "Session Name / Title (Optional)",
+            value="",
+            placeholder=f"e.g. Transcribed Exam - {doc_file.name if doc_file else 'Paper'}",
+            help="Custom name for this transcribed session. If blank, a descriptive title is automatically assigned.",
+            key="trans_custom_title"
+        )
+
         skip_healing_trans = st.checkbox(
             "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
             value=True,
@@ -1200,7 +1243,8 @@ elif "Document Transcriber" in author_mode:
                 exam_series=t_exam_series,
                 user_instructions=transcription_prompt,
                 progress=progress_listener,
-                skip_self_healing=skip_healing_trans
+                skip_self_healing=skip_healing_trans,
+                session_title=t_custom_title if 't_custom_title' in locals() else None
             )
 
         duration = time.time() - start_time
@@ -1244,6 +1288,32 @@ if curr_sess:
         skipped_indices=persisted_skipped
     )
     components.html(persisted_pipeline_html, height=220)
+
+    # Session Title & Quick Rename Bar
+    sess_head_c1, sess_head_c2 = st.columns([3.6, 1.4])
+    with sess_head_c1:
+        st.markdown(
+            f"<div style='display: flex; align-items: center; gap: 10px; margin: 10px 0;'>"
+            f"<span style='font-size: 1.35rem; font-weight: 800; color: #f8fafc;'>📝 {curr_sess.title}</span>"
+            f"<span style='font-size: 0.75rem; background: #334155; color: #94a3b8; padding: 3px 8px; border-radius: 6px; font-family: monospace;'>ID: {curr_sess.session_id}</span>"
+            f"</div>",
+            unsafe_allow_html=True
+        )
+    with sess_head_c2:
+        with st.popover("✏️ Rename Session", use_container_width=True):
+            st.markdown("##### ✏️ Rename Exam Session")
+            st.caption("Update the title saved in memory and exported packages.")
+            main_rename_val = st.text_input("New Title", value=curr_sess.title, key=f"top_rename_val_{curr_sess.session_id}")
+            if st.button("💾 Save Title", key=f"btn_save_top_title_{curr_sess.session_id}", type="primary", use_container_width=True):
+                if main_rename_val.strip():
+                    renamed_res = st.session_state.orchestrator.session_manager.rename_session(curr_sess.session_id, main_rename_val.strip())
+                    if renamed_res:
+                        st.session_state.current_session = renamed_res
+                        _fetch_cached_sessions.clear()
+                        st.success(f"Renamed to '{main_rename_val.strip()}'!")
+                        st.rerun()
+                else:
+                    st.error("Title cannot be blank.")
     
     # Top Action Bar & Metrics
     m1, m2, m3, m4, m5 = st.columns(5)

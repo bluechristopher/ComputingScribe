@@ -7,6 +7,7 @@ Handles Gemini Models (Gemini 3.7 Flash) and dual access modes:
 
 import os
 import json
+import time
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 from dotenv import load_dotenv
@@ -47,68 +48,73 @@ class GeminiModelWrapper:
 
         generation_config = generation_config or {}
 
-        # 1. Google GenAI SDK (Direct API Key mode)
-        if self.client_type == "GENAI_SDK_KEY" and self.raw_client:
-            for m_candidate in self.model_candidates:
+        for m_candidate in self.model_candidates:
+            for attempt in range(3):
                 try:
-                    from google.genai import types
-                    req_config = None
-                    if "response_mime_type" in generation_config:
-                        req_config = types.GenerateContentConfig(response_mime_type=generation_config["response_mime_type"])
-                    res = self.raw_client.models.generate_content(
-                        model=m_candidate,
-                        contents=prompt,
-                        config=req_config
-                    )
-                    if res and res.text:
-                        return ResponseWrapper(res.text)
-                except Exception as e:
-                    print(f"[GeminiModelWrapper] Google GenAI SDK error on model {m_candidate}: {e}")
-                    continue
+                    # 1. Google GenAI SDK (Direct API Key mode)
+                    if self.client_type == "GENAI_SDK_KEY" and self.raw_client:
+                        from google.genai import types
+                        req_config = None
+                        if "response_mime_type" in generation_config:
+                            req_config = types.GenerateContentConfig(
+                                response_mime_type=generation_config["response_mime_type"],
+                                http_options=types.HttpOptions(timeout=600000) if hasattr(types, "HttpOptions") else None
+                            )
+                        elif hasattr(types, "HttpOptions"):
+                            req_config = types.GenerateContentConfig(
+                                http_options=types.HttpOptions(timeout=600000)
+                            )
+                        res = self.raw_client.models.generate_content(
+                            model=m_candidate,
+                            contents=prompt,
+                            config=req_config
+                        )
+                        if res and res.text:
+                            return ResponseWrapper(res.text)
 
-        # 2. Google GenAI SDK with Vertex AI (Authenticated Enterprise Mode)
-        elif self.client_type == "GENAI_VERTEX" and self.raw_client:
-            for m_candidate in self.model_candidates:
-                try:
-                    from google.genai import types
-                    req_config = None
-                    if "response_mime_type" in generation_config:
-                        req_config = types.GenerateContentConfig(response_mime_type=generation_config["response_mime_type"])
-                    res = self.raw_client.models.generate_content(
-                        model=m_candidate,
-                        contents=prompt,
-                        config=req_config
-                    )
-                    if res and res.text:
-                        return ResponseWrapper(res.text)
-                except Exception as e:
-                    print(f"[GeminiModelWrapper] GenAI Vertex AI error on model {m_candidate}: {e}")
-                    continue
+                    # 2. Google GenAI SDK with Vertex AI (Authenticated Enterprise Mode)
+                    elif self.client_type == "GENAI_VERTEX" and self.raw_client:
+                        from google.genai import types
+                        req_config = None
+                        if "response_mime_type" in generation_config:
+                            req_config = types.GenerateContentConfig(
+                                response_mime_type=generation_config["response_mime_type"],
+                                http_options=types.HttpOptions(timeout=600000) if hasattr(types, "HttpOptions") else None
+                            )
+                        elif hasattr(types, "HttpOptions"):
+                            req_config = types.GenerateContentConfig(
+                                http_options=types.HttpOptions(timeout=600000)
+                            )
+                        res = self.raw_client.models.generate_content(
+                            model=m_candidate,
+                            contents=prompt,
+                            config=req_config
+                        )
+                        if res and res.text:
+                            return ResponseWrapper(res.text)
 
-        # 3. Legacy Vertex AI SDK
-        elif self.client_type == "VERTEX_AI" and self.raw_client:
-            for m_candidate in self.model_candidates:
-                try:
-                    from vertexai.generative_models import GenerativeModel
-                    model = GenerativeModel(m_candidate)
-                    res = model.generate_content(prompt, generation_config=generation_config)
-                    if res and res.text:
-                        return ResponseWrapper(res.text)
-                except Exception as e:
-                    print(f"[GeminiModelWrapper] Legacy Vertex AI error on model {m_candidate}: {e}")
-                    continue
+                    # 3. Legacy Vertex AI SDK
+                    elif self.client_type == "VERTEX_AI" and self.raw_client:
+                        from vertexai.generative_models import GenerativeModel
+                        model = GenerativeModel(m_candidate)
+                        res = model.generate_content(prompt, generation_config=generation_config, request_options={"timeout": 600})
+                        if res and res.text:
+                            return ResponseWrapper(res.text)
 
-        # 4. Legacy google.generativeai fallback
-        elif self.client_type == "GOOGLE_GENAI" and self.raw_client:
-            for m_candidate in self.model_candidates:
-                try:
-                    model = self.raw_client.GenerativeModel(m_candidate)
-                    res = model.generate_content(prompt, generation_config=generation_config)
-                    if res and res.text:
-                        return ResponseWrapper(res.text)
+                    # 4. Legacy google.generativeai fallback
+                    elif self.client_type == "GOOGLE_GENAI" and self.raw_client:
+                        model = self.raw_client.GenerativeModel(m_candidate)
+                        res = model.generate_content(prompt, generation_config=generation_config, request_options={"timeout": 600})
+                        if res and res.text:
+                            return ResponseWrapper(res.text)
+
                 except Exception as e:
-                    print(f"[GeminiModelWrapper] google.generativeai error on model {m_candidate}: {e}")
-                    continue
+                    err_msg = str(e).lower()
+                    print(f"[GeminiModelWrapper] Attempt {attempt + 1}/3 on model {m_candidate} error: {e}")
+                    if attempt < 2 and any(k in err_msg for k in ["timeout", "deadline", "quota", "rate", "429", "503", "500", "unavailable"]):
+                        time.sleep(2 ** attempt)
+                        continue
+                    break
 
         raise RuntimeError("No valid Gemini model response received. Please check your API key (Guest BYOK) or Google Cloud Vertex AI configuration.")
 

@@ -280,6 +280,18 @@ class SessionManager:
 
         return sorted(sessions, key=lambda x: x.get("updated_at", ""), reverse=True)
 
+    def rename_session(self, session_id: str, new_title: str) -> Optional[ExamSession]:
+        """Renames a session's title in Firestore and local storage."""
+        new_title = (new_title or "").strip()
+        if not new_title:
+            return None
+        session = self.get_session(session_id)
+        if not session:
+            return None
+        session.title = new_title
+        self.save_session(session)
+        return session
+
     def delete_session(self, session_id: str) -> bool:
         """Deletes a session from Firestore and local disk."""
         if self.firestore_db:
