@@ -488,6 +488,7 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
    - DO NOT output \\documentclass or \\begin{{document}} or \\end{{document}} - ONLY output the inner body to replace % __AGENT_BODY_SLOT__.
    - INLINE CODE & IDENTIFIERS: Put identifiers in \\code{{...}} and write their characters literally inside that macro (e.g. \\code{{__init__(self, ...)}}, \\code{{p_laptop}}, \\code{{test_cases.csv}}). Do not nest formatting commands inside \\code.
    - VERBATIM / LSTLISTING CODE BLOCKS: Inside \\begin{{lstlisting}} or \\begin{{verbatim}}, write pure normal Python without LaTeX backslashes (e.g. write `p_laptop = Product('L001', 'Laptop', 2.5)`).
+   - CSV DATA: Never use `language=csv` in a `lstlisting` option because the LaTeX listings package does not define it. Use a plain `\\begin{{lstlisting}}` block for CSV content.
    - TABLES: For test case tables, trace tables, or multi-column grids, use \\begin{{tabularx}}{{\\linewidth}}{{...}} with `X` columns to prevent tables from overflowing the page margin.
    - Properly escape special characters in prose: use \\_ for underscores, \\% for percents, \\& for ampersands, \\# for hashes.
 """

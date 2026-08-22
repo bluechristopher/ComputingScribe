@@ -97,5 +97,19 @@ class TestLaTeXSyntaxValidator(unittest.TestCase):
         self.assertIn("\\begin{tabularx}{\\linewidth}{|X|X|X|}", sanitized)
         self.assertIn("\\end{tabularx}", sanitized)
 
+    def test_unsupported_csv_listing_language_is_made_portable(self):
+        source = (
+            "\\documentclass{article}\n"
+            "\\usepackage{listings}\n"
+            "\\begin{document}\n"
+            "\\begin{lstlisting}[language=csv]\n"
+            "candidate_id,score\n"
+            "\\end{lstlisting}\n"
+            "\\end{document}"
+        )
+        sanitized, fixes = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(source)
+        self.assertIn("\\begin{lstlisting}[language={}]", sanitized)
+        self.assertTrue(any("language=csv" in fix for fix in fixes))
+
 if __name__ == '__main__':
     unittest.main()

@@ -62,6 +62,18 @@ class LaTeXSyntaxValidator:
         fixes = []
         source = latex_source
 
+        # The LaTeX listings package has no built-in CSV lexer. ``language=csv``
+        # therefore fails in pdflatex/Overleaf; a plain listing is portable and
+        # preserves every field exactly as supplied.
+        source, csv_language_replacements = re.subn(
+            r"language\s*=\s*(?:\{\s*csv\s*\}|csv)(?=\s*(?:[,\]]|$))",
+            "language={}",
+            source,
+            flags=re.IGNORECASE,
+        )
+        if csv_language_replacements:
+            fixes.append("Replaced unsupported listings language=csv with a portable plain listing.")
+
         # Question bodies are fragments. Adding document scaffolding to them would
         # create an invalid nested document once the paper template assembles them.
         if not document_mode:

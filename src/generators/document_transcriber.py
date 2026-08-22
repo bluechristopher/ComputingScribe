@@ -151,6 +151,7 @@ HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
      * Format table definitions with primary keys underlined using \\uline{{...}} and foreign keys dashed-underlined using \\dashuline{{...}}.
    - For Inline Code/Identifiers in prose: Use \\code{{...}} or \\texttt{{...}} and escape underscores as \\_ (e.g. \\code{{\\_\\_init\\_\\_(self, ...)}}, \\code{{\\_\\_str\\_\\_}}, \\code{{weight\\_kg}}).
    - Inside \\begin{{lstlisting}} or \\begin{{verbatim}} blocks: write pure normal Python without LaTeX backslash escaping.
+   - For CSV data, use a plain \\begin{{lstlisting}} block. Never set `language=csv`, because the LaTeX listings package does not provide that language.
    - For wide tables: Use \\begin{{tabularx}}{{\\linewidth}}{{...}} with `X` columns to prevent margin overflow.
 
 3. If THEORY paper:
