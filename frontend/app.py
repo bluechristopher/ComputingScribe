@@ -93,6 +93,14 @@ button.addEventListener('click', copySource);
     )
 
 
+def format_elapsed_time(seconds: float) -> str:
+    """Formats elapsed time as seconds or minutes plus seconds for status HUDs."""
+    seconds = max(0.0, seconds)
+    minutes = int(seconds // 60)
+    remainder = seconds - (minutes * 60)
+    return f"{minutes} min {remainder:05.2f} sec" if minutes else f"{remainder:.2f} sec"
+
+
 def render_activity_hud(title: str, detail: str, key: str, start_ms: int) -> None:
     """Shows a compact, self-animating status surface for synchronous actions."""
     hud_id = f"activity-{key}"
@@ -113,11 +121,12 @@ p {{ margin:0; color:#e0f8ff; font-size:12px; line-height:1.35; max-width:760px;
 @keyframes sweep {{ to {{ left:120%; }} }} @keyframes travel {{ 0% {{ transform:translateX(-110%); }} 100% {{ transform:translateX(310%); }} }}
 @media (prefers-reduced-motion:reduce) {{ .hud::before,.rail span {{ animation:none; }} }}
 </style></head><body><section class='hud' aria-live='polite' aria-label='{html.escape(title)} in progress'>
-  <div class='content'><div><div class='eyebrow'>ComputingScribe is working</div><h3>{html.escape(title)}</h3><p>{html.escape(detail)}</p></div><div id='{hud_id}' class='timer'>00:00.0</div></div>
+  <div class='content'><div><div class='eyebrow'>ComputingScribe is working</div><h3>{html.escape(title)}</h3><p>{html.escape(detail)}</p></div><div id='{hud_id}' class='timer'>0.00 sec</div></div>
   <div class='rail' aria-hidden='true'><span></span></div>
 </section><script>
 const started={start_ms}; const timer=document.getElementById('{hud_id}');
-setInterval(()=>{{ timer.textContent=((Date.now()-started)/1000).toFixed(1)+'s'; }},100);
+function formatElapsed(elapsed) {{ const mins=Math.floor(elapsed/60); const secs=elapsed-(mins*60); return mins ? mins+' min '+secs.toFixed(2).padStart(5,'0')+' sec' : secs.toFixed(2)+' sec'; }}
+setInterval(()=>{{ timer.textContent=formatElapsed((Date.now()-started)/1000); }},100);
 </script></body></html>""",
         height=112,
         scrolling=False,
@@ -216,7 +225,13 @@ def build_task_authoring_hud_html(
         for idx, (name, detail) in enumerate(stages)
     )
     state_text = "Draft ready for review" if is_done else "Gemini is composing a structured assessment draft"
-    timer_text = final_duration_str if is_done and final_duration_str else "0.0s"
+    if is_done and final_duration_str:
+        try:
+            timer_text = format_elapsed_time(float(re.sub(r"[^0-9.]", "", final_duration_str)))
+        except ValueError:
+            timer_text = final_duration_str
+    else:
+        timer_text = "0.00 sec"
     return f"""<!doctype html>
 <html><head><meta charset='utf-8'><style>
 * {{ box-sizing:border-box; }}
@@ -248,7 +263,8 @@ body {{ margin:0; padding:2px; font-family:Inter,Segoe UI,sans-serif; color:#102
 </section><script>
 const done = {'true' if is_done else 'false'}; const start = {start_ms}; const stages = [...document.querySelectorAll('.task-stage')];
 function activate(index) {{ stages.forEach((el,i)=>el.classList.toggle('active',!done && i===index)); stages.forEach((el,i)=>el.classList.toggle('done',done || (!done && i<index))); }}
-if (done) {{ activate(stages.length); }} else {{ let active=0; activate(active); setInterval(()=>{{ active=(active+1)%stages.length; activate(active); }}, 1450); setInterval(()=>{{ const elapsed=(Date.now()-start)/1000; document.getElementById('task-timer').textContent='⏱ '+elapsed.toFixed(1)+'s'; }},100); }}
+function formatElapsed(elapsed) {{ const minutes=Math.floor(elapsed/60); const seconds=elapsed-(minutes*60); return minutes ? minutes+' min '+seconds.toFixed(2).padStart(5,'0')+' sec' : seconds.toFixed(2)+' sec'; }}
+if (done) {{ activate(stages.length); }} else {{ let active=0; activate(active); setInterval(()=>{{ active=(active+1)%stages.length; activate(active); }}, 1450); setInterval(()=>{{ const elapsed=(Date.now()-start)/1000; document.getElementById('task-timer').textContent='⏱ '+formatElapsed(elapsed); }},100); }}
 </script></body></html>"""
 
 # Page Configuration
@@ -368,8 +384,14 @@ def build_pipeline_hud_html(
 
     status_tag = "🎉 All Active Stages Complete" if is_done else f"Station {min(current_station_idx + 1, 7)} of 7 Active"
     action_text = "🎉 All active agents completed their tasks successfully! Exam package compiled & ready." if is_done else active_msg
-    spinner_html = "" if is_done else '<span class="inline-spinner"></span>'
-    stopwatch_init_text = f"⏱️ {final_duration_str}" if is_done else "⏱️ 00:00.0s"
+    spinner_html = "" if is_done else '<span class="pipeline-spinner" aria-hidden="true"></span>'
+    if is_done:
+        try:
+            stopwatch_init_text = f"⏱️ {format_elapsed_time(float(re.sub(r'[^0-9.]', '', final_duration_str)))}"
+        except ValueError:
+            stopwatch_init_text = f"⏱️ {final_duration_str}"
+    else:
+        stopwatch_init_text = "⏱️ 0.00 sec"
 
     return f"""<!DOCTYPE html>
 <html>
@@ -393,9 +415,11 @@ body {{ background: transparent; padding: 2px; }}
     50% {{ color: #fde047 !important; text-shadow: 0 0 12px rgba(251, 191, 36, 0.95), 0 0 24px rgba(245, 158, 11, 0.8) !important; }}
     100% {{ color: #ffffff !important; text-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 0 16px rgba(254, 240, 138, 0.6) !important; }}
 }}
-@keyframes miniRotate {{
-    0% {{ transform: rotate(0deg); }}
-    100% {{ transform: rotate(360deg); }}
+@keyframes pipelineSpin {{
+    to {{ transform: rotate(360deg); }}
+}}
+@keyframes spinnerGlow {{
+    50% {{ filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.8)); }}
 }}
 @keyframes eqBounce {{
     0% {{ height: 25%; transform: scaleY(0.4); opacity: 0.6; }}
@@ -430,9 +454,10 @@ body {{ background: transparent; padding: 2px; }}
 .station-icon-active {{ display: inline-block; animation: iconFloat 1.4s infinite ease-in-out; }}
 .station-box-done {{ background: #ecfdf5; border: 2px solid #10b981; }}
 .station-box-pending {{ background: #f8fafc; border: 2px solid #cbd5e1; }}
-.inline-spinner {{
-    display: inline-block; width: 14px; height: 14px; border: 2.5px solid rgba(16, 185, 129, 0.25);
-    border-top-color: #10b981; border-radius: 50%; animation: miniRotate 0.75s linear infinite; vertical-align: -2px; margin-right: 8px; flex-shrink: 0;
+.pipeline-spinner {{
+    display: inline-block; width: 18px; height: 18px; margin-right: 9px; flex: 0 0 18px;
+    border: 3px solid rgba(14, 165, 233, 0.18); border-top-color: #38bdf8; border-right-color: #fbbf24;
+    border-radius: 50%; animation: pipelineSpin 0.75s linear infinite, spinnerGlow 1.2s ease-in-out infinite;
 }}
 </style>
 </head>
@@ -458,12 +483,12 @@ body {{ background: transparent; padding: 2px; }}
         var startTime = {start_ms};
         var isDone = {'true' if is_done else 'false'};
         var el = document.getElementById('live-stopwatch');
-        function pad(n) {{ return (n < 10 ? '0' : '') + n; }}
         function formatTime(elapsed) {{
             var mins = Math.floor(elapsed / 60);
-            var secs = Math.floor(elapsed % 60);
-            var tenths = Math.floor((elapsed % 1) * 10);
-            return (mins > 0 ? pad(mins) + ':' : '') + (mins > 0 ? pad(secs) : secs) + '.' + tenths + 's';
+            var secs = elapsed - (mins * 60);
+            return mins > 0
+                ? mins + ' min ' + secs.toFixed(2).padStart(5, '0') + ' sec'
+                : secs.toFixed(2) + ' sec';
         }}
         if (!isDone && startTime > 0) {{
             function update() {{

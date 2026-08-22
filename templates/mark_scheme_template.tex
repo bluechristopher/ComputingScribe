@@ -29,6 +29,7 @@
 
 \usepackage{textcomp}
 \usepackage{underscore}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{\usepackage{url}}
 \usepackage{tabularx}
 \usepackage{array}
 \usepackage{listings}
@@ -40,7 +41,7 @@
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.4em}
 
-\newcommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}
+\newcommand{\code}[1]{{\begingroup\urlstyle{tt}\nolinkurl{#1}\endgroup}}
 
 \lstset{
   basicstyle=\ttfamily\upshape\small,

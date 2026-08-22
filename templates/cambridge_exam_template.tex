@@ -44,6 +44,7 @@
 \newcommand{\ExamImage}[2]{\par\begin{center}\includegraphics[width=#2]{#1}\end{center}\par}
 \usepackage{textcomp}
 \usepackage{underscore}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{\usepackage{url}}
 
 \linespread{1.08}
 \setlength{\parindent}{0pt}
@@ -52,7 +53,7 @@
 % --- Precise Right-Aligned Marks Macro (same line when space allows; wraps only under pressure) ---
 \newcommand{\Marks}[1]{\unskip\penalty50\hbox{}\hfill\hbox{[#1]}}
 
-\providecommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}
+\providecommand{\code}[1]{{\begingroup\urlstyle{tt}\nolinkurl{#1}\endgroup}}
 
 \lstset{
   basicstyle=\ttfamily\upshape\small,

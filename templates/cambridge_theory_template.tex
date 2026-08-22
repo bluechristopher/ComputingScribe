@@ -58,6 +58,7 @@
 \usepackage{tikz}
 \usepackage{textcomp}
 \usepackage{underscore}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{\usepackage{url}}
 
 % Session image asset: centred; the second argument may be e.g. 0.65\linewidth.
 \newcommand{\ExamImage}[2]{\par\begin{center}\includegraphics[width=#2]{#1}\end{center}\par}
@@ -90,8 +91,8 @@
 % --- Precise Right-Aligned Marks Macro (same line when space allows; wraps only under pressure) ---
 \newcommand{\Marks}[1]{\unskip\penalty50\hbox{}\hfill\hbox{[#1]}}
 
-% --- Inline Code Macro ---
-\providecommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}
+% --- Inline Code Macro (breakable at code punctuation, never into the margin) ---
+\providecommand{\code}[1]{{\begingroup\urlstyle{tt}\nolinkurl{#1}\endgroup}}
 
 % --- Cambridge List Structure Setup ---
 % Level 0: Main Question numbers (1, 2, ...)

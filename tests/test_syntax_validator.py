@@ -125,5 +125,18 @@ class TestLaTeXSyntaxValidator(unittest.TestCase):
         self.assertIn("Explain the result. \\Marks{2}", sanitized)
         self.assertIn("\\end{tabular} \\Marks{3}", sanitized)
 
+    def test_legacy_inline_code_macro_becomes_breakable(self):
+        source = (
+            "\\documentclass{article}\n"
+            "\\begin{document}\n"
+            "\\providecommand{\\code}[1]{{\\ttfamily\\upshape\\detokenize{#1}}}\n"
+            "Use \\code{very_long_identifier_with_many_segments}.\n"
+            "\\end{document}"
+        )
+        sanitized, fixes = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(source)
+        self.assertIn("\\usepackage{xurl}", sanitized)
+        self.assertIn("\\nolinkurl{#1}", sanitized)
+        self.assertTrue(any("inline code formatting" in fix for fix in fixes))
+
 if __name__ == '__main__':
     unittest.main()

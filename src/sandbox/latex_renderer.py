@@ -165,7 +165,9 @@ class LaTeXVisualRenderer:
             font-weight: 700;
             color: #0f172a;
             white-space: nowrap;
-            padding-top: 4px;
+            align-self: flex-start;
+            padding-top: 7px;
+            line-height: 1.45;
         }}
         
         .jupyter-grey-frame {{

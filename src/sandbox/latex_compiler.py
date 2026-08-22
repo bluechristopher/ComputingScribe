@@ -92,6 +92,24 @@ class LaTeXSyntaxValidator:
         if detached_mark_replacements:
             fixes.append("Moved detached mark brackets onto the final assessed line where safe.")
 
+        legacy_code_macros = {
+            r"\providecommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}": r"\providecommand{\code}[1]{{\begingroup\urlstyle{tt}\nolinkurl{#1}\endgroup}}",
+            r"\newcommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}": r"\newcommand{\code}[1]{{\begingroup\urlstyle{tt}\nolinkurl{#1}\endgroup}}",
+        }
+        replaced_legacy_code_macro = False
+        for legacy_code_macro, replacement_code_macro in legacy_code_macros.items():
+            if legacy_code_macro in source:
+                source = source.replace(legacy_code_macro, replacement_code_macro)
+                replaced_legacy_code_macro = True
+        if replaced_legacy_code_macro:
+            if r"\usepackage{xurl}" not in source and r"\usepackage{url}" not in source:
+                source = source.replace(
+                    r"\begin{document}",
+                    r"\IfFileExists{xurl.sty}{\usepackage{xurl}}{\usepackage{url}}" + "\n\\begin{document}",
+                    1,
+                )
+            fixes.append("Updated inline code formatting to wrap long identifiers within the text width.")
+
         # Question bodies are fragments. Adding document scaffolding to them would
         # create an invalid nested document once the paper template assembles them.
         if not document_mode:
