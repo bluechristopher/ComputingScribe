@@ -74,6 +74,24 @@ class LaTeXSyntaxValidator:
         if csv_language_replacements:
             fixes.append("Replaced unsupported listings language=csv with a portable plain listing.")
 
+        # Keep a mark bracket with the final line it assesses. Listings require
+        # their closing command to remain on its own line, but prose and tables
+        # can safely carry the right-aligned mark on that final line.
+        def attach_mark_to_previous_line(match: re.Match) -> str:
+            previous_line = match.group(1)
+            mark = match.group(2)
+            if re.search(r"\\end\{(?:lstlisting|verbatim|minted|pseudocode|python)\}\s*$", previous_line):
+                return previous_line + "\n" + mark
+            return previous_line + " " + mark
+
+        source, detached_mark_replacements = re.subn(
+            r"([^\n]+)\n[ \t]*(\\Marks\{[^}]+\})",
+            attach_mark_to_previous_line,
+            source,
+        )
+        if detached_mark_replacements:
+            fixes.append("Moved detached mark brackets onto the final assessed line where safe.")
+
         # Question bodies are fragments. Adding document scaffolding to them would
         # create an invalid nested document once the paper template assembles them.
         if not document_mode:

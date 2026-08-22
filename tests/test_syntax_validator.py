@@ -111,5 +111,19 @@ class TestLaTeXSyntaxValidator(unittest.TestCase):
         self.assertIn("\\begin{lstlisting}[language={}]", sanitized)
         self.assertTrue(any("language=csv" in fix for fix in fixes))
 
+    def test_detached_marks_attach_to_prose_or_table_final_line(self):
+        source = (
+            "\\documentclass{article}\n"
+            "\\begin{document}\n"
+            "Explain the result.\n"
+            "\\Marks{2}\n"
+            "\\begin{tabular}{|c|}A \\\\ \\hline\\end{tabular}\n"
+            "\\Marks{3}\n"
+            "\\end{document}"
+        )
+        sanitized, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(source)
+        self.assertIn("Explain the result. \\Marks{2}", sanitized)
+        self.assertIn("\\end{tabular} \\Marks{3}", sanitized)
+
 if __name__ == '__main__':
     unittest.main()

@@ -194,7 +194,7 @@ ComputingScribe AI demonstrates deep architectural synergy between **Google Clou
 - **Autonomous Cambridge Normalization**: Transcribes and reformats uploaded content into rigid **Singapore-Cambridge H2 Computing (9569)** LaTeX:
   - Standardizes task headings into `\maintask{X}` with `TASKX_<your name>_<centre number>_<index number>.ipynb`.
   - Injects `\tasksubtaskintro{X}` (subtask comment instructions + left-aligned `In [1]:` box) before subtasks.
-  - Formats subtasks with structured bullet points and `\Marks{<n>}` brackets.
+  - Formats practical subtasks in Cambridge-style prose with right-aligned `\Marks{<n>}` brackets; bullets are reserved for genuine lists.
   - Normalizes relational schemas with solid underline (`\uline{...}`) for Primary Keys and dashed underline (`\dashuline{...}`) for Foreign Keys.
   - Automatically synthesizes matching Cambridge Mark Scheme rows and compiles to PDF.
 
@@ -333,6 +333,7 @@ gcloud run deploy eduscribe-ai \
   --allow-unauthenticated \
   --memory=2Gi \
   --cpu=2 \
+  --timeout=10m \
   --set-env-vars="GCP_PROJECT_ID=eduscribe-505616,GCP_LOCATION=asia-southeast1"
 ```
 

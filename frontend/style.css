@@ -1127,6 +1127,21 @@ span[data-baseweb="tag"] *,
     font-size: 0.93rem !important;
 }
 
+/* Labels are the visible segmented controls. Preserve native radio semantics
+   for keyboard and screen-reader users without showing redundant dot icons. */
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label input[type="radio"] {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    opacity: 0 !important;
+}
+
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:focus-within {
+    outline: 3px solid #0b73ce !important;
+    outline-offset: 2px !important;
+}
+
 [data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover {
     background: #e2e8f0 !important;
     color: #1e3a8a !important;

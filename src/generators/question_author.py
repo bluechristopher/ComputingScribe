@@ -66,8 +66,8 @@ class QuestionAuthor:
 CONTEXTUAL DEPTH DIRECTIVES (ACTIVE):
 - For PRACTICAL (Paper 2):
   * Create an EXTENDED, REAL-WORLD SCENARIO (e.g. Singapore MRT Automated Fare Collection, Hospital Emergency Triage Queue, E-Commerce Warehouse Logistics, or Bank Transaction Ledger).
-  * Structure every subtask with CLEAR, STEP-BY-STEP BULLETED POINT INSTRUCTIONS.
-  * Explicitly specify data types, method signatures, return values, exception handling, and expected console/Jupyter outputs.
+  * Follow Cambridge Paper 2 style: bold `Task X.Y` headings followed by concise prose paragraphs. Use bullets only for genuine lists of independent requirements.
+  * Request output only where testing or display is explicitly assessed; do not add an output block after every subtask.
   * Include realistic sample records and structured test tables.
   * TOTAL QUESTION MARKS MUST SUM TO EXACTLY 94 MARKS (6 marks are reserved for Programming Style).
 
@@ -467,20 +467,25 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
      * Provide an EXTENDED, REAL-WORLD SCENARIO narrative background for the technical challenge.
      * Before the subtasks, include \\tasksubtaskintro{{X}} EXACTLY ONCE per task (which outputs the subtask comment instructions and the left-aligned In [1]: #Task X.1 Program code / Output: box). Do NOT repeat this instruction box more than once in a task.
      * Use \\subtask{{X.1}}, \\subtask{{X.2}}, \\subtask{{X.3}}, etc. for subtask headers.
-     * Structure subtask instructions with clear, concise bullet points (using \\begin{{itemize}} \\item ... \\end{{itemize}}).
+     * After each \\subtask header, write concise prose paragraphs, as in Cambridge Paper 2. Use bullets only where the requirements are inherently a list; never turn every subtask into a bullet list.
+     * Do not add a separate expected-output section after each subtask. Request output only where testing or display is explicitly assessed.
+     * Give each separately assessed instruction its own paragraph, including a separate “Run/Test your program...” instruction where appropriate. Put its \\Marks{{n}} immediately after that paragraph's final text so it sits at the right margin; never emit a standalone mark line.
      * PYTHON SIGNATURE CONVENTION: In Python questions, write plain function headers WITHOUT type annotations or return arrows (e.g. write `def search(arr, target):` NOT `def search(arr: list, target: int) -> bool:` or `--> Boolean`). Explain parameter roles and return values in natural English.
      * ALWAYS use \\Marks{{<n>}} directly at the end of each question part on the SAME line (e.g. `\\item Implement the search algorithm. \\Marks{{4}}`). Never insert a newline `\\\\` or blank line before \\Marks{{<n>}}.
      * At the end of Task X, include: \\taskfooter{{X}} (which prints "Save your Jupyter Notebook for Task X.").
      * Include \\newpage and \\TurnOver between major tasks.
 
 2. For THEORY papers:
-   - Begin questions with a WELL-DEVELOPED DOMAIN SCENARIO establishing background context, business rules, hardware specs, or database schema.
+   - Follow Cambridge Paper 1 style: a numbered question begins with a compact factual stem or scenario, then uses (a), (b), ... parts and (i), (ii), ... subparts only when needed. Do not add decorative section headings, summary boxes, expected-answer blocks, or teaching commentary.
+   - Keep directions concise and assessment-led, usually beginning with a direct verb such as Identify, State, Explain, Calculate, Complete, Trace, or Write.
+   - Use bullets only where the source is genuinely a list. Do not use bullets as the default question structure.
    - Wrap the questions in \\begin{{questions}} ... \\end{{questions}}.
    - Use \\item for main questions.
    - Use \\begin{{parts}} \\item ... \\end{{parts}} for question subparts.
    - Use \\begin{{subparts}} \\item ... \\end{{subparts}} for question sub-subparts.
    - Use \\begin{{pseudocode}} ... \\end{{pseudocode}} for pseudocode listings.
-   - Use standard tabular environments for decision tables, trace tables, and comparison matrices.
+   - Use simple, unshaded tables for candidate-completed trace tables, decision tables, and comparison matrices. Keep only the necessary columns and provide blank rows when candidates must complete a table.
+   - Give each separately assessed directive its own paragraph and attach \\Marks{{n}} directly to that paragraph's final text. The mark must be right aligned on the final line, never emitted as a standalone line below a question or table.
    - ALWAYS place \\Marks{{<n>}} directly at the end of the question text on the SAME line (e.g. `\\item Complete the truth table. \\Marks{{3}}`). Never insert `\\\\` before \\Marks{{<n>}}.
    - Include \\newpage and \\TurnOver between pages where appropriate.
 
@@ -609,7 +614,7 @@ Output ONLY the LaTeX body to replace % __AGENT_BODY_SLOT__.
         contextual_note = """
 CONTEXTUAL DIRECTIVES:
 - Provide an authentic, real-world scenario narrative establishing the business/engineering domain.
-- Break down subtasks with structured, step-by-step instructions specifying exact signatures, data types, validation checks, and return values.
+- Use Cambridge-style prose paragraphs under each subtask; reserve bullets for genuine lists and request output only when assessed.
 """ if is_contextual else ""
 
         if paper_type == "practical":
@@ -618,18 +623,18 @@ CRITICAL STRUCTURE REQUIREMENTS (PAPER 2 PRACTICAL):
 1. Start with \\maintask{{{task_number}}} (which automatically formats "Task {task_number}" and "Name your Jupyter Notebook as: TASK{task_number}_<your name>_<centre number>_<index number>.ipynb").
 2. Provide the domain scenario technical challenge description.
 3. Include \\tasksubtaskintro{{{task_number}}} EXACTLY ONCE before the subtasks (this formats the subtask comment instructions and the left-aligned In [1]: #Task {task_number}.1 Program code / Output: box).
-4. For each subtask, use \\subtask{{{task_number}.1}}, \\subtask{{{task_number}.2}}, etc. with structured bullet points (\\begin{{itemize}} \\item ... \\end{{itemize}}). Place \\Marks{{<n>}} directly at the end of the text on the SAME line (do not insert `\\\\` or newlines before `\\Marks{{<n>}}`).
+4. For each subtask, use \\subtask{{{task_number}.1}}, \\subtask{{{task_number}.2}}, etc. followed by concise prose paragraphs. Use bullet points only for an actual list of requirements, and request output only when testing/display is assessed. Give any separately assessed test/run instruction its own paragraph. Place \\Marks{{<n>}} directly at the end of each assessed paragraph's final text on the SAME line (do not insert `\\\\` or newlines before `\\Marks{{<n>}}`).
 5. PYTHON SIGNATURE CONVENTION: Use plain function headers WITHOUT type annotations or return arrows (e.g. `def search(arr, target):` NOT `def search(arr: list, target: int) -> bool:` or `--> Boolean`). Explain parameter roles and return values in natural English.
 6. At the end of the task, output: \\taskfooter{{{task_number}}}.
 """
         else:
             structure_rules = f"""
 CRITICAL STRUCTURE REQUIREMENTS (PAPER 1 THEORY):
-1. Start with \\item followed by the problem scenario, technical background, specifications, or business rules. (DO NOT output \\begin{{questions}} or \\end{{questions}} for this single question; output only this question's \\item body).
+1. Start with \\item followed by a compact factual stem, scenario, code/pseudocode, data or diagram context. (DO NOT output \\begin{{questions}} or \\end{{questions}} for this single question; output only this question's \\item body).
 2. STRICT PROHIBITION: DO NOT USE \\maintask, \\tasksubtaskintro, \\taskfooter, Jupyter notebook names (.ipynb), #Task comments, or In [1]: boxes! These are strictly for Practical programming exams and must NOT appear in Theory papers.
-3. Structure subparts using \\begin{{parts}} \\item ... \\end{{parts}} and sub-subparts using \\begin{{subparts}} \\item ... \\end{{subparts}}.
+3. Match Cambridge Paper 1 hierarchy: use \\begin{{parts}} \\item ... \\end{{parts}} for (a), (b), ... directives and \\begin{{subparts}} \\item ... \\end{{subparts}} for (i), (ii), ... only where necessary. Use concise prose directives, not default bullet lists, headings, expected-answer boxes, or explanatory commentary.
 4. For pseudocode listings, use \\begin{{pseudocode}} ... \\end{{pseudocode}} (with 2-digit line numbers 01, 02, ...).
-5. For decision tables, trace tables, or comparison grids, use standard LaTeX tabular environments.
+5. For decision tables, trace tables, or comparison grids, use simple unshaded LaTeX tabular environments. Include blank candidate rows only when the question asks candidates to complete a table.
 6. For database schemas, underline primary keys with \\uline{{...}} and dashed-underline foreign keys with \\dashuline{{...}}.
 7. ALWAYS place \\Marks{{<n>}} directly at the end of each question part on the SAME line (e.g. `\\item Complete the truth table. \\Marks{{3}}`). Never insert `\\\\` or blank lines before `\\Marks{{<n>}}`.
 """

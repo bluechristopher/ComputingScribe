@@ -54,4 +54,5 @@ jobs:
             --allow-unauthenticated \
             --memory=2Gi \
             --cpu=2 \
+            --timeout=10m \
             --set-env-vars="GCP_PROJECT_ID=eduscribe-505616,GCP_LOCATION=${{ env.GAR_LOCATION }}"

@@ -142,7 +142,8 @@ HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
      * Start with \\maintask{{X}} (which outputs "Task X" and "Name your Jupyter Notebook as: TASKX_<your name>_<centre number>_<index number>.ipynb").
      * Maintain the full introductory problem scenario narrative.
      * Include \\tasksubtaskintro{{X}} EXACTLY ONCE before the subtasks (outputs the subtask comment instructions and In [1]: #Task X.1 Program code / Output: box).
-     * Structure subtasks as \\subtask{{X.1}}, \\subtask{{X.2}}, etc. with bullet points (\\begin{{taskitemize}} ... \\end{{taskitemize}} or \\begin{{itemize}}).
+     * Structure subtasks as \\subtask{{X.1}}, \\subtask{{X.2}}, etc. followed by concise prose paragraphs. Preserve bullets only where the original paper uses a genuine list; do not introduce bullets or expected-output blocks after every subtask.
+     * Keep each separately assessed instruction as its own paragraph, including testing instructions. Attach \\Marks{{n}} directly to that paragraph's final text; never leave a mark on its own line below the question or table.
      * Place \\Marks{{<n>}} directly at the end of each subtask on the SAME line (do not insert `\\\\` or blank lines before `\\Marks{{<n>}}`).
      * At the end of Task X, output: \\taskfooter{{X}}
      * Place \\newpage and \\TurnOver between tasks.
@@ -156,10 +157,13 @@ HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
 
 3. If THEORY paper:
    - STRICT PROHIBITION: DO NOT USE \\maintask, \\tasksubtaskintro, \\taskfooter, Jupyter notebook names (.ipynb), #Task comments, or In [1]: boxes! These belong strictly to Practical programming exams and must NOT appear in Theory papers.
+   - Preserve Cambridge Paper 1 hierarchy: a numbered question has a compact factual stem or scenario, then (a), (b), ... parts and (i), (ii), ... only where needed. Do not introduce decorative headings, expected-answer blocks, teaching commentary, or default bullet lists.
+   - Keep directives concise and assessment-led (for example, Identify, State, Explain, Calculate, Complete, Trace, or Write).
    - Wrap questions in \\begin{{questions}} ... \\end{{questions}}.
    - Use \\item for main questions, \\begin{{parts}} \\item ... \\end{{parts}} for subparts, \\begin{{subparts}} for sub-subparts.
    - Use \\begin{{pseudocode}} ... \\end{{pseudocode}} for pseudocode listings (with 2-digit line numbers).
-   - Use standard tabular environments for decision tables, trace tables, and comparison grids.
+   - Use simple unshaded tabular environments for decision tables, trace tables, and comparison grids; preserve blank rows when candidates are asked to complete a table.
+   - Keep each separately assessed directive as its own paragraph and attach \\Marks{{n}} to the final text of that directive, including after a table where applicable. Do not output a standalone mark line.
    - ALWAYS place \\Marks{{<n>}} directly at the end of each question part on the SAME line (do not insert `\\\\` or blank lines before `\\Marks{{<n>}}`).
    - Insert \\newpage and \\TurnOver between pages where appropriate.
    - For wide tables: Use \\begin{{tabularx}}{{\\linewidth}}{{...}} with `X` columns.

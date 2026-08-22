@@ -59,6 +59,71 @@ def build_session_image_data_urls(session: ExamSession) -> Dict[str, str]:
     return data_urls
 
 
+def render_tex_copy_control(tex_source: str, filename: str, key: str) -> None:
+    """Renders a prominent, accessible clipboard control above a TeX preview."""
+    source_json = json.dumps(tex_source).replace("</", "<\\/")
+    control_id = f"copy-{key}"
+    components.html(
+        f"""<!doctype html>
+<html><head><meta charset='utf-8'><style>
+body {{ margin:0; font-family:Montserrat,Segoe UI,sans-serif; background:transparent; }}
+button {{ width:100%; min-height:42px; border:1px solid #0b5d89; border-radius:7px; padding:9px 14px; cursor:pointer; color:#fff; background:linear-gradient(135deg,#0b3b70,#087f8c); font:700 14px Montserrat,Segoe UI,sans-serif; letter-spacing:0; box-shadow:0 2px 7px rgba(11,59,112,.2); }}
+button:hover {{ background:linear-gradient(135deg,#082e59,#056d78); }}
+button:focus-visible {{ outline:3px solid #fbbf24; outline-offset:2px; }}
+</style></head><body>
+<button id='{control_id}' type='button' aria-label='Copy all contents of {html.escape(filename)} to clipboard'>Copy {html.escape(filename)} to clipboard</button>
+<script>
+const source = {source_json};
+const button = document.getElementById('{control_id}');
+async function copySource() {{
+  try {{
+    if (navigator.clipboard && window.isSecureContext) {{ await navigator.clipboard.writeText(source); }}
+    else {{
+      const area=document.createElement('textarea'); area.value=source; area.style.position='fixed'; area.style.opacity='0';
+      document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
+    }}
+    button.textContent='Copied {html.escape(filename)}';
+  }} catch (error) {{ button.textContent='Copy failed - use the source box below'; }}
+  window.setTimeout(() => {{ button.textContent='Copy {html.escape(filename)} to clipboard'; }}, 2200);
+}}
+button.addEventListener('click', copySource);
+</script></body></html>""",
+        height=48,
+        scrolling=False,
+    )
+
+
+def render_activity_hud(title: str, detail: str, key: str, start_ms: int) -> None:
+    """Shows a compact, self-animating status surface for synchronous actions."""
+    hud_id = f"activity-{key}"
+    components.html(
+        f"""<!doctype html>
+<html><head><meta charset='utf-8'><style>
+* {{ box-sizing:border-box; }}
+body {{ margin:0; font-family:Montserrat,Segoe UI,sans-serif; background:transparent; color:#fff; }}
+.hud {{ position:relative; overflow:hidden; min-height:104px; border:1px solid #0a6383; border-radius:8px; background:linear-gradient(118deg,#082e59 0%,#0d4e82 48%,#087f8c 100%); box-shadow:0 8px 20px rgba(13,70,116,.22); padding:16px 18px; }}
+.hud::before {{ content:''; position:absolute; width:42%; height:180%; top:-40%; left:-55%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent); transform:rotate(18deg); animation:sweep 2.8s linear infinite; }}
+.content {{ position:relative; z-index:1; display:flex; justify-content:space-between; gap:18px; align-items:flex-start; }}
+.eyebrow {{ color:#b9f2ff; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }}
+h3 {{ margin:4px 0 5px; font-size:17px; letter-spacing:0; }}
+p {{ margin:0; color:#e0f8ff; font-size:12px; line-height:1.35; max-width:760px; }}
+.timer {{ font:700 14px 'Courier New',monospace; white-space:nowrap; padding:7px 9px; border:1px solid rgba(185,242,255,.62); border-radius:5px; background:rgba(3,23,48,.26); }}
+.rail {{ position:relative; z-index:1; height:5px; margin-top:15px; border-radius:99px; background:rgba(255,255,255,.22); overflow:hidden; }}
+.rail span {{ display:block; height:100%; width:36%; border-radius:inherit; background:linear-gradient(90deg,#fbbf24,#fef08a,#67e8f9); animation:travel 1.45s ease-in-out infinite; }}
+@keyframes sweep {{ to {{ left:120%; }} }} @keyframes travel {{ 0% {{ transform:translateX(-110%); }} 100% {{ transform:translateX(310%); }} }}
+@media (prefers-reduced-motion:reduce) {{ .hud::before,.rail span {{ animation:none; }} }}
+</style></head><body><section class='hud' aria-live='polite' aria-label='{html.escape(title)} in progress'>
+  <div class='content'><div><div class='eyebrow'>ComputingScribe is working</div><h3>{html.escape(title)}</h3><p>{html.escape(detail)}</p></div><div id='{hud_id}' class='timer'>00:00.0</div></div>
+  <div class='rail' aria-hidden='true'><span></span></div>
+</section><script>
+const started={start_ms}; const timer=document.getElementById('{hud_id}');
+setInterval(()=>{{ timer.textContent=((Date.now()-started)/1000).toFixed(1)+'s'; }},100);
+</script></body></html>""",
+        height=112,
+        scrolling=False,
+    )
+
+
 def insert_exam_image(
     latex_source: str,
     image_macro: str,
@@ -1007,15 +1072,22 @@ elif "Question-by-Question" in author_mode:
             with col_ref:
                 if st.button("🔄 Refine Question", use_container_width=True):
                     if refine_input.strip():
-                        with st.spinner("Refining question..."):
-                            refined = st.session_state.orchestrator.refine_single_task(
-                                current_task=cur_draft,
-                                refinement_prompt=refine_input,
-                                paper_type=s_paper_type
+                        activity_placeholder = st.empty()
+                        with activity_placeholder.container():
+                            render_activity_hud(
+                                "Refining question",
+                                "Reworking the assessment wording, structure, marks and LaTeX source.",
+                                "refine-question",
+                                int(time.time() * 1000),
                             )
-                            st.session_state.studio_current_draft = refined
-                            st.success("Question refined!")
-                            st.rerun()
+                        refined = st.session_state.orchestrator.refine_single_task(
+                            current_task=cur_draft,
+                            refinement_prompt=refine_input,
+                            paper_type=s_paper_type
+                        )
+                        st.session_state.studio_current_draft = refined
+                        st.success("Question refined!")
+                        st.rerun()
             with col_app:
                 if st.button("➕ Append to Question Paper", type="primary", use_container_width=True):
                     # Append and auto-renumber
@@ -1121,21 +1193,28 @@ elif "Question-by-Question" in author_mode:
             # Compile & Build Button styled with blue background & light blue text
             st.markdown("<div class='compile-build-box'>", unsafe_allow_html=True)
             if st.button("Build Exam Package", type="primary", use_container_width=True, key="studio_compile_btn"):
-                with st.spinner("Assembling full LaTeX document for all questions and compiling in sandbox..."):
-                    compiled_sess = st.session_state.orchestrator.compile_assembled_session(
-                        tasks_list=q_list,
-                        paper_type=s_paper_type,
-                        syllabus_code="9569",
-                        paper_number="02" if s_paper_type == "practical" else "01",
-                        institution=b_institution if 'b_institution' in locals() else "HelloWorld Junior College",
-                        exam_year=b_exam_year if 'b_exam_year' in locals() else "2027",
-                        exam_series=b_exam_series if 'b_exam_series' in locals() else "Prelim",
-                        skip_self_healing=skip_healing_studio,
-                        session_title=b_custom_title if 'b_custom_title' in locals() else None
+                activity_placeholder = st.empty()
+                with activity_placeholder.container():
+                    render_activity_hud(
+                        "Building exam package",
+                        "Assembling the paper and mark scheme, then checking the LaTeX package for export.",
+                        "build-package",
+                        int(time.time() * 1000),
                     )
-                    st.session_state.current_session = compiled_sess
-                    st.success("🎉 Full Exam Package Assembled and Compiled Successfully!")
-                    st.rerun()
+                compiled_sess = st.session_state.orchestrator.compile_assembled_session(
+                    tasks_list=q_list,
+                    paper_type=s_paper_type,
+                    syllabus_code="9569",
+                    paper_number="02" if s_paper_type == "practical" else "01",
+                    institution=b_institution if 'b_institution' in locals() else "HelloWorld Junior College",
+                    exam_year=b_exam_year if 'b_exam_year' in locals() else "2027",
+                    exam_series=b_exam_series if 'b_exam_series' in locals() else "Prelim",
+                    skip_self_healing=skip_healing_studio,
+                    session_title=b_custom_title if 'b_custom_title' in locals() else None
+                )
+                st.session_state.current_session = compiled_sess
+                st.success("🎉 Full Exam Package Assembled and Compiled Successfully!")
+                st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
@@ -1534,6 +1613,8 @@ if curr_sess:
                 use_container_width=True,
             )
 
+        render_tex_copy_control(curr_sess.latex_source, "paper.tex", "paper-tex")
+
         with st.expander("🖼️ Insert Exam Image", expanded=False):
             st.caption("PNG and JPEG images are stored in this paper's `assets/` folder. They render in the browser preview and are included with `paper.tex` in the export ZIP.")
             
@@ -1771,16 +1852,23 @@ if curr_sess:
             
         if refine_paper_btn and paper_refine_prompt:
             t0 = time.time()
-            with st.spinner("🤖 Gemini 3.7 Flash is refining your exam paper and updating mark schemes..."):
-                updated_sess = st.session_state.orchestrator.refine_full_paper(
-                    session=curr_sess,
-                    refinement_prompt=paper_refine_prompt
+            activity_placeholder = st.empty()
+            with activity_placeholder.container():
+                render_activity_hud(
+                    "Refining the full paper",
+                    "Updating the question paper and mark scheme, then rebuilding the LaTeX artefacts.",
+                    "refine-full-paper",
+                    int(t0 * 1000),
                 )
-                st.session_state.current_session = updated_sess
-                dur = round(time.time() - t0, 1)
-                st.success(f"🎉 Exam paper and mark scheme refined in {dur}s!")
-                time.sleep(0.5)
-                st.rerun()
+            updated_sess = st.session_state.orchestrator.refine_full_paper(
+                session=curr_sess,
+                refinement_prompt=paper_refine_prompt
+            )
+            st.session_state.current_session = updated_sess
+            dur = round(time.time() - t0, 1)
+            st.success(f"🎉 Exam paper and mark scheme refined in {dur}s!")
+            time.sleep(0.5)
+            st.rerun()
 
     # --------------------------------------------------------------------------
     # TAB 3: Mark Scheme & Rubrics (Clean KaTeX View & Copy LaTeX)
@@ -1803,6 +1891,8 @@ if curr_sess:
                 type="primary",
                 use_container_width=True,
             )
+
+        render_tex_copy_control(curr_sess.mark_scheme_source, "mark_scheme.tex", "mark-scheme-tex")
 
         ms_rendered_html = LaTeXVisualRenderer.render_questions_only_html(curr_sess.mark_scheme_source, title="Mark Scheme")
         components.html(ms_rendered_html, height=850, scrolling=True)
