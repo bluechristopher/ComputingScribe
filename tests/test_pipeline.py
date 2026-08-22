@@ -278,8 +278,12 @@ class TestEduScribePipeline(unittest.TestCase):
             paper_type="practical",
             institution="Victoria Junior College"
         )
-        self.assertEqual(session.status, "completed")
-        self.assertIsNotNone(session.pdf_path)
+        native_pdflatex_available = self.orchestrator.latex_compiler.pdflatex_cmd is not None
+        self.assertEqual(session.status, "completed" if native_pdflatex_available else "draft")
+        if native_pdflatex_available:
+            self.assertIsNotNone(session.pdf_path)
+        else:
+            self.assertIsNone(session.pdf_path)
         print(" [PASS] Document Transcriber & Cambridge Normalization Verified.")
 
     def test_8_auth_manager_verification(self):
