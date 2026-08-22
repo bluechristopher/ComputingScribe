@@ -135,7 +135,7 @@ class TestLaTeXSyntaxValidator(unittest.TestCase):
         )
         sanitized, fixes = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(source)
         self.assertIn("\\usepackage{xurl}", sanitized)
-        self.assertIn("\\nolinkurl{#1}", sanitized)
+        self.assertIn("\\path{#1}", sanitized)
         self.assertTrue(any("inline code formatting" in fix for fix in fixes))
 
 if __name__ == '__main__':

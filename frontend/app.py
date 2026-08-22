@@ -26,6 +26,7 @@ if str(REPO_ROOT) not in sys.path:
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
+from code_editor import code_editor
 
 from config.gcp_config import AppConfig, BASE_DIR
 from src.auth.auth_manager import AuthManager
@@ -99,6 +100,201 @@ def format_elapsed_time(seconds: float) -> str:
     minutes = int(seconds // 60)
     remainder = seconds - (minutes * 60)
     return f"{minutes} min {remainder:05.2f} sec" if minutes else f"{remainder:.2f} sec"
+
+
+TEX_EDITOR_BUTTONS = [
+    {
+        "name": "copy",
+        "feather": "Copy",
+        "hasText": True,
+        "alwaysOn": True,
+        "commands": ["copyAll"],
+        "style": {"top": "0.45rem", "right": "5.9rem"},
+    },
+    {
+        "name": "save",
+        "feather": "Save",
+        "primary": True,
+        "hasText": True,
+        "showWithIcon": True,
+        "alwaysOn": True,
+        "commands": ["submit"],
+        "style": {"top": "0.45rem", "right": "0.45rem"},
+    },
+]
+
+
+def build_tex_lint_annotations(tex_source: str) -> list[dict[str, Any]]:
+    """Returns Ace gutter annotations for common, actionable TeX structure errors."""
+    annotations: list[dict[str, Any]] = []
+    environment_stack: list[tuple[str, int, int]] = []
+    brace_balance = 0
+    code_environment: Optional[str] = None
+
+    for row, raw_line in enumerate(tex_source.splitlines()):
+        line = re.split(r"(?<!\\)%", raw_line, maxsplit=1)[0]
+        for match in re.finditer(r"\\(begin|end)\{([^}]+)\}", line):
+            action, environment = match.groups()
+            if code_environment and environment != code_environment:
+                continue
+            if action == "begin":
+                environment_stack.append((environment, row, match.start()))
+                if environment in {"verbatim", "lstlisting", "minted", "python"}:
+                    code_environment = environment
+            elif not environment_stack:
+                annotations.append({
+                    "row": row,
+                    "column": match.start(),
+                    "text": f"Unexpected \\end{{{environment}}}.",
+                    "type": "error",
+                })
+            elif environment_stack[-1][0] != environment:
+                expected = environment_stack[-1][0]
+                annotations.append({
+                    "row": row,
+                    "column": match.start(),
+                    "text": f"Expected \\end{{{expected}}} before \\end{{{environment}}}.",
+                    "type": "error",
+                })
+            else:
+                environment_stack.pop()
+                if environment == code_environment:
+                    code_environment = None
+
+        if code_environment:
+            continue
+
+        unescaped_line = line.replace(r"\{", "").replace(r"\}", "")
+        brace_balance += unescaped_line.count("{") - unescaped_line.count("}")
+        if r"\nolinkurl" in line:
+            annotations.append({
+                "row": row,
+                "column": line.find(r"\nolinkurl"),
+                "text": "\\nolinkurl requires hyperref here; use \\path for portable inline code.",
+                "type": "error",
+            })
+        csv_match = re.search(r"language\s*=\s*(?:\{\s*csv\s*\}|csv)", line, flags=re.IGNORECASE)
+        if csv_match:
+            annotations.append({
+                "row": row,
+                "column": csv_match.start(),
+                "text": "listings has no portable csv language; use language={}.",
+                "type": "warning",
+            })
+
+    for environment, row, column in environment_stack:
+        annotations.append({
+            "row": row,
+            "column": column,
+            "text": f"Unclosed \\begin{{{environment}}} environment.",
+            "type": "error",
+        })
+    if brace_balance:
+        annotations.append({
+            "row": 0,
+            "column": 0,
+            "text": "Curly braces are unbalanced in this document.",
+            "type": "error",
+        })
+    if r"\documentclass" not in tex_source:
+        annotations.append({
+            "row": 0,
+            "column": 0,
+            "text": "Missing \\documentclass declaration.",
+            "type": "error",
+        })
+    if r"\begin{document}" not in tex_source or r"\end{document}" not in tex_source:
+        annotations.append({
+            "row": 0,
+            "column": 0,
+            "text": "A complete export needs both \\begin{document} and \\end{document}.",
+            "type": "error",
+        })
+    return annotations
+
+
+def render_tex_editor(session: ExamSession, source_attribute: str, filename: str, editor_id: str) -> None:
+    """Renders an editable TeX workspace whose saved text becomes the session source."""
+    editor_prefix = f"tex_editor_{session.session_id}_{editor_id}"
+    draft_key = f"{editor_prefix}_draft"
+    source_key = f"{editor_prefix}_source"
+    dirty_key = f"{editor_prefix}_dirty"
+    revision_key = f"{editor_prefix}_revision"
+    saved_source = getattr(session, source_attribute)
+
+    if draft_key not in st.session_state:
+        st.session_state[draft_key] = saved_source
+        st.session_state[source_key] = saved_source
+        st.session_state[dirty_key] = False
+        st.session_state[revision_key] = 0
+    elif st.session_state[source_key] != saved_source and not st.session_state[dirty_key]:
+        st.session_state[draft_key] = saved_source
+        st.session_state[source_key] = saved_source
+        st.session_state[revision_key] += 1
+
+    draft_source = st.session_state[draft_key]
+    annotations = build_tex_lint_annotations(draft_source)
+    response = code_editor(
+        draft_source,
+        lang="latex",
+        theme="light",
+        shortcuts="vscode",
+        height="620px",
+        buttons=TEX_EDITOR_BUTTONS,
+        options={"wrap": True, "fontSize": "14px", "showPrintMargin": False},
+        props={
+            "annotations": annotations,
+            "showGutter": True,
+            "highlightActiveLine": True,
+            "style": {"borderRadius": "8px", "border": "1px solid #b9cbe3"},
+        },
+        component_props={
+            "css": ".ace_editor { font-family: 'Fira Code', 'Courier New', monospace; } .ace_gutter { background:#edf5ff; color:#34506f; }",
+        },
+        response_mode=["debounce", "blur"],
+        allow_reset=True,
+        key=f"{editor_prefix}_{st.session_state[revision_key]}",
+    )
+
+    response_text = response.get("text") if isinstance(response, dict) else None
+    if isinstance(response_text, str) and response_text != st.session_state[draft_key]:
+        st.session_state[draft_key] = response_text
+        st.session_state[dirty_key] = response_text != saved_source
+        draft_source = response_text
+        annotations = build_tex_lint_annotations(draft_source)
+
+    lint_report = LaTeXSyntaxValidator.validate_syntax(draft_source)
+    issue_count = max(len(annotations), len(lint_report.issues))
+    lint_col, save_col, reset_col = st.columns([2.4, 1, 1])
+    with lint_col:
+        if issue_count:
+            st.warning(f"Live TeX lint: {issue_count} issue{'s' if issue_count != 1 else ''}. See the editor gutter for locations.")
+        else:
+            st.success("Live TeX lint: no structural errors found.")
+    with save_col:
+        save_requested = st.button("Save TeX", key=f"{editor_prefix}_save", type="primary", use_container_width=True)
+    with reset_col:
+        reset_requested = st.button("Revert", key=f"{editor_prefix}_revert", use_container_width=True)
+
+    if reset_requested:
+        st.session_state[draft_key] = saved_source
+        st.session_state[dirty_key] = False
+        st.session_state[revision_key] += 1
+        st.rerun()
+
+    if save_requested or (isinstance(response, dict) and response.get("type") == "submit"):
+        updated_source = st.session_state[draft_key]
+        if updated_source != saved_source:
+            setattr(session, source_attribute, updated_source)
+            session.status = "draft"
+            st.session_state.orchestrator.session_manager.save_session(session)
+            st.session_state.current_session = session
+            st.session_state[source_key] = updated_source
+            st.session_state[dirty_key] = False
+            st.session_state[revision_key] += 1
+            st.toast(f"Saved {filename}. Re-run pdflatex before treating this edit as compiled.")
+            st.rerun()
+        st.info(f"No changes to save in {filename}.")
 
 
 def render_activity_hud(title: str, detail: str, key: str, start_ms: int) -> None:
@@ -1854,11 +2050,11 @@ if curr_sess:
         )
         components.html(rendered_html, height=850, scrolling=True)
 
-        # Easy 1-Click Copy LaTeX Code at the Bottom
+        # Editable TeX workspace
         st.markdown("---")
-        st.markdown("### 📋 Copy Full LaTeX Source Code (`paper.tex`)")
-        st.caption("Click the copy icon in the top right corner of the box below to instantly copy the complete LaTeX code for Overleaf, TeXLive, or VS Code:")
-        st.code(curr_sess.latex_source, language="latex")
+        st.markdown("### TeX Editor (`paper.tex`)")
+        st.caption("Edit the source directly, then save it to update the preview and every export. The gutter flags common structural TeX issues as you work.")
+        render_tex_editor(curr_sess, "latex_source", "paper.tex", "paper")
 
         st.markdown("---")
         st.markdown("### 💬 Conversational Paper Editor & Refinement Workbench")
@@ -1922,11 +2118,11 @@ if curr_sess:
         ms_rendered_html = LaTeXVisualRenderer.render_questions_only_html(curr_sess.mark_scheme_source, title="Mark Scheme")
         components.html(ms_rendered_html, height=850, scrolling=True)
 
-        # Easy 1-Click Copy Mark Scheme LaTeX Code at the Bottom
+        # Editable mark scheme workspace
         st.markdown("---")
-        st.markdown("### 📋 Copy Mark Scheme LaTeX Source Code (`mark_scheme.tex`)")
-        st.caption("Click the copy icon in the top right corner of the box below to copy the mark scheme LaTeX code:")
-        st.code(curr_sess.mark_scheme_source, language="latex")
+        st.markdown("### TeX Editor (`mark_scheme.tex`)")
+        st.caption("Edit and save the mark scheme directly. Live linting marks common TeX structure problems in the gutter.")
+        render_tex_editor(curr_sess, "mark_scheme_source", "mark_scheme.tex", "mark-scheme")
 
     # --------------------------------------------------------------------------
     # TAB 4: Demographic Datasets & Starter Code

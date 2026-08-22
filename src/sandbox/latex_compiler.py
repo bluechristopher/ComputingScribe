@@ -93,14 +93,21 @@ class LaTeXSyntaxValidator:
             fixes.append("Moved detached mark brackets onto the final assessed line where safe.")
 
         legacy_code_macros = {
-            r"\providecommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}": r"\providecommand{\code}[1]{{\begingroup\urlstyle{tt}\nolinkurl{#1}\endgroup}}",
-            r"\newcommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}": r"\newcommand{\code}[1]{{\begingroup\urlstyle{tt}\nolinkurl{#1}\endgroup}}",
+            r"\providecommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}": r"\providecommand{\code}[1]{{\begingroup\urlstyle{tt}\path{#1}\endgroup}}",
+            r"\newcommand{\code}[1]{{\ttfamily\upshape\detokenize{#1}}}": r"\newcommand{\code}[1]{{\begingroup\urlstyle{tt}\path{#1}\endgroup}}",
         }
         replaced_legacy_code_macro = False
         for legacy_code_macro, replacement_code_macro in legacy_code_macros.items():
             if legacy_code_macro in source:
                 source = source.replace(legacy_code_macro, replacement_code_macro)
                 replaced_legacy_code_macro = True
+        unsupported_nolinkurl_macro = r"\urlstyle{tt}\nolinkurl{#1}\endgroup"
+        if unsupported_nolinkurl_macro in source:
+            source = source.replace(
+                unsupported_nolinkurl_macro,
+                r"\urlstyle{tt}\path{#1}\endgroup",
+            )
+            replaced_legacy_code_macro = True
         if replaced_legacy_code_macro:
             if r"\usepackage{xurl}" not in source and r"\usepackage{url}" not in source:
                 source = source.replace(
