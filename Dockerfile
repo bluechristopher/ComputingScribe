@@ -6,13 +6,16 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH="/app"
 ENV PORT=8501
 
-# Install essential system dependencies and lightweight TeXLive for rapid cloud building
+# Install every LaTeX collection required by the bundled templates. Do not rely on
+# on-demand package installation: Cloud Run builds must be deterministic.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     texlive-latex-base \
     texlive-latex-recommended \
+    texlive-latex-extra \
     texlive-fonts-recommended \
+    texlive-pictures \
     lmodern \
     && rm -rf /var/lib/apt/lists/*
 

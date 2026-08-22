@@ -224,10 +224,10 @@ class EduScribeOrchestrator:
             from src.sandbox.latex_compiler import LaTeXCompilationResult
             sanitized_p, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(latex_paper_source)
             compilation_result = LaTeXCompilationResult(
-                success=True,
+                success=False,
                 pdf_bytes=None,
                 pdf_path=None,
-                compilation_log=f"[Sandbox Note]: Paper syntax verified ({e})",
+                compilation_log=f"[pdflatex Verification]: BLOCKED by compiler exception: {e}",
                 attempts=1,
                 repaired_source=sanitized_p
             )
@@ -245,10 +245,10 @@ class EduScribeOrchestrator:
             from src.sandbox.latex_compiler import LaTeXCompilationResult
             sanitized_ms, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(mark_scheme_source)
             ms_result = LaTeXCompilationResult(
-                success=True,
+                success=False,
                 pdf_bytes=None,
                 pdf_path=None,
-                compilation_log=f"[Sandbox Note]: Mark scheme verified ({e})",
+                compilation_log=f"[pdflatex Verification]: BLOCKED by compiler exception: {e}",
                 attempts=1,
                 repaired_source=sanitized_ms
             )
@@ -274,10 +274,13 @@ class EduScribeOrchestrator:
             mark_scheme_source=ms_result.repaired_source or mark_scheme_source,
             generated_datasets=generated_datasets,
             starter_files=starter_files,
-            status="completed" if compilation_result.success else "draft",
-            compilation_logs=compilation_result.compilation_log,
+            status="completed" if compilation_result.success and ms_result.success else "draft",
+            compilation_logs="[Paper]\n" + compilation_result.compilation_log + "\n\n[Mark scheme]\n" + ms_result.compilation_log,
             pdf_path=str(compilation_result.pdf_path) if compilation_result.pdf_path else None
         )
+
+        if session.status == "completed":
+            session.compiled_source_hash = session.source_fingerprint()
 
         try:
             self.session_manager.save_session(session)
@@ -370,7 +373,18 @@ class EduScribeOrchestrator:
             working_dir=session_dir,
             job_name="paper"
         )
+        ms_res = self.latex_compiler.compile(
+            latex_source=session.mark_scheme_source,
+            working_dir=session_dir,
+            job_name="mark_scheme"
+        )
+        session.latex_source = comp_res.repaired_source or session.latex_source
+        session.mark_scheme_source = ms_res.repaired_source or session.mark_scheme_source
         session.pdf_path = str(comp_res.pdf_path) if comp_res.pdf_path else None
+        session.status = "completed" if comp_res.success and ms_res.success else "draft"
+        session.compilation_logs = "[Paper]\n" + comp_res.compilation_log + "\n\n[Mark scheme]\n" + ms_res.compilation_log
+        if session.status == "completed":
+            session.compiled_source_hash = session.source_fingerprint()
         self.session_manager.save_session(session)
         return session
 
@@ -482,11 +496,13 @@ class EduScribeOrchestrator:
             generated_datasets=generated_datasets,
             starter_files=starter_files,
             questions=tasks_list,
-            status="completed" if comp_res.success else "draft",
-            compilation_logs=comp_res.compilation_log,
+            status="completed" if comp_res.success and ms_res.success else "draft",
+            compilation_logs="[Paper]\n" + comp_res.compilation_log + "\n\n[Mark scheme]\n" + ms_res.compilation_log,
             pdf_path=str(comp_res.pdf_path) if comp_res.pdf_path else None
         )
 
+        if session.status == "completed":
+            session.compiled_source_hash = session.source_fingerprint()
         self.session_manager.save_session(session)
         return session
 
@@ -592,12 +608,14 @@ class EduScribeOrchestrator:
                 "latex_code": transcription["latex_body"],
                 "mark_scheme_code": transcription["mark_scheme_body"]
             }],
-            status="completed" if comp_res.success else "draft",
-            compilation_logs=comp_res.compilation_log,
+            status="completed" if comp_res.success and ms_res.success else "draft",
+            compilation_logs="[Paper]\n" + comp_res.compilation_log + "\n\n[Mark scheme]\n" + ms_res.compilation_log,
             pdf_path=str(comp_res.pdf_path) if comp_res.pdf_path else None
         )
 
         prog.notify("Station 4: Packaging", f"Session saved. Ready for inspection and PDF export.")
+        if session.status == "completed":
+            session.compiled_source_hash = session.source_fingerprint()
         self.session_manager.save_session(session)
         return session
 
@@ -680,17 +698,36 @@ Return a valid JSON object matching this schema:
                 )
                 data = json.loads(response.text)
                 if data.get("repaired_latex_source"):
-                    return data
+                    repaired_paper, paper_fixes = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(
+                        data["repaired_latex_source"],
+                    )
+                    paper_report = LaTeXSyntaxValidator.validate_syntax(repaired_paper)
+                    repaired_ms, ms_fixes = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(
+                        data.get("repaired_mark_scheme_source") or mark_scheme_source or "",
+                    )
+                    ms_report = LaTeXSyntaxValidator.validate_syntax(repaired_ms)
+                    if paper_report.is_valid and ms_report.is_valid:
+                        data["repaired_latex_source"] = repaired_paper
+                        data["repaired_mark_scheme_source"] = repaired_ms
+                        data["fixes_applied"] = data.get("fixes_applied", []) + paper_fixes + ms_fixes
+                        return data
+                    print(
+                        "[Orchestrator] Rejected AI lint response with unresolved syntax: "
+                        f"paper={paper_report.issues}; mark_scheme={ms_report.issues}"
+                    )
             except Exception as e:
                 print(f"[Orchestrator] ai_lint_and_repair_document failed: {e}")
 
-        # Fallback heuristic lint
-        repaired_latex = latex_source
-        repaired_latex = re.sub(r"(?<!\\)_", r"\_", repaired_latex)
-        repaired_latex = repaired_latex.replace(r"\_\_", "__")
+        # Deterministic fallback never claims success without a syntax report.
+        repaired_latex, paper_fixes = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(latex_source)
+        repaired_mark_scheme, ms_fixes = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(
+            mark_scheme_source or "",
+        )
+        paper_report = LaTeXSyntaxValidator.validate_syntax(repaired_latex)
+        ms_report = LaTeXSyntaxValidator.validate_syntax(repaired_mark_scheme)
         return {
             "repaired_latex_source": repaired_latex,
-            "repaired_mark_scheme_source": mark_scheme_source or "",
-            "audit_summary": "Static heuristic lint completed: verified and escaped special characters.",
-            "fixes_applied": ["Verified and escaped unescaped underscores and special symbols."]
+            "repaired_mark_scheme_source": repaired_mark_scheme,
+            "audit_summary": "Static syntax verification passed." if paper_report.is_valid and ms_report.is_valid else "Static syntax verification found unresolved issues; inspect the reported source before export.",
+            "fixes_applied": paper_fixes + ms_fixes + paper_report.issues + ms_report.issues,
         }

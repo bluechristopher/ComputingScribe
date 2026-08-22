@@ -34,6 +34,7 @@ from src.agent.preference_learner import PreferenceLearner
 from src.agent.session_manager import SessionManager, ExamSession
 from src.sandbox.code_executor import CodeExecutor
 from src.sandbox.latex_renderer import LaTeXVisualRenderer
+from src.sandbox.latex_compiler import LaTeXSyntaxValidator
 
 CURRENT_YEAR = str(datetime.now().year)
 SERIES_OPTIONS = ["Prelim", "A-Level", "Practice Paper", "Promo", "WA", "Specimen", "Mid-Year Exam", "Other / Custom..."]
@@ -1271,6 +1272,18 @@ elif "Document Transcriber" in author_mode:
 curr_sess: ExamSession = st.session_state.current_session
 
 if curr_sess:
+    session_paper_report = LaTeXSyntaxValidator.validate_syntax(curr_sess.latex_source)
+    session_mark_scheme_report = LaTeXSyntaxValidator.validate_syntax(curr_sess.mark_scheme_source)
+    session_native_compile_verified = (
+        curr_sess.status == "completed"
+        and curr_sess.compiled_source_hash == curr_sess.source_fingerprint()
+        and curr_sess.compilation_logs.count("[pdflatex Engine]: Native pdflatex compilation succeeded on two passes.") >= 2
+    )
+    session_export_ready = (
+        session_paper_report.is_valid
+        and session_mark_scheme_report.is_valid
+        and session_native_compile_verified
+    )
     st.markdown("---")
     
     # Persistent Multi-Agent Pipeline (All Stages Complete)
@@ -1339,6 +1352,8 @@ if curr_sess:
                 type="primary",
                 use_container_width=True
             )
+            if not session_export_ready:
+                st.warning("This ZIP is downloadable, but it has not passed native pdflatex verification. Resolve the compiler errors before treating it as print-ready.")
 
     # Post-generation Zero-Compile AI TeX Audit & Repair Action Bar
     with st.expander("🤖 Gemini AI TeX Audit & Fix (Zero-Compile & Error Repair)", expanded=False):
@@ -1501,18 +1516,22 @@ if curr_sess:
     # TAB 2: Exam Question Paper (Clean KaTeX Questions Preview & Copy LaTeX)
     # --------------------------------------------------------------------------
     with tab2:
+        paper_export_report = LaTeXSyntaxValidator.validate_syntax(curr_sess.latex_source)
+        paper_export_ready = paper_export_report.is_valid and session_native_compile_verified
         col_hdr, col_btn_down = st.columns([1.6, 1.4])
         with col_hdr:
             st.markdown("### 📄 Question Paper (KaTeX Live Preview)")
             st.caption("Clean pedagogical view of questions, subtasks, Jupyter cells, and mark brackets.")
         with col_btn_down:
+            if not paper_export_ready:
+                st.warning("This source is downloadable, but it has not passed native pdflatex verification. Check the compilation log before using it in production.")
             st.download_button(
                 "⬇️ Download paper.tex",
                 data=curr_sess.latex_source,
                 file_name="paper.tex",
                 mime="text/x-tex",
                 type="primary",
-                use_container_width=True
+                use_container_width=True,
             )
 
         with st.expander("🖼️ Insert Exam Image", expanded=False):
@@ -1767,18 +1786,22 @@ if curr_sess:
     # TAB 3: Mark Scheme & Rubrics (Clean KaTeX View & Copy LaTeX)
     # --------------------------------------------------------------------------
     with tab3:
+        mark_scheme_export_report = LaTeXSyntaxValidator.validate_syntax(curr_sess.mark_scheme_source)
+        mark_scheme_export_ready = mark_scheme_export_report.is_valid and session_native_compile_verified
         col_mshdr, col_msbtn = st.columns([1.6, 1.4])
         with col_mshdr:
             st.markdown("### 📝 Official Cambridge Mark Scheme (KaTeX Live Preview)")
             st.caption("Granular partial credit rubrics with Assessment Objective (AO) allocations.")
         with col_msbtn:
+            if not mark_scheme_export_ready:
+                st.warning("This source is downloadable, but it has not passed native pdflatex verification. Check the compilation log before using it in production.")
             st.download_button(
                 "⬇️ Download mark_scheme.tex",
                 data=curr_sess.mark_scheme_source,
                 file_name="mark_scheme.tex",
                 mime="text/x-tex",
                 type="primary",
-                use_container_width=True
+                use_container_width=True,
             )
 
         ms_rendered_html = LaTeXVisualRenderer.render_questions_only_html(curr_sess.mark_scheme_source, title="Mark Scheme")

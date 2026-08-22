@@ -15,6 +15,7 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 from datetime import datetime, timezone
 from config.gcp_config import AppConfig, LOCAL_SESSIONS_DIR
+from src.sandbox.latex_compiler import LaTeXSyntaxValidator
 
 class ExamSession:
     def __init__(
@@ -38,7 +39,8 @@ class ExamSession:
         questions: Optional[List[Dict[str, Any]]] = None,
         status: str = "draft",
         compilation_logs: str = "",
-        pdf_path: Optional[str] = None
+        pdf_path: Optional[str] = None,
+        compiled_source_hash: str = ""
     ):
         self.session_id = session_id
         self.title = title
@@ -60,7 +62,13 @@ class ExamSession:
         self.status = status
         self.compilation_logs = compilation_logs
         self.pdf_path = pdf_path
+        self.compiled_source_hash = compiled_source_hash
         self.updated_at = datetime.now(timezone.utc).isoformat()
+
+    def source_fingerprint(self) -> str:
+        """Identifies the exact paper/mark-scheme pair accepted by pdflatex."""
+        payload = (self.latex_source + "\0" + self.mark_scheme_source).encode("utf-8")
+        return hashlib.sha256(payload).hexdigest()
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -84,6 +92,7 @@ class ExamSession:
             "status": self.status,
             "compilation_logs": self.compilation_logs,
             "pdf_path": self.pdf_path,
+            "compiled_source_hash": self.compiled_source_hash,
             "updated_at": self.updated_at
         }
 
@@ -109,7 +118,8 @@ class ExamSession:
             questions=data.get("questions", []),
             status=data.get("status", "draft"),
             compilation_logs=data.get("compilation_logs", ""),
-            pdf_path=data.get("pdf_path")
+            pdf_path=data.get("pdf_path"),
+            compiled_source_hash=data.get("compiled_source_hash", "")
         )
 
 class SessionManager:
@@ -136,6 +146,25 @@ class SessionManager:
 
     def save_session(self, session: ExamSession) -> bool:
         """Saves session metadata and file artefacts locally and to Cloud if configured."""
+        # Never rewrite TeX here. Compilation verifies a precise source string, so
+        # mutating it after that point would make the export claim meaningless.
+        export_notes = []
+        if session.latex_source:
+            paper_report = LaTeXSyntaxValidator.validate_syntax(session.latex_source)
+            export_notes.extend(paper_report.issues)
+            if not paper_report.is_valid:
+                session.status = "draft"
+        if session.mark_scheme_source:
+            ms_report = LaTeXSyntaxValidator.validate_syntax(session.mark_scheme_source)
+            export_notes.extend(ms_report.issues)
+            if not ms_report.is_valid:
+                session.status = "draft"
+        if session.status == "completed" and session.compiled_source_hash != session.source_fingerprint():
+            session.status = "draft"
+            export_notes.append("Source changed after native pdflatex verification; rebuild required.")
+        if export_notes:
+            session.compilation_logs = "\n".join(filter(None, [session.compilation_logs, "[Export normalization] " + "; ".join(export_notes)]))
+
         session.updated_at = datetime.now(timezone.utc).isoformat()
         session_dir = self._get_session_dir(session.session_id)
         

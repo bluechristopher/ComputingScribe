@@ -46,9 +46,10 @@ class TestLaTeXSyntaxValidator(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             compiler = LaTeXCompiler()
             res = compiler.compile(t, Path(tmpdir), job_name='test_paper', skip_self_healing=True)
-            self.assertTrue(res.success)
+            self.assertFalse(res.success)
             self.assertIn('raw\\_data.csv', res.repaired_source)
             self.assertIn('[Syntax Verification]: PASSED', res.compilation_log)
+            self.assertIn('[pdflatex Verification]: BLOCKED', res.compilation_log)
 
     def test_dunder_methods_and_verbatim_cleaning(self):
         t = (

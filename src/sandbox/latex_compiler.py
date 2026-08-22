@@ -2,7 +2,7 @@
 EduScribe AI - LaTeX Compiler & Self-Healing Sandbox Module
 Compiles LaTeX source files using pdflatex. Intercepts compiler errors,
 repairs broken syntax/macros with Gemini 3.7 Flash, and retries up to 3 times automatically.
-Generates structured PDF documents for headless environments.
+Native pdflatex success is the only condition that marks an export as compiled.
 """
 
 import os
@@ -42,7 +42,8 @@ class SyntaxValidationReport:
 class LaTeXSyntaxValidator:
     """
     Robust static syntax validator and deterministic sanitizer for Cambridge LaTeX documents.
-    Operates independently of local pdflatex binaries to guarantee zero syntax errors.
+    Provides a conservative preflight check. It complements, but never replaces,
+    native pdflatex verification.
     """
     @classmethod
     def sanitize_and_repair_deterministically(
@@ -386,9 +387,9 @@ INSTRUCTIONS:
         skip_self_healing: bool = False
     ) -> LaTeXCompilationResult:
         """
-        Guarantees end-to-end syntax validation, sanitization, and pdflatex compilation.
-        Even if pdflatex is absent or self-healing is skipped, unconditionally validates
-        and sanitizes syntax so zero syntax errors are returned.
+        Runs deterministic normalization followed by native pdflatex verification.
+        A static preflight is useful feedback, but never a substitute for a successful
+        compiler run: without pdflatex this method returns ``success=False``.
         """
         working_dir.mkdir(parents=True, exist_ok=True)
         logs_accumulated = []
@@ -419,25 +420,24 @@ INSTRUCTIONS:
         with open(tex_file, "w", encoding="utf-8") as f:
             f.write(current_source)
 
-        # 4. If pdflatex is not on PATH -> Generate high-fidelity standalone PDF
+        # A browser/static preview is not evidence that the export compiles. Keep the
+        # source available for repair, but never label it as a compiled artifact.
         if not self.pdflatex_cmd:
-            pdf_path = self._generate_fallback_pdf(current_source, working_dir, job_name)
-            pdf_bytes = pdf_path.read_bytes() if pdf_path and pdf_path.exists() else None
-            if syntax_report.is_valid:
-                logs_accumulated.append(f"[PDF Engine]: Rendered standalone high-fidelity PDF ({pdf_path.name}). Verified LaTeX source saved to {tex_file.name}.")
-            else:
-                logs_accumulated.append(f"[Export Readiness]: BLOCKED by unresolved static syntax issues. Source saved to {tex_file.name} as a draft.")
+            logs_accumulated.append(
+                "[pdflatex Verification]: BLOCKED. pdflatex is unavailable; "
+                "static validation is not a successful compilation."
+            )
 
             return LaTeXCompilationResult(
-                success=syntax_report.is_valid,
-                pdf_bytes=pdf_bytes,
-                pdf_path=pdf_path,
+                success=False,
+                pdf_bytes=None,
+                pdf_path=None,
                 compilation_log="\n".join(logs_accumulated),
                 attempts=1,
                 repaired_source=current_source
             )
 
-        # 5. pdflatex is available -> Execute sandbox compilation with auto-repair
+        # pdflatex is available -> Execute sandbox compilation with auto-repair.
         effective_max_attempts = 1 if skip_self_healing else self.max_healing_attempts
 
         for attempt in range(1, effective_max_attempts + 1):
@@ -451,6 +451,8 @@ INSTRUCTIONS:
                 self.pdflatex_cmd,
                 "-interaction=nonstopmode",
                 "-halt-on-error",
+                "-file-line-error",
+                "-no-shell-escape",
                 f"-jobname={job_name}",
                 tex_file.name
             ]
@@ -466,13 +468,11 @@ INSTRUCTIONS:
                 )
             except subprocess.TimeoutExpired:
                 print(f"[LaTeXCompiler] pdflatex timed out on attempt {attempt}")
-                pdf_path = self._generate_fallback_pdf(current_source, working_dir, job_name)
-                pdf_bytes = pdf_path.read_bytes() if pdf_path and pdf_path.exists() else None
-                logs_accumulated.append("pdflatex compilation timed out; rendered high-fidelity fallback PDF.")
+                logs_accumulated.append("[pdflatex Verification]: BLOCKED. Native pdflatex compilation timed out.")
                 return LaTeXCompilationResult(
-                    success=True,
-                    pdf_bytes=pdf_bytes,
-                    pdf_path=pdf_path,
+                    success=False,
+                    pdf_bytes=None,
+                    pdf_path=None,
                     compilation_log="\n".join(logs_accumulated),
                     attempts=attempt,
                     repaired_source=current_source
@@ -486,16 +486,43 @@ INSTRUCTIONS:
             logs_accumulated.append(f"--- pdflatex Attempt {attempt} ---\n{proc.stdout}\n{proc.stderr}")
 
             if proc.returncode == 0 and pdf_file.exists():
-                pdf_bytes = pdf_file.read_bytes()
-                logs_accumulated.append("[pdflatex Engine]: Native pdflatex compilation succeeded.")
-                return LaTeXCompilationResult(
-                    success=True,
-                    pdf_bytes=pdf_bytes,
-                    pdf_path=pdf_file,
-                    compilation_log="\n".join(logs_accumulated),
-                    attempts=attempt,
-                    repaired_source=current_source
+                # A second pass resolves cross references and labels generated by the
+                # first pass. Both runs must succeed for a verified export.
+                try:
+                    verification_proc = subprocess.run(
+                        cmd,
+                        cwd=working_dir,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        timeout=12,
+                    )
+                except subprocess.TimeoutExpired:
+                    logs_accumulated.append("[pdflatex Verification]: BLOCKED. Second pdflatex pass timed out.")
+                    return LaTeXCompilationResult(False, compilation_log="\n".join(logs_accumulated), attempts=attempt, repaired_source=current_source)
+
+                logs_accumulated.append(
+                    f"--- pdflatex Verification Pass ---\n{verification_proc.stdout}\n{verification_proc.stderr}"
                 )
+                if verification_proc.returncode == 0 and pdf_file.exists():
+                    pdf_bytes = pdf_file.read_bytes()
+                    logs_accumulated.append("[pdflatex Engine]: Native pdflatex compilation succeeded on two passes.")
+                    return LaTeXCompilationResult(
+                        success=True,
+                        pdf_bytes=pdf_bytes,
+                        pdf_path=pdf_file,
+                        compilation_log="\n".join(logs_accumulated),
+                        attempts=attempt,
+                        repaired_source=current_source
+                    )
+
+                log_content = log_file.read_text(encoding="utf-8", errors="ignore") if log_file.exists() else verification_proc.stdout
+                error_snippet = self._extract_error_snippet(log_content)
+                logs_accumulated.append(f"[pdflatex Error on verification pass]:\n{error_snippet}")
+                if not skip_self_healing and attempt < effective_max_attempts:
+                    current_source = self._heal_latex_source(current_source, error_snippet)
+                    current_source, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(current_source)
+                continue
 
             # Compilation failed -> extract exact error lines
             error_snippet = self._extract_error_snippet(log_content or proc.stdout)
@@ -506,14 +533,10 @@ INSTRUCTIONS:
                 current_source = self._heal_latex_source(current_source, error_snippet)
                 current_source, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(current_source)
 
-        # Fallback PDF generation if compiler attempts exhausted or self-healing skipped
-        pdf_path = self._generate_fallback_pdf(current_source, working_dir, job_name)
-        pdf_bytes = pdf_path.read_bytes() if pdf_path and pdf_path.exists() else None
-
         return LaTeXCompilationResult(
             success=False,
-            pdf_bytes=pdf_bytes,
-            pdf_path=pdf_path,
+            pdf_bytes=None,
+            pdf_path=None,
             compilation_log="\n".join(logs_accumulated),
             attempts=effective_max_attempts,
             repaired_source=current_source
