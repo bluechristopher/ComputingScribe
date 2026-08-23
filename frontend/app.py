@@ -141,7 +141,91 @@ def render_tex_preview_popover(tex_source: str, filename: str, key: str) -> None
         )
 
 
-PRACTICAL_STRUCTURE_TEMPLATE = r"""\maintask{1}
+PRACTICAL_STRUCTURE_TEMPLATE = r"""\documentclass[11pt,a4paper]{article}
+
+\newcommand{\Institution}{Your Institution}
+\newcommand{\ExamYear}{2027}
+\newcommand{\ExamYearShort}{27}
+\newcommand{\SyllabusCode}{9569}
+\newcommand{\PaperNumber}{02}
+\newcommand{\ExamSeries}{Practice}
+\newcommand{\FullPaperCode}{\SyllabusCode/\PaperNumber/\ExamSeries/\ExamYearShort}
+
+\usepackage[a4paper,left=1.65cm,right=1.65cm,top=1.8cm,bottom=2.2cm,headheight=14pt,headsep=10pt,footskip=22pt]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\usepackage{courier}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{enumitem}
+\usepackage{calc}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\usepackage{underscore}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{\usepackage{url}}
+\IfFileExists{needspace.sty}{\usepackage{needspace}}{\providecommand{\Needspace}[1]{}}
+
+\linespread{1.08}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+\newcommand{\Marks}[1]{\unskip\penalty50\hbox{}\hfill\hbox{[#1]}}
+\providecommand{\code}[1]{{\begingroup\urlstyle{tt}\path{#1}\endgroup}}
+\newcommand{\ExamImage}[2]{\par\begin{center}\includegraphics[width=#2]{#1}\end{center}\par}
+
+\lstset{basicstyle=\ttfamily\upshape\small,upquote=true,breaklines=true,frame=single,tabsize=4,backgroundcolor=\color{gray!8}}
+\newlist{taskitemize}{itemize}{1}
+\setlist[taskitemize]{label=\textbullet,leftmargin=0.8cm,labelwidth=0.4cm,labelsep=0.4cm,topsep=0.3em,itemsep=0.2em,parsep=0.2em}
+\newlist{testcases}{itemize}{1}
+\setlist[testcases]{label={},leftmargin=0pt,itemindent=0pt,topsep=0.2em,itemsep=0.1em,parsep=0.1em}
+
+\newcommand{\maintask}[1]{%
+  \Needspace{10\baselineskip}\vspace{1.0em}%
+  {\noindent\normalsize\textbf{Task #1}}\par\vspace{0.4em}%
+  {\noindent Name your Jupyter Notebook as:}\par\vspace{0.4em}%
+  {\noindent\texttt{TASK#1\_<your name>\_<centre number>\_<index number>.ipynb}}\par\vspace{0.8em}%
+}
+\newcommand{\subtask}[1]{\Needspace{7\baselineskip}\vspace{0.9em}{\noindent\normalsize\textbf{Task #1}}\par\vspace{0.2em}}
+\newcommand{\taskfooter}[1]{\par\vspace{0.8em}\noindent Save your Jupyter Notebook for Task #1.\par\vspace{1.0em}}
+
+\definecolor{jupytegray}{gray}{0.92}
+\newlength{\jupytlabelw}
+\newcommand{\tasksubtaskintro}[1]{%
+  \par\vspace{0.5em}\noindent
+  For each of the sub-tasks, add a comment statement at the beginning of the code, using the hash symbol `\#', to indicate the sub-task the program code belongs to, for example:\par\vspace{0.6em}\noindent
+  \settowidth{\jupytlabelw}{\ttfamily In [1]:\space}%
+  \setlength{\fboxsep}{5.5pt}\fboxrule=0.6pt%
+  \begin{minipage}[t]{\jupytlabelw}\vspace*{\dimexpr\fboxsep+\fboxrule\relax}\ttfamily In [1]:\end{minipage}%
+  \begin{minipage}[t]{\dimexpr\linewidth-\jupytlabelw\relax}%
+    \vspace{0pt}\fcolorbox{black}{jupytegray}{%
+      \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+        \ttfamily\itshape \#Task #1.1\par
+        \ttfamily\itshape Program code
+      \end{minipage}%
+    }\par\vspace{0.2em}\ttfamily Output:%
+  \end{minipage}\par\vspace{0.8em}%
+}
+\newcommand{\jupytercell}[2][1]{\tasksubtaskintro{#1}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyhead[C]{\textbf{\thepage}}
+\fancyfoot[L]{\fontsize{8.5pt}{10pt}\selectfont \copyright\ \Institution\ \ExamYear}
+\fancyfoot[C]{\fontsize{8.5pt}{10pt}\selectfont \FullPaperCode}
+\newcommand{\TurnOver}{\fancyfoot[R]{\fontsize{9.5pt}{11pt}\selectfont\textbf{[Turn over}}}
+\newcommand{\NoTurnOver}{\fancyfoot[R]{}}
+
+\begin{document}
+\setcounter{page}{2}
+\TurnOver
+
+\maintask{1}
 \tasksubtaskintro{1}
 
 \subtask{1.1}
@@ -162,10 +246,77 @@ Produce a summary report sorted by customer ID. Include suitable test evidence. 
 Extend your solution with one additional feature, such as searching, filtering, or exporting results. \Marks{6}
 
 \taskfooter{2}
+
+\end{document}
 """
 
 
-THEORY_STRUCTURE_TEMPLATE = r"""\begin{questions}
+THEORY_STRUCTURE_TEMPLATE = r"""\documentclass[11pt,a4paper]{article}
+
+\newcommand{\Institution}{Your Institution}
+\newcommand{\ExamYear}{2027}
+\newcommand{\ExamYearShort}{27}
+\newcommand{\SyllabusCode}{9569}
+\newcommand{\PaperNumber}{01}
+\newcommand{\ExamSeries}{Practice}
+\newcommand{\FullPaperCode}{\SyllabusCode/\PaperNumber/\ExamSeries/\ExamYearShort}
+
+\usepackage[a4paper,left=1.65cm,right=1.65cm,top=1.8cm,bottom=2.2cm,headheight=14pt,headsep=10pt,footskip=22pt]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\usepackage{courier}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{enumitem}
+\usepackage{calc}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\usepackage{underscore}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{\usepackage{url}}
+\IfFileExists{needspace.sty}{\usepackage{needspace}}{\providecommand{\Needspace}[1]{}}
+
+\linespread{1.08}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45em}
+\newcommand{\Marks}[1]{\unskip\penalty50\hbox{}\hfill\hbox{[#1]}}
+\providecommand{\code}[1]{{\begingroup\urlstyle{tt}\path{#1}\endgroup}}
+\newcommand{\ExamImage}[2]{\par\begin{center}\includegraphics[width=#2]{#1}\end{center}\par}
+
+\newlist{questions}{enumerate}{1}
+\setlist[questions]{label=\textbf{\arabic*},leftmargin=0.8cm,labelwidth=0.8cm,labelsep=0pt,itemindent=0pt,align=left,topsep=1.2em,itemsep=1.5em,parsep=0.45em}
+\newlist{parts}{enumerate}{1}
+\setlist[parts]{label=\textbf{(\alph*)},leftmargin=0.8cm,labelwidth=0.8cm,labelsep=0pt,itemindent=0pt,align=left,topsep=0.6em,itemsep=0.8em,parsep=0.45em}
+\newlist{subparts}{enumerate}{1}
+\setlist[subparts]{label=\textbf{(\roman*)},leftmargin=0.8cm,labelwidth=0.8cm,labelsep=0pt,itemindent=0pt,align=left,topsep=0.4em,itemsep=0.5em,parsep=0.45em}
+\newlist{tightitemize}{itemize}{1}
+\setlist[tightitemize]{label=\textbullet,leftmargin=0.8cm,labelwidth=0.4cm,labelsep=0.4cm,topsep=0.3em,itemsep=0.2em,parsep=0.2em}
+
+\newcommand{\padtwo}[1]{\ifnum#1<10 0#1\else#1\fi}
+\lstnewenvironment{pseudocode}[1][]{
+  \lstset{basicstyle=\ttfamily\upshape\fontsize{10.5pt}{13pt}\selectfont,numbers=left,numberstyle=\ttfamily\fontsize{10.5pt}{13pt}\selectfont\padtwo,numbersep=1.2em,xleftmargin=1.0cm,stepnumber=1,breaklines=true,showstringspaces=false,tabsize=2,keepspaces=true,upquote=true,escapeinside={(*@}{@*)},#1}
+}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyhead[C]{\textbf{\thepage}}
+\fancyfoot[L]{\fontsize{8.5pt}{10pt}\selectfont \copyright\ \Institution\ \ExamYear}
+\fancyfoot[C]{\fontsize{8.5pt}{10pt}\selectfont \FullPaperCode}
+\newcommand{\TurnOver}{\fancyfoot[R]{\fontsize{9.5pt}{11pt}\selectfont\textbf{[Turn over}}}
+\newcommand{\NoTurnOver}{\fancyfoot[R]{}}
+
+\begin{document}
+\setcounter{page}{2}
+\TurnOver
+
+\begin{questions}
 \item A school library stores book loans in a database.
 \begin{parts}
   \item Explain one advantage of storing loan records in a relational database. \Marks{2}
@@ -180,6 +331,8 @@ THEORY_STRUCTURE_TEMPLATE = r"""\begin{questions}
   \item Explain why the algorithm is more efficient than a linear search for large sorted lists. \Marks{3}
 \end{parts}
 \end{questions}
+
+\end{document}
 """
 
 
