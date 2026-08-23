@@ -94,6 +94,91 @@ button.addEventListener('click', copySource);
     )
 
 
+PRACTICAL_STRUCTURE_TEMPLATE = r"""\maintask{1}
+\tasksubtaskintro{1}
+
+\subtask{1.1}
+Write a program that reads data from \code{orders.csv} and stores each record using a suitable data structure. \Marks{4}
+
+\subtask{1.2}
+Add validation so that invalid quantities are rejected and reported clearly. \Marks{5}
+
+\subtask{1.3}
+Produce a summary report sorted by customer ID. Include suitable test evidence. \Marks{8}
+
+\taskfooter{1}
+
+\maintask{2}
+\tasksubtaskintro{2}
+
+\subtask{2.1}
+Extend your solution with one additional feature, such as searching, filtering, or exporting results. \Marks{6}
+
+\taskfooter{2}
+"""
+
+
+THEORY_STRUCTURE_TEMPLATE = r"""\begin{questions}
+\item A school library stores book loans in a database.
+\begin{parts}
+  \item Explain one advantage of storing loan records in a relational database. \Marks{2}
+  \item The table below contains repeated data. Identify one likely update anomaly. \Marks{2}
+  \item Convert the data into suitable 3NF relations, showing primary and foreign keys. \Marks{6}
+\end{parts}
+
+\item The following algorithm searches a sorted list.
+\begin{parts}
+  \item State the name of the search algorithm and give its worst-case time complexity. \Marks{2}
+  \item Complete a trace table for the values of \code{low}, \code{high}, and \code{mid}. \Marks{5}
+  \item Explain why the algorithm is more efficient than a linear search for large sorted lists. \Marks{3}
+\end{parts}
+\end{questions}
+"""
+
+
+def render_structure_copy_buttons() -> None:
+    """Renders copy buttons for concise editable TeX structure starters."""
+    practical_json = json.dumps(PRACTICAL_STRUCTURE_TEMPLATE).replace("</", "<\\/")
+    theory_json = json.dumps(THEORY_STRUCTURE_TEMPLATE).replace("</", "<\\/")
+    components.html(
+        f"""<!doctype html>
+<html><head><meta charset='utf-8'><style>
+* {{ box-sizing:border-box; }}
+body {{ margin:0; font-family:Montserrat,Segoe UI,sans-serif; background:transparent; }}
+.wrap {{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }}
+button {{ min-height:44px; border:1px solid #0b5d89; border-radius:7px; padding:10px 12px; cursor:pointer; color:#fff; background:#0b5d89; font:700 13px Montserrat,Segoe UI,sans-serif; letter-spacing:0; }}
+button:hover {{ background:#084b71; }}
+button:focus-visible {{ outline:3px solid #fbbf24; outline-offset:2px; }}
+@media (max-width:640px) {{ .wrap {{ grid-template-columns:1fr; }} }}
+</style></head><body>
+<div class='wrap'>
+  <button id='copy-practical' type='button'>Copy Practical TeX Structure</button>
+  <button id='copy-theory' type='button'>Copy Theory TeX Structure</button>
+</div>
+<script>
+const templates = {{ practical: {practical_json}, theory: {theory_json} }};
+async function copyTemplate(kind, button) {{
+  const original = button.textContent;
+  try {{
+    if (navigator.clipboard && window.isSecureContext) {{ await navigator.clipboard.writeText(templates[kind]); }}
+    else {{
+      const area=document.createElement('textarea'); area.value=templates[kind]; area.style.position='fixed'; area.style.opacity='0';
+      document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
+    }}
+    button.textContent = 'Copied';
+  }} catch (error) {{
+    button.textContent = 'Copy failed';
+  }}
+  window.setTimeout(() => {{ button.textContent = original; }}, 1800);
+}}
+document.getElementById('copy-practical').addEventListener('click', event => copyTemplate('practical', event.currentTarget));
+document.getElementById('copy-theory').addEventListener('click', event => copyTemplate('theory', event.currentTarget));
+</script></body></html>""",
+        height=56,
+        scrolling=False,
+    )
+
+
 def format_elapsed_time(seconds: float) -> str:
     """Formats elapsed time as seconds or minutes plus seconds for status HUDs."""
     seconds = max(0.0, seconds)
@@ -942,6 +1027,10 @@ banner_img_path = BASE_DIR / "images" / "banner.jpg"
 if banner_img_path.exists():
     st.image(str(banner_img_path), use_container_width=True)
     st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+
+with st.expander("Copy Adaptable TeX Question Structures", expanded=False):
+    st.caption("Starter snippets for hand-authored questions. Paste into the TeX editor or your own document and replace the sample text.")
+    render_structure_copy_buttons()
 
 # Authoring Mode Selection
 col_m1, col_m2 = st.columns([1, 1])
