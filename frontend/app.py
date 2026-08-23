@@ -26,8 +26,6 @@ if str(REPO_ROOT) not in sys.path:
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-from code_editor import code_editor
-
 from config.gcp_config import AppConfig, BASE_DIR
 from src.auth.auth_manager import AuthManager
 from src.agent.orchestrator import EduScribeOrchestrator, ExamGenerationProgress
@@ -35,7 +33,6 @@ from src.agent.preference_learner import PreferenceLearner
 from src.agent.session_manager import SessionManager, ExamSession
 from src.sandbox.code_executor import CodeExecutor
 from src.sandbox.latex_renderer import LaTeXVisualRenderer
-from src.sandbox.latex_compiler import LaTeXSyntaxValidator
 
 CURRENT_YEAR = str(datetime.now().year)
 SERIES_OPTIONS = ["Prelim", "A-Level", "Practice Paper", "Promo", "WA", "Specimen", "Mid-Year Exam", "Other / Custom..."]
@@ -67,10 +64,46 @@ def render_tex_copy_control(tex_source: str, filename: str, key: str) -> None:
     components.html(
         f"""<!doctype html>
 <html><head><meta charset='utf-8'><style>
+* {{ box-sizing:border-box; }}
 body {{ margin:0; font-family:Montserrat,Segoe UI,sans-serif; background:transparent; }}
-button {{ width:100%; min-height:42px; border:1px solid #0b5d89; border-radius:7px; padding:9px 14px; cursor:pointer; color:#fff; background:linear-gradient(135deg,#0b3b70,#087f8c); font:700 14px Montserrat,Segoe UI,sans-serif; letter-spacing:0; box-shadow:0 2px 7px rgba(11,59,112,.2); }}
-button:hover {{ background:linear-gradient(135deg,#082e59,#056d78); }}
+button {{
+  position:relative;
+  width:100%;
+  min-height:52px;
+  overflow:hidden;
+  border:1px solid rgba(103,232,249,.95);
+  border-radius:8px;
+  padding:12px 18px;
+  cursor:pointer;
+  color:#ffffff;
+  background:linear-gradient(135deg,#082f49 0%,#0f766e 52%,#155e75 100%);
+  font:800 15px Montserrat,Segoe UI,sans-serif;
+  letter-spacing:0;
+  box-shadow:0 10px 24px rgba(8,47,73,.28), inset 0 1px 0 rgba(255,255,255,.24);
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}}
+button::before {{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(110deg,transparent 0%,rgba(255,255,255,.22) 45%,transparent 62%);
+  transform:translateX(-115%);
+  transition:transform .55s ease;
+}}
+button::after {{
+  content:'⌘';
+  position:absolute;
+  right:16px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#bae6fd;
+  font:800 16px Montserrat,Segoe UI,sans-serif;
+}}
+button:hover {{ transform:translateY(-1px); border-color:#fbbf24; box-shadow:0 14px 30px rgba(8,47,73,.34), 0 0 0 3px rgba(251,191,36,.18); }}
+button:hover::before {{ transform:translateX(115%); }}
+button:active {{ transform:translateY(0); }}
 button:focus-visible {{ outline:3px solid #fbbf24; outline-offset:2px; }}
+@media (prefers-reduced-motion:reduce) {{ button, button::before {{ transition:none; }} }}
 </style></head><body>
 <button id='{control_id}' type='button' aria-label='Copy all contents of {html.escape(filename)} to clipboard'>Copy {html.escape(filename)} to clipboard</button>
 <script>
@@ -89,7 +122,7 @@ async function copySource() {{
 }}
 button.addEventListener('click', copySource);
 </script></body></html>""",
-        height=48,
+        height=62,
         scrolling=False,
     )
 
@@ -146,9 +179,12 @@ def render_structure_copy_buttons() -> None:
 * {{ box-sizing:border-box; }}
 body {{ margin:0; font-family:Montserrat,Segoe UI,sans-serif; background:transparent; }}
 .wrap {{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }}
-button {{ min-height:44px; border:1px solid #0b5d89; border-radius:7px; padding:10px 12px; cursor:pointer; color:#fff; background:#0b5d89; font:700 13px Montserrat,Segoe UI,sans-serif; letter-spacing:0; }}
-button:hover {{ background:#084b71; }}
+button {{ position:relative; min-height:48px; overflow:hidden; border:1px solid rgba(103,232,249,.9); border-radius:8px; padding:11px 14px; cursor:pointer; color:#fff; background:linear-gradient(135deg,#0f3d5e,#0f766e); font:800 13px Montserrat,Segoe UI,sans-serif; letter-spacing:0; box-shadow:0 8px 18px rgba(15,61,94,.24), inset 0 1px 0 rgba(255,255,255,.22); transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease; }}
+button::before {{ content:''; position:absolute; inset:0; background:linear-gradient(110deg,transparent,rgba(255,255,255,.2),transparent); transform:translateX(-115%); transition:transform .55s ease; }}
+button:hover {{ transform:translateY(-1px); border-color:#fbbf24; box-shadow:0 12px 24px rgba(15,61,94,.3), 0 0 0 3px rgba(251,191,36,.16); }}
+button:hover::before {{ transform:translateX(115%); }}
 button:focus-visible {{ outline:3px solid #fbbf24; outline-offset:2px; }}
+@media (prefers-reduced-motion:reduce) {{ button, button::before {{ transition:none; }} }}
 @media (max-width:640px) {{ .wrap {{ grid-template-columns:1fr; }} }}
 </style></head><body>
 <div class='wrap'>
@@ -174,7 +210,7 @@ async function copyTemplate(kind, button) {{
 document.getElementById('copy-practical').addEventListener('click', event => copyTemplate('practical', event.currentTarget));
 document.getElementById('copy-theory').addEventListener('click', event => copyTemplate('theory', event.currentTarget));
 </script></body></html>""",
-        height=56,
+        height=62,
         scrolling=False,
     )
 
@@ -185,117 +221,6 @@ def format_elapsed_time(seconds: float) -> str:
     minutes = int(seconds // 60)
     remainder = seconds - (minutes * 60)
     return f"{minutes} min {remainder:05.2f} sec" if minutes else f"{remainder:.2f} sec"
-
-
-TEX_EDITOR_BUTTONS = [
-    {
-        "name": "copy",
-        "feather": "Copy",
-        "hasText": True,
-        "alwaysOn": True,
-        "commands": ["copyAll"],
-        "style": {"top": "0.45rem", "right": "5.9rem"},
-    },
-    {
-        "name": "save",
-        "feather": "Save",
-        "primary": True,
-        "hasText": True,
-        "showWithIcon": True,
-        "alwaysOn": True,
-        "commands": ["submit"],
-        "style": {"top": "0.45rem", "right": "0.45rem"},
-    },
-]
-
-
-def build_tex_lint_annotations(tex_source: str) -> list[dict[str, Any]]:
-    """Returns Ace gutter annotations for common, actionable TeX structure errors."""
-    annotations: list[dict[str, Any]] = []
-    environment_stack: list[tuple[str, int, int]] = []
-    brace_balance = 0
-    code_environment: Optional[str] = None
-
-    for row, raw_line in enumerate(tex_source.splitlines()):
-        line = re.split(r"(?<!\\)%", raw_line, maxsplit=1)[0]
-        for match in re.finditer(r"\\(begin|end)\{([^}]+)\}", line):
-            action, environment = match.groups()
-            if code_environment and environment != code_environment:
-                continue
-            if action == "begin":
-                environment_stack.append((environment, row, match.start()))
-                if environment in {"verbatim", "lstlisting", "minted", "python"}:
-                    code_environment = environment
-            elif not environment_stack:
-                annotations.append({
-                    "row": row,
-                    "column": match.start(),
-                    "text": f"Unexpected \\end{{{environment}}}.",
-                    "type": "error",
-                })
-            elif environment_stack[-1][0] != environment:
-                expected = environment_stack[-1][0]
-                annotations.append({
-                    "row": row,
-                    "column": match.start(),
-                    "text": f"Expected \\end{{{expected}}} before \\end{{{environment}}}.",
-                    "type": "error",
-                })
-            else:
-                environment_stack.pop()
-                if environment == code_environment:
-                    code_environment = None
-
-        if code_environment:
-            continue
-
-        unescaped_line = line.replace(r"\{", "").replace(r"\}", "")
-        brace_balance += unescaped_line.count("{") - unescaped_line.count("}")
-        if r"\nolinkurl" in line:
-            annotations.append({
-                "row": row,
-                "column": line.find(r"\nolinkurl"),
-                "text": "\\nolinkurl requires hyperref here; use \\path for portable inline code.",
-                "type": "error",
-            })
-        csv_match = re.search(r"language\s*=\s*(?:\{\s*csv\s*\}|csv)", line, flags=re.IGNORECASE)
-        if csv_match:
-            annotations.append({
-                "row": row,
-                "column": csv_match.start(),
-                "text": "listings has no portable csv language; use language={}.",
-                "type": "warning",
-            })
-
-    for environment, row, column in environment_stack:
-        annotations.append({
-            "row": row,
-            "column": column,
-            "text": f"Unclosed \\begin{{{environment}}} environment.",
-            "type": "error",
-        })
-    if brace_balance:
-        annotations.append({
-            "row": 0,
-            "column": 0,
-            "text": "Curly braces are unbalanced in this document.",
-            "type": "error",
-        })
-    if r"\documentclass" not in tex_source:
-        annotations.append({
-            "row": 0,
-            "column": 0,
-            "text": "Missing \\documentclass declaration.",
-            "type": "error",
-        })
-    if r"\begin{document}" not in tex_source or r"\end{document}" not in tex_source:
-        annotations.append({
-            "row": 0,
-            "column": 0,
-            "text": "A complete export needs both \\begin{document} and \\end{document}.",
-            "type": "error",
-        })
-    return annotations
 
 
 def ensure_exam_image_macro(latex_source: str) -> str:
@@ -311,90 +236,6 @@ def ensure_exam_image_macro(latex_source: str) -> str:
     if r"\begin{document}" in latex_source:
         return latex_source.replace(r"\begin{document}", EXAM_IMAGE_MACRO + "\n\\begin{document}", 1)
     return EXAM_IMAGE_MACRO + "\n" + latex_source
-
-
-def render_tex_editor(session: ExamSession, source_attribute: str, filename: str, editor_id: str) -> None:
-    """Renders an editable TeX workspace whose saved text becomes the session source."""
-    editor_prefix = f"tex_editor_{session.session_id}_{editor_id}"
-    draft_key = f"{editor_prefix}_draft"
-    source_key = f"{editor_prefix}_source"
-    dirty_key = f"{editor_prefix}_dirty"
-    revision_key = f"{editor_prefix}_revision"
-    saved_source = getattr(session, source_attribute)
-
-    if draft_key not in st.session_state:
-        st.session_state[draft_key] = saved_source
-        st.session_state[source_key] = saved_source
-        st.session_state[dirty_key] = False
-        st.session_state[revision_key] = 0
-    elif st.session_state[source_key] != saved_source and not st.session_state[dirty_key]:
-        st.session_state[draft_key] = saved_source
-        st.session_state[source_key] = saved_source
-        st.session_state[revision_key] += 1
-
-    draft_source = st.session_state[draft_key]
-    annotations = build_tex_lint_annotations(draft_source)
-    response = code_editor(
-        draft_source,
-        lang="latex",
-        theme="light",
-        shortcuts="vscode",
-        height="620px",
-        buttons=TEX_EDITOR_BUTTONS,
-        options={"wrap": True, "fontSize": "14px", "showPrintMargin": False},
-        props={
-            "annotations": annotations,
-            "showGutter": True,
-            "highlightActiveLine": True,
-            "style": {"borderRadius": "8px", "border": "1px solid #b9cbe3"},
-        },
-        component_props={
-            "css": ".ace_editor { font-family: 'Fira Code', 'Courier New', monospace; } .ace_gutter { background:#edf5ff; color:#34506f; }",
-        },
-        response_mode=["debounce", "blur"],
-        allow_reset=True,
-        key=f"{editor_prefix}_{st.session_state[revision_key]}",
-    )
-
-    response_text = response.get("text") if isinstance(response, dict) else None
-    if isinstance(response_text, str) and response_text != st.session_state[draft_key]:
-        st.session_state[draft_key] = response_text
-        st.session_state[dirty_key] = response_text != saved_source
-        draft_source = response_text
-        annotations = build_tex_lint_annotations(draft_source)
-
-    lint_report = LaTeXSyntaxValidator.validate_syntax(draft_source)
-    issue_count = max(len(annotations), len(lint_report.issues))
-    lint_col, save_col, reset_col = st.columns([2.4, 1, 1])
-    with lint_col:
-        if issue_count:
-            st.caption(f"Live TeX lint: {issue_count} issue{'s' if issue_count != 1 else ''}; see the editor gutter for locations.")
-        else:
-            st.caption("Live TeX lint: no structural errors found.")
-    with save_col:
-        save_requested = st.button("Save TeX", key=f"{editor_prefix}_save", type="primary", use_container_width=True)
-    with reset_col:
-        reset_requested = st.button("Revert", key=f"{editor_prefix}_revert", use_container_width=True)
-
-    if reset_requested:
-        st.session_state[draft_key] = saved_source
-        st.session_state[dirty_key] = False
-        st.session_state[revision_key] += 1
-        st.rerun()
-
-    if save_requested or (isinstance(response, dict) and response.get("type") == "submit"):
-        updated_source = st.session_state[draft_key]
-        if updated_source != saved_source:
-            setattr(session, source_attribute, updated_source)
-            session.status = "draft"
-            st.session_state.orchestrator.session_manager.save_session(session)
-            st.session_state.current_session = session
-            st.session_state[source_key] = updated_source
-            st.session_state[dirty_key] = False
-            st.session_state[revision_key] += 1
-            st.toast(f"Saved {filename}. Re-run pdflatex before treating this edit as compiled.")
-            st.rerun()
-        st.info(f"No changes to save in {filename}.")
 
 
 def render_activity_hud(title: str, detail: str, key: str, start_ms: int) -> None:
@@ -1470,20 +1311,6 @@ elif "Question-by-Question" in author_mode:
                     key="studio_custom_title"
                 )
 
-            # Live Preview of Full Assembled LaTeX Source
-            with st.expander("👁️ Inspect Full Assembled LaTeX Document Code", expanded=False):
-                st.caption("Complete combined LaTeX document for all assembled questions above:")
-                preview_assembled = st.session_state.orchestrator.question_author.assemble_full_paper(
-                    tasks_list=q_list,
-                    paper_type=s_paper_type,
-                    syllabus_code="9569",
-                    paper_number="02" if s_paper_type == "practical" else "01",
-                    institution=b_institution if 'b_institution' in locals() else "HelloWorld Junior College",
-                    exam_year=b_exam_year if 'b_exam_year' in locals() else "2027",
-                    exam_series=b_exam_series if 'b_exam_series' in locals() else "Prelim"
-                )
-                st.code(preview_assembled["latex_source"], language="latex")
-
             skip_healing_studio = st.checkbox(
                 "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
                 value=True,
@@ -1652,18 +1479,6 @@ elif "Document Transcriber" in author_mode:
 curr_sess: ExamSession = st.session_state.current_session
 
 if curr_sess:
-    session_paper_report = LaTeXSyntaxValidator.validate_syntax(curr_sess.latex_source)
-    session_mark_scheme_report = LaTeXSyntaxValidator.validate_syntax(curr_sess.mark_scheme_source)
-    session_native_compile_verified = (
-        curr_sess.status == "completed"
-        and curr_sess.compiled_source_hash == curr_sess.source_fingerprint()
-        and curr_sess.compilation_logs.count("[pdflatex Engine]: Native pdflatex compilation succeeded on two passes.") >= 2
-    )
-    session_export_ready = (
-        session_paper_report.is_valid
-        and session_mark_scheme_report.is_valid
-        and session_native_compile_verified
-    )
     st.markdown("---")
     
     # Persistent Multi-Agent Pipeline (All Stages Complete)
@@ -1732,49 +1547,6 @@ if curr_sess:
                 type="primary",
                 use_container_width=True
             )
-            if not session_export_ready:
-                st.warning("This ZIP is downloadable, but it has not passed native pdflatex verification. Resolve the compiler errors before treating it as print-ready.")
-
-    # Post-generation Zero-Compile AI TeX Audit & Repair Action Bar
-    with st.expander("🤖 Gemini AI TeX Audit & Fix (Zero-Compile & Error Repair)", expanded=False):
-        st.caption("⚡ **Zero-Compile AI Linter**: Audits syntax, unescaped `_`/`%`/`#`, unmatched `\\begin{...}`, and Cambridge tags using pure Gemini reasoning without invoking pdflatex. You can paste any compiler error log below:")
-        col_top_err, col_top_act = st.columns([3, 1])
-        with col_top_err:
-            top_pasted_err = st.text_area(
-                "Paste Compiler Error / Log / Issue (Optional)",
-                placeholder="e.g. ! LaTeX Error: File ulem.sty not found or ! Missing $ inserted or paste terminal compiler log...",
-                height=70,
-                key="top_ai_lint_err_input"
-            )
-        with col_top_act:
-            st.write("")
-            st.write("")
-            if st.button("✨ Run AI TeX Audit & Fix", key="top_ai_lint_btn", type="primary", use_container_width=True):
-                with st.spinner("🤖 Gemini 3.7 Flash is auditing and repairing LaTeX syntax (zero-compile)..."):
-                    lint_result = st.session_state.orchestrator.ai_lint_and_repair_document(
-                        latex_source=curr_sess.latex_source,
-                        mark_scheme_source=curr_sess.mark_scheme_source,
-                        paper_type=curr_sess.paper_type,
-                        compiler_error=top_pasted_err
-                    )
-                    curr_sess.latex_source = lint_result["repaired_latex_source"]
-                    if lint_result.get("repaired_mark_scheme_source"):
-                        curr_sess.mark_scheme_source = lint_result["repaired_mark_scheme_source"]
-                    st.session_state.orchestrator.session_manager.save_session(curr_sess)
-                    st.session_state.current_session = curr_sess
-                    st.session_state["last_lint_summary"] = lint_result.get("audit_summary", "Audit completed successfully.")
-                    st.session_state["last_lint_fixes"] = lint_result.get("fixes_applied", [])
-                    st.success(f"✅ AI TeX Audit & Fix Complete! {lint_result.get('audit_summary', '')}")
-                    st.rerun()
-
-    if st.session_state.get("last_lint_summary"):
-        with st.expander(f"✨ AI TeX Audit Report: {st.session_state.get('last_lint_summary')}", expanded=True):
-            fixes = st.session_state.get("last_lint_fixes", [])
-            if fixes:
-                for fix in fixes:
-                    st.markdown(f"- 🔧 {fix}")
-            else:
-                st.markdown("- ✅ All LaTeX environments, tags, and macros verified syntax-clean.")
 
     # --------------------------------------------------------------------------
     # NAVIGATION TABS
@@ -1893,18 +1665,14 @@ if curr_sess:
             st.markdown(style_card_html, unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # TAB 2: Exam Question Paper (Clean KaTeX Questions Preview & Copy LaTeX)
+    # TAB 2: Exam Question Paper Copy, Download & Image Insertion
     # --------------------------------------------------------------------------
     with tab2:
-        paper_export_report = LaTeXSyntaxValidator.validate_syntax(curr_sess.latex_source)
-        paper_export_ready = paper_export_report.is_valid and session_native_compile_verified
         col_hdr, col_btn_down = st.columns([1.6, 1.4])
         with col_hdr:
-            st.markdown("### 📄 Question Paper (KaTeX Live Preview)")
-            st.caption("Clean pedagogical view of questions, subtasks, Jupyter cells, and mark brackets.")
+            st.markdown("### 📄 Question Paper")
+            st.caption("Copy or download `paper.tex`; use image insertion when you need to place a figure.")
         with col_btn_down:
-            if not paper_export_ready:
-                st.warning("This source is downloadable, but it has not passed native pdflatex verification. Check the compilation log before using it in production.")
             st.download_button(
                 "⬇️ Download paper.tex",
                 data=curr_sess.latex_source,
@@ -1993,7 +1761,7 @@ if curr_sess:
                     on_select="rerun",
                     key="paper_tex_line_clicker_df",
                     column_config={
-                        "Line #": st.column_config.NumberColumn("Line #", width="small"),
+                        "Line #": st.column_config.NumberColumn("Line #", width=70),
                         "LaTeX Code": st.column_config.TextColumn("LaTeX Source Content", width="large"),
                     }
                 )
@@ -2095,47 +1863,6 @@ if curr_sess:
                 key="paper_tex_assets_download",
             )
 
-        # AI Fix TeX Action with Optional Error Message Input
-        with st.expander("🤖 Gemini AI TeX Audit & Fix (Zero-Compile & Error Repair)", expanded=False):
-            st.caption("Zero-compile static linter: audits syntax and repairs specific compiler errors using Gemini 3.7 Flash.")
-            tab2_pasted_err = st.text_area(
-                "Paste Compiler Error / Log / Issue (Optional)",
-                placeholder="e.g. ! LaTeX Error: File ulem.sty not found or ! Missing $ inserted or paste terminal compiler log...",
-                height=75,
-                key="tab2_ai_lint_err_input"
-            )
-            if st.button("✨ Run AI TeX Audit & Fix on paper.tex", key="tab2_ai_lint_btn", type="primary", use_container_width=True):
-                with st.spinner("🤖 Gemini is checking and fixing LaTeX syntax (zero-compile)..."):
-                    lint_res = st.session_state.orchestrator.ai_lint_and_repair_document(
-                        latex_source=curr_sess.latex_source,
-                        mark_scheme_source=curr_sess.mark_scheme_source,
-                        paper_type=curr_sess.paper_type,
-                        compiler_error=tab2_pasted_err
-                    )
-                    curr_sess.latex_source = lint_res["repaired_latex_source"]
-                    if lint_res.get("repaired_mark_scheme_source"):
-                        curr_sess.mark_scheme_source = lint_res["repaired_mark_scheme_source"]
-                    st.session_state.orchestrator.session_manager.save_session(curr_sess)
-                    st.session_state.current_session = curr_sess
-                    st.session_state["last_lint_summary"] = lint_res.get("audit_summary", "Audit completed successfully.")
-                    st.session_state["last_lint_fixes"] = lint_res.get("fixes_applied", [])
-                    st.success(f"✅ Repaired: {lint_res.get('audit_summary', '')}")
-                    st.rerun()
-
-        # Clean KaTeX Questions Rendering (No Cover/Header noise)
-        rendered_html = LaTeXVisualRenderer.render_questions_only_html(
-            curr_sess.latex_source,
-            title=curr_sess.title,
-            image_data_urls=build_session_image_data_urls(curr_sess),
-        )
-        components.html(rendered_html, height=850, scrolling=True)
-
-        # Editable TeX workspace
-        st.markdown("---")
-        st.markdown("### TeX Editor (`paper.tex`)")
-        st.caption("Edit the source directly, then save it to update the preview and every export. The gutter flags common structural TeX issues as you work.")
-        render_tex_editor(curr_sess, "latex_source", "paper.tex", "paper")
-
         st.markdown("---")
         st.markdown("### 💬 Conversational Paper Editor & Refinement Workbench")
         st.markdown(f"<div style='color: #475569; margin-bottom: 10px; font-size: 0.95rem;'>Prompt {GEMINI_ICON_SM} <strong>Gemini 3.7 Flash</strong> to refine, rephrase, add subtasks, adjust difficulty, or rewrite specific tasks across this working exam paper:</div>", unsafe_allow_html=True)
@@ -2172,18 +1899,14 @@ if curr_sess:
             st.rerun()
 
     # --------------------------------------------------------------------------
-    # TAB 3: Mark Scheme & Rubrics (Clean KaTeX View & Copy LaTeX)
+    # TAB 3: Mark Scheme Copy & Download
     # --------------------------------------------------------------------------
     with tab3:
-        mark_scheme_export_report = LaTeXSyntaxValidator.validate_syntax(curr_sess.mark_scheme_source)
-        mark_scheme_export_ready = mark_scheme_export_report.is_valid and session_native_compile_verified
         col_mshdr, col_msbtn = st.columns([1.6, 1.4])
         with col_mshdr:
-            st.markdown("### 📝 Official Cambridge Mark Scheme (KaTeX Live Preview)")
-            st.caption("Granular partial credit rubrics with Assessment Objective (AO) allocations.")
+            st.markdown("### 📝 Official Cambridge Mark Scheme")
+            st.caption("Copy or download `mark_scheme.tex`.")
         with col_msbtn:
-            if not mark_scheme_export_ready:
-                st.warning("This source is downloadable, but it has not passed native pdflatex verification. Check the compilation log before using it in production.")
             st.download_button(
                 "⬇️ Download mark_scheme.tex",
                 data=curr_sess.mark_scheme_source,
@@ -2194,15 +1917,6 @@ if curr_sess:
             )
 
         render_tex_copy_control(curr_sess.mark_scheme_source, "mark_scheme.tex", "mark-scheme-tex")
-
-        ms_rendered_html = LaTeXVisualRenderer.render_questions_only_html(curr_sess.mark_scheme_source, title="Mark Scheme")
-        components.html(ms_rendered_html, height=850, scrolling=True)
-
-        # Editable mark scheme workspace
-        st.markdown("---")
-        st.markdown("### TeX Editor (`mark_scheme.tex`)")
-        st.caption("Edit and save the mark scheme directly. Live linting marks common TeX structure problems in the gutter.")
-        render_tex_editor(curr_sess, "mark_scheme_source", "mark_scheme.tex", "mark-scheme")
 
     # --------------------------------------------------------------------------
     # TAB 4: Demographic Datasets & Starter Code
