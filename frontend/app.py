@@ -127,6 +127,20 @@ button.addEventListener('click', copySource);
     )
 
 
+def render_tex_preview_popover(tex_source: str, filename: str, key: str) -> None:
+    """Keeps TeX source off the page until the user opens a preview popover."""
+    with st.popover(f"Preview & copy {filename}", use_container_width=True):
+        st.caption(f"Read-only preview of `{filename}`.")
+        render_tex_copy_control(tex_source, filename, f"{key}-popover-copy")
+        st.text_area(
+            f"{filename} source",
+            value=tex_source,
+            height=420,
+            key=f"{key}_preview_source",
+            label_visibility="collapsed",
+        )
+
+
 PRACTICAL_STRUCTURE_TEMPLATE = r"""\maintask{1}
 \tasksubtaskintro{1}
 
@@ -1682,6 +1696,7 @@ if curr_sess:
                 use_container_width=True,
             )
 
+        render_tex_preview_popover(curr_sess.latex_source, "paper.tex", "paper-tex")
         render_tex_copy_control(curr_sess.latex_source, "paper.tex", "paper-tex")
 
         with st.expander("🖼️ Insert Exam Image", expanded=False):
@@ -1916,6 +1931,7 @@ if curr_sess:
                 use_container_width=True,
             )
 
+        render_tex_preview_popover(curr_sess.mark_scheme_source, "mark_scheme.tex", "mark-scheme-tex")
         render_tex_copy_control(curr_sess.mark_scheme_source, "mark_scheme.tex", "mark-scheme-tex")
 
     # --------------------------------------------------------------------------
