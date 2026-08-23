@@ -491,7 +491,7 @@ class LaTeXVisualRenderer:
                     f"<p>For each of the sub-tasks, add a comment statement at the beginning of the code, using the hash symbol '#', to indicate the sub-task the program code belongs to, for example:</p>"
                     f"<div class='jupyter-cell-aligned'>"
                     f"<span class='jupyter-in-tag'>In [1]:</span>"
-                    f"<div class='jupyter-grey-frame'>#Task {t_num}.1<br>Program code</div>"
+                    f"<div class='jupyter-grey-frame'><em>#Task {t_num}.1<br>Program code</em></div>"
                     f"</div>"
                     f"<div class='jupyter-output-tag'>Output:</div>"
                     f"</div>"

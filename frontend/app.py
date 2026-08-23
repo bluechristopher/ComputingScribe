@@ -213,6 +213,21 @@ def build_tex_lint_annotations(tex_source: str) -> list[dict[str, Any]]:
     return annotations
 
 
+def ensure_exam_image_macro(latex_source: str) -> str:
+    """Ensures paper.tex contains the image macro needed by browser preview and pdflatex."""
+    if r"\newcommand{\ExamImage}" in latex_source:
+        return latex_source
+    if r"\usepackage{graphicx}" in latex_source:
+        return latex_source.replace(
+            r"\usepackage{graphicx}",
+            r"\usepackage{graphicx}" + "\n" + EXAM_IMAGE_MACRO,
+            1,
+        )
+    if r"\begin{document}" in latex_source:
+        return latex_source.replace(r"\begin{document}", EXAM_IMAGE_MACRO + "\n\\begin{document}", 1)
+    return EXAM_IMAGE_MACRO + "\n" + latex_source
+
+
 def render_tex_editor(session: ExamSession, source_attribute: str, filename: str, editor_id: str) -> None:
     """Renders an editable TeX workspace whose saved text becomes the session source."""
     editor_prefix = f"tex_editor_{session.session_id}_{editor_id}"
@@ -268,9 +283,9 @@ def render_tex_editor(session: ExamSession, source_attribute: str, filename: str
     lint_col, save_col, reset_col = st.columns([2.4, 1, 1])
     with lint_col:
         if issue_count:
-            st.warning(f"Live TeX lint: {issue_count} issue{'s' if issue_count != 1 else ''}. See the editor gutter for locations.")
+            st.caption(f"Live TeX lint: {issue_count} issue{'s' if issue_count != 1 else ''}; see the editor gutter for locations.")
         else:
-            st.success("Live TeX lint: no structural errors found.")
+            st.caption("Live TeX lint: no structural errors found.")
     with save_col:
         save_requested = st.button("Save TeX", key=f"{editor_prefix}_save", type="primary", use_container_width=True)
     with reset_col:
@@ -339,15 +354,9 @@ def insert_exam_image(
 ) -> tuple[Optional[str], Optional[str]]:
     """Adds an image after a selected line number, after a uniquely matched source phrase, or at the end of the paper."""
     if placement == "At end of paper":
-        if r"\newcommand{\ExamImage}" not in latex_source:
-            if r"\usepackage{graphicx}" in latex_source:
-                latex_source = latex_source.replace(
-                    r"\usepackage{graphicx}",
-                    r"\usepackage{graphicx}" + "\n" + EXAM_IMAGE_MACRO,
-                    1,
-                )
-            else:
-                latex_source = latex_source.replace(r"\begin{document}", EXAM_IMAGE_MACRO + "\n\\begin{document}", 1)
+        latex_source = ensure_exam_image_macro(latex_source)
+        if r"\end{document}" in latex_source:
+            return latex_source.replace(r"\end{document}", f"{image_macro}\n\n\\end{{document}}", 1), None
         return latex_source.rstrip() + f"\n\n{image_macro}\n", None
 
     if placement in ("Click to select line in paper.tex", "After selected line", "Before selected line") or line_number is not None:
@@ -360,17 +369,7 @@ def insert_exam_image(
         insert_idx = line_number if position.lower() == "after" else (line_number - 1)
         formatted_macro = f"\n{image_macro}\n" if (insert_idx > 0 and not raw_lines[insert_idx - 1].endswith("\n")) else f"{image_macro}\n"
         raw_lines.insert(insert_idx, formatted_macro)
-        updated_source = "".join(raw_lines)
-        
-        if r"\newcommand{\ExamImage}" not in updated_source:
-            if r"\usepackage{graphicx}" in updated_source:
-                updated_source = updated_source.replace(
-                    r"\usepackage{graphicx}",
-                    r"\usepackage{graphicx}" + "\n" + EXAM_IMAGE_MACRO,
-                    1,
-                )
-            else:
-                updated_source = updated_source.replace(r"\begin{document}", EXAM_IMAGE_MACRO + "\n\\begin{document}", 1)
+        updated_source = ensure_exam_image_macro("".join(raw_lines))
         return updated_source, None
 
     phrase = phrase.strip()
@@ -385,15 +384,7 @@ def insert_exam_image(
     if line_end == -1:
         line_end = len(latex_source)
     updated_source = latex_source[:line_end] + f"\n\n{image_macro}" + latex_source[line_end:]
-    if r"\newcommand{\ExamImage}" not in updated_source:
-        if r"\usepackage{graphicx}" in updated_source:
-            updated_source = updated_source.replace(
-                r"\usepackage{graphicx}",
-                r"\usepackage{graphicx}" + "\n" + EXAM_IMAGE_MACRO,
-                1,
-            )
-        else:
-            updated_source = updated_source.replace(r"\begin{document}", EXAM_IMAGE_MACRO + "\n\\begin{document}", 1)
+    updated_source = ensure_exam_image_macro(updated_source)
     return updated_source, None
 
 

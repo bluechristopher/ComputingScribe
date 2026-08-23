@@ -2,6 +2,7 @@ import unittest
 from pathlib import Path
 import tempfile
 from src.sandbox.latex_compiler import LaTeXSyntaxValidator, LaTeXCompiler
+from src.sandbox.latex_renderer import LaTeXVisualRenderer
 
 class TestLaTeXSyntaxValidator(unittest.TestCase):
     def test_unescaped_underscore_sanitization(self):
@@ -137,6 +138,22 @@ class TestLaTeXSyntaxValidator(unittest.TestCase):
         self.assertIn("\\usepackage{xurl}", sanitized)
         self.assertIn("\\path{#1}", sanitized)
         self.assertTrue(any("inline code formatting" in fix for fix in fixes))
+
+    def test_practical_jupyter_prompt_and_images_render_in_preview(self):
+        source = (
+            "\\documentclass{article}\n"
+            "\\begin{document}\n"
+            "\\tasksubtaskintro{2}\n"
+            "\\ExamImage{assets/chart.png}{0.55\\linewidth}\n"
+            "\\end{document}"
+        )
+        rendered = LaTeXVisualRenderer.render_questions_only_html(
+            source,
+            image_data_urls={"assets/chart.png": "data:image/png;base64,abc123"},
+        )
+        self.assertIn("<em>#Task 2.1<br>Program code</em>", rendered)
+        self.assertIn("src='data:image/png;base64,abc123'", rendered)
+        self.assertIn("width: 55.0%;", rendered)
 
 if __name__ == '__main__':
     unittest.main()
