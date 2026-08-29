@@ -964,27 +964,43 @@ with st.sidebar:
 # ==============================================================================
 @st.dialog("🎓 Welcome to ComputingScribe AI", width="large")
 def show_welcome_gateway():
-    st.markdown("#### Select Access Mode")
-    st.markdown("Choose whether to use your own free Gemini API key (**Guest Entry**) or log in with verified credentials for **Google Cloud Vertex AI**.")
-    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="background: linear-gradient(135deg, rgba(30, 58, 138, 0.6) 0%, rgba(124, 58, 237, 0.45) 45%, rgba(234, 88, 12, 0.4) 75%, rgba(220, 38, 38, 0.4) 100%);
+                    border: 1.5px solid rgba(191, 219, 254, 0.5); border-radius: 14px; padding: 14px 18px; margin-bottom: 16px;
+                    box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), 0 6px 24px rgba(0,0,0,0.35); backdrop-filter: blur(14px);">
+            <div style="font-size: 1.15rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                <span>✨</span><span>Select Access Gateway</span>
+            </div>
+            <div style="font-size: 0.9rem; color: #e2e8f0; margin-top: 4px; line-height: 1.45;">
+                Choose whether to use your own free Gemini API key (<strong style="color: #93c5fd;">Guest Entry</strong>) or authenticate for enterprise <strong style="color: #f472b6;">Google Cloud Vertex AI</strong>.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     
     col_guest, col_auth = st.columns(2)
     
     with col_guest:
         st.markdown(
             """
-            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 18px; min-height: 150px;">
-                <div style="font-size: 1.8rem; margin-bottom: 4px;">👤</div>
-                <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 1.15rem;">Guest Entry</h3>
-                <p style="font-size: 0.86rem; color: #475569; line-height: 1.45;">
-                    <strong>Bring Your Own Key (BYOK)</strong> via your Google AI Studio API key. Instant access, zero server credentials required.
+            <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 20%, #1e3a8a 45%, #334155 70%, #0f172a 100%);
+                        border: 2px solid #93c5fd; border-radius: 14px; padding: 18px; min-height: 165px;
+                        box-shadow: inset 0 1px 3px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.6), 0 8px 25px rgba(37,99,235,0.35);
+                        position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -30px; right: -30px; width: 90px; height: 90px; background: radial-gradient(circle, rgba(147,197,253,0.35) 0%, transparent 70%); border-radius: 50%;"></div>
+                <div style="font-size: 1.8rem; margin-bottom: 2px;">👤</div>
+                <h3 style="margin: 4px 0 8px 0; background: linear-gradient(180deg, #ffffff 0%, #93c5fd 60%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.18rem; font-weight: 900; letter-spacing: -0.01em;">Guest Entry (BYOK)</h3>
+                <p style="font-size: 0.86rem; color: #cbd5e1 !important; line-height: 1.5; margin: 0;">
+                    <strong style="color: #f8fafc;">Bring Your Own Key</strong> via your Google AI Studio Gemini API key. Instant access with zero server credentials needed.
                 </p>
             </div>
             """,
             unsafe_allow_html=True
         )
         st.write("")
-        if st.button("👉 Enter as Guest (BYOK)", type="secondary", use_container_width=True, key="dlg_guest_btn"):
+        if st.button("👉 Enter as Guest (BYOK)", type="primary", use_container_width=True, key="dlg_guest_btn"):
             st.session_state.auth_choice = "guest"
             AppConfig.set_auth_mode("byok")
             st.rerun()
@@ -992,11 +1008,15 @@ def show_welcome_gateway():
     with col_auth:
         st.markdown(
             """
-            <div style="background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 12px; padding: 18px; min-height: 150px;">
-                <div style="font-size: 1.8rem; margin-bottom: 4px;">🔐</div>
-                <h3 style="margin: 0 0 6px 0; color: #1e3a8a; font-size: 1.15rem;">Authenticated Access</h3>
-                <p style="font-size: 0.86rem; color: #1e40af; line-height: 1.45; margin-bottom: 8px;">
-                    <strong>Enterprise Vertex AI</strong> (Gemini 3.7 Flash). Authenticates securely against Google Cloud Secret Manager.
+            <div style="background: linear-gradient(135deg, #2e1065 0%, #0f172a 20%, #581c87 45%, #3b0764 70%, #0f172a 100%);
+                        border: 2px solid #c084fc; border-radius: 14px; padding: 18px; min-height: 165px;
+                        box-shadow: inset 0 1px 3px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.6), 0 8px 25px rgba(168,85,247,0.35);
+                        position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -30px; right: -30px; width: 90px; height: 90px; background: radial-gradient(circle, rgba(216,180,254,0.35) 0%, transparent 70%); border-radius: 50%;"></div>
+                <div style="font-size: 1.8rem; margin-bottom: 2px;">🔐</div>
+                <h3 style="margin: 4px 0 8px 0; background: linear-gradient(180deg, #ffffff 0%, #e9d5ff 55%, #c084fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.18rem; font-weight: 900; letter-spacing: -0.01em;">Authenticated Access</h3>
+                <p style="font-size: 0.86rem; color: #cbd5e1 !important; line-height: 1.5; margin-bottom: 4px;">
+                    <strong style="color: #f8fafc;">Enterprise Vertex AI</strong> (Gemini 3.7 Flash & Gemini 3.1 Flash Image). Authenticates securely against Google Cloud Secret Manager.
                 </p>
             </div>
             """,
@@ -1049,7 +1069,7 @@ author_mode = st.radio(
         "📄 Document Transcriber (Word / PDF to Cambridge LaTeX)",
         "🖼️ AI Diagram Studio (Gemini 3.1 Flash Image)"
     ],
-    horizontal=True,
+    horizontal=False,
     key="main_authoring_mode_radio"
 )
 
@@ -1188,7 +1208,13 @@ if "Full Paper" in author_mode:
                 help="Executes a single-pass compilation without calling iterative Gemini auto-repair loops if minor compiler warnings occur."
             )
         with col_hint:
-            st.caption("💡 *Tip: Adding the word `'contextual'` triggers extended real-world scenarios and step-by-step bulleted subtasks.*")
+            st.markdown(
+                "<div class='metallic-tip-badge'>"
+                "<span style='font-size: 1.15rem; line-height: 1;'>💡</span> "
+                "<span><strong style='color: #f8fafc;'>Tip:</strong> Adding the word <span class='metallic-code-chip'>'contextual'</span> triggers extended real-world scenarios and step-by-step bulleted subtasks.</span>"
+                "</div>",
+                unsafe_allow_html=True
+            )
 
         generate_btn = st.button("Generate Exam Package", type="primary", use_container_width=True)
 

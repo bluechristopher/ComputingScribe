@@ -240,25 +240,11 @@ section.main,
     background-color: #f1f5f9 !important;
 }
 
-/* Force dark text in main panel except inside metallic dark hero header */
-[data-testid="stMain"] label,
-[data-testid="stMain"] label *,
-[data-testid="stMain"] label p,
-[data-testid="stMain"] label span,
-[data-testid="stMain"] [data-testid="stWidgetLabel"],
-[data-testid="stMain"] [data-testid="stWidgetLabel"] *,
-[data-testid="stMain"] [data-testid="stWidgetLabel"] p,
+/* Standard text colors for content */
 [data-testid="stMain"] [data-testid="stWidgetLabel"] label,
-[data-testid="stMain"] [data-testid="stRadio"] label,
-[data-testid="stMain"] [data-testid="stRadio"] label *,
-[data-testid="stMain"] [data-testid="stRadio"] p,
-[data-testid="stMain"] [data-testid="stRadio"] span,
-[data-testid="stMain"] div[role="radiogroup"] label,
-[data-testid="stMain"] [data-testid="stMarkdownContainer"]:not(button *):not(button) > p:not(.main-header *):not(.station-box-active *):not(button *):not(button),
-[data-testid="stMain"] p:not(button *):not(button):not(.main-header *):not(.main-header):not([data-baseweb="tag"] *):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble *):not(.marks-bracket *):not(.objective-chip *):not(.objective-chip),
-[data-testid="stMain"] span:not(button *):not(button):not(.main-header *):not(.main-header):not([data-baseweb="tag"] *):not([data-baseweb="tag"]):not([data-baseweb="tag"] span):not([data-testid="stMultiSelect"] *):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble):not(.subtask-mark-bubble *):not(.marks-bracket):not(.marks-bracket *):not(.badge-pill):not(.badge-pill *):not(.badge-latex):not(.badge-latex *):not(.badge-gemini):not(.badge-fairness):not(.objective-chip):not(.objective-chip *),
-[data-testid="stMain"] div:not(button *):not(button):not([data-testid="stButton"]):not(.main-header):not(.main-header *):not([data-baseweb="tag"]):not([data-baseweb="tag"] *):not([data-testid="stMultiSelect"] *):not(.station-box-active *):not(.station-box-active):not(.subtask-mark-bubble):not(.subtask-mark-bubble *):not(.marks-bracket):not(.marks-bracket *):not(.badge-pill):not(.badge-pill *):not(.badge-latex):not(.badge-gemini):not(.badge-fairness):not(.objective-chip):not(.objective-chip *),
-[data-testid="stMain"] li:not(button *) {
+[data-testid="stMain"] [data-testid="stWidgetLabel"] p,
+[data-testid="stMain"] [data-testid="stMarkdownContainer"]:not(button *):not(button):not(div[role="radiogroup"] *) > p:not(.main-header *):not(.station-box-active *),
+[data-testid="stMain"] li:not(button *):not(div[role="radiogroup"] *) {
     color: #0f172a !important;
 }
 
@@ -1101,316 +1087,218 @@ span[data-baseweb="tag"] *,
 }
 
 /* ==============================================================================
-   9. PREMIUM SEGMENTED MODE SELECTOR
+   9. AUTHENTIC DARK GRAY - SILVER METALLIC 3D CONTROLS (NO FULL BLACK)
    ============================================================================== */
+
+/* Radio Group Housing (Brushed Silver-Steel Housing) */
+div[data-testid="stRadio"] > div[role="radiogroup"],
 [data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] {
     display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    gap: 8px !important;
-    background: #f1f5f9 !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 12px !important;
-    padding: 6px !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    background: linear-gradient(145deg, #3f4756 0%, #2d3440 50%, #3f4756 100%) !important;
+    border: 2px solid #94a3b8 !important;
+    border-radius: 14px !important;
+    padding: 12px !important;
     margin: 8px 0 16px 0 !important;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.4), inset 0 -2px 5px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.2) !important;
     width: 100% !important;
     box-sizing: border-box !important;
 }
 
+/* Unselected Radio Option (Dark Gray - Brushed Silver Metallic Plate) */
+div[data-testid="stRadio"] > div[role="radiogroup"] > label,
 [data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label {
-    flex: 1 1 0 !important;
     display: flex !important;
-    justify-content: center !important;
+    flex-direction: row !important;
     align-items: center !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-    background: transparent !important;
-    border: 1px solid transparent !important;
-    border-radius: 9px !important;
-    padding: 9px 6px !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    width: 100% !important;
+    background: linear-gradient(135deg, #576375 0%, #3e4756 45%, #4b5566 75%, #333b47 100%) !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    padding: 12px 18px !important;
     margin: 0 !important;
     cursor: pointer !important;
     transition: all 0.2s ease-in-out !important;
-    font-weight: 600 !important;
-    font-size: 0.84rem !important;
-    min-width: 0 !important;
-}
-
-/* Labels are the visible segmented controls. Preserve native radio semantics
-   for keyboard and screen-reader users without showing redundant dot icons. */
-[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label input[type="radio"] {
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    margin: -1px !important;
-    opacity: 0 !important;
-}
-
-[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:focus-within {
-    outline: 3px solid #0b73ce !important;
-    outline-offset: 2px !important;
-}
-
-[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover {
-    background: #e2e8f0 !important;
-    color: #1e3a8a !important;
-}
-
-[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label[data-checked="true"],
-[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) {
-    background: #ffffff !important;
-    border-color: #3b82f6 !important;
-    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-}
-
-[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) * {
-    color: #1e3a8a !important;
-    font-weight: 700 !important;
-}
-
-/* ============================================================================
-   10. ACCESSIBLE WORKSPACE REFINEMENT
-   A restrained control system for repeated exam-authoring tasks.
-   ============================================================================ */
-:root {
-    --ui-ink: #172033;
-    --ui-muted: #52627a;
-    --ui-canvas: #f5f7fb;
-    --ui-surface: #ffffff;
-    --ui-border: #c7d2e1;
-    --ui-focus: #0b73ce;
-    --ui-primary: #123f73;
-    --ui-primary-hover: #0c315c;
-    --ui-primary-gradient: linear-gradient(135deg, #0b3b70 0%, #155f9d 54%, #087f8c 100%);
-    --ui-primary-gradient-hover: linear-gradient(135deg, #082e59 0%, #104d84 54%, #056d78 100%);
-    --ui-success: #087a55;
-}
-
-.stApp, section.main, [data-testid="stMain"], [data-testid="stMainBlockContainer"], .main {
-    background: var(--ui-canvas) !important;
-}
-
-[data-testid="stMain"] .block-container {
-    max-width: 1540px;
-}
-
-/* Inputs are deliberately quiet until the user interacts with them. */
-[data-testid="stMain"] input,
-[data-testid="stMain"] textarea,
-[data-testid="stMain"] [data-baseweb="select"] > div,
-[data-testid="stMain"] [data-baseweb="base-input"],
-[data-testid="stMain"] [data-testid="stNumberInput"] input {
-    background: var(--ui-surface) !important;
-    color: var(--ui-ink) !important;
-    border: 1px solid var(--ui-border) !important;
-    border-radius: 6px !important;
-    box-shadow: none !important;
-}
-
-[data-testid="stMain"] input:hover,
-[data-testid="stMain"] textarea:hover,
-[data-testid="stMain"] [data-baseweb="select"] > div:hover,
-[data-testid="stMain"] [data-baseweb="base-input"]:hover {
-    border-color: #8094b0 !important;
-}
-
-button:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-[data-baseweb="select"]:focus-within,
-[data-testid="stMain"] label:has(input:focus-visible) {
-    outline: 3px solid rgba(11, 115, 206, 0.32) !important;
-    outline-offset: 2px !important;
-}
-
-/* Buttons communicate hierarchy by colour and placement, not decoration. */
-.stButton > button,
-[data-testid="stDownloadButton"] > button {
-    min-height: 40px !important;
-    border-radius: 6px !important;
-    font-size: 0.92rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 0 !important;
-}
-
-button[data-testid="baseButton-primary"],
-.stButton > button[kind="primary"],
-.stButton > button[type="primary"],
-.compile-build-box button {
-    background: var(--ui-primary-gradient) !important;
-    color: #ffffff !important;
-    border: 1px solid #0b527f !important;
-    box-shadow: 0 3px 8px rgba(13, 70, 116, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
-}
-
-button[data-testid="baseButton-primary"]::before,
-.stButton > button[kind="primary"]::before,
-.stButton > button[type="primary"]::before {
-    content: none !important;
-    display: none !important;
-}
-
-button[data-testid="baseButton-primary"]:hover:not(:disabled),
-.stButton > button[kind="primary"]:hover:not(:disabled),
-.stButton > button[type="primary"]:hover:not(:disabled),
-.compile-build-box button:hover:not(:disabled) {
-    background: var(--ui-primary-gradient-hover) !important;
-    border-color: #083e68 !important;
-    box-shadow: 0 5px 12px rgba(13, 70, 116, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
-    transform: translateY(-1px) !important;
-}
-
-[data-testid="stMain"] .stButton > button:not([kind="primary"]),
-[data-testid="stDownloadButton"] > button {
-    background: #ffffff !important;
-    color: #174a80 !important;
-    border: 1px solid #7894b5 !important;
-    box-shadow: none !important;
-}
-
-/* Secondary, Popover & Download Buttons (Crisp White Card + Indigo Blue Text & Border) */
-.stButton > button[kind="secondary"],
-button[data-testid="baseButton-secondary"],
-[data-testid="stMain"] .stButton > button:not([kind="primary"]):not([type="primary"]),
-[data-testid="stMain"] button:not([kind="primary"]):not([type="primary"]),
-[data-testid="stDownloadButton"] > button,
-[data-testid="stPopover"] > button,
-[data-testid="stPopoverButton"],
-div[data-testid="stPopover"] button {
-    background-color: #ffffff !important;
-    background: #ffffff !important;
-    color: #1e3a8a !important;
-    -webkit-text-fill-color: #1e3a8a !important;
-    border: 1.5px solid #60a5fa !important;
     font-weight: 700 !important;
     font-size: 0.95rem !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
-    transition: all 0.2s ease !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.5), inset 0 -2px 4px rgba(0, 0, 0, 0.35), 0 3px 8px rgba(0, 0, 0, 0.25) !important;
 }
 
-.stButton > button[kind="secondary"] *,
-button[data-testid="baseButton-secondary"] *,
-[data-testid="stMain"] .stButton > button:not([kind="primary"]):not([type="primary"]) *,
-[data-testid="stMain"] button:not([kind="primary"]):not([type="primary"]) *,
-[data-testid="stDownloadButton"] > button *,
-[data-testid="stPopover"] > button *,
-[data-testid="stPopoverButton"] *,
-div[data-testid="stPopover"] button * {
-    color: #1e3a8a !important;
-    -webkit-text-fill-color: #1e3a8a !important;
+/* Ensure text inside unselected radio option is pure bright white */
+div[data-testid="stRadio"] > div[role="radiogroup"] > label *,
+div[data-testid="stRadio"] > div[role="radiogroup"] > label p,
+div[data-testid="stRadio"] > div[role="radiogroup"] > label span,
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label * {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-weight: 700 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Hover Radio Option (Silver Gleam) */
+div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover,
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover {
+    background: linear-gradient(135deg, #6b798e 0%, #4f5a6d 45%, #5e6b7f 75%, #424c5b 100%) !important;
+    border-color: #ffffff !important;
+    box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.7), inset 0 -2px 5px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.3) !important;
+    transform: translateY(-1px);
+}
+
+/* Selected Radio Option (Glowing Cobalt-Platinum Metallic Plate) */
+div[data-testid="stRadio"] > div[role="radiogroup"] > label[data-checked="true"],
+div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked),
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 40%, #3b82f6 75%, #1d4ed8 100%) !important;
+    border: 2px solid #ffffff !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.8), inset 0 -2px 6px rgba(0, 0, 0, 0.5), 0 0 16px rgba(59, 130, 246, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Text in Selected Radio Option */
+div[data-testid="stRadio"] > div[role="radiogroup"] > label[data-checked="true"] *,
+div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) *,
+[data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) *,
+div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) p,
+div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked) span {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-weight: 800 !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Radio Dot Indicator Colors */
+[data-testid="stRadio"] svg {
+    fill: #60a5fa !important;
+    stroke: #ffffff !important;
+}
+
+[data-testid="stRadio"] input[type="radio"]:checked + div {
+    background-color: #60a5fa !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 0 10px #60a5fa !important;
+}
+
+/* 10. Textboxes, Inputs & Textareas (Dark Gray - Brushed Silver Metallic 3D) */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+textarea,
+[data-testid="stTextInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-testid="stNumberInput"] input,
+div[data-baseweb="input"] input,
+div[data-baseweb="textarea"] textarea {
+    background: linear-gradient(145deg, #374151 0%, #28303e 50%, #374151 100%) !important;
+    border: 1.5px solid #94a3b8 !important;
+    border-radius: 9px !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.94rem !important;
+    padding: 10px 14px !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(255, 255, 255, 0.25) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+input[type="text"]::placeholder,
+textarea::placeholder,
+[data-testid="stTextInput"] input::placeholder,
+[data-testid="stTextArea"] textarea::placeholder {
+    color: #cbd5e1 !important;
+    -webkit-text-fill-color: #cbd5e1 !important;
+    opacity: 0.85 !important;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+[data-testid="stTextInput"] input:focus,
+[data-testid="stTextArea"] textarea:focus,
+div[data-baseweb="input"]:focus-within,
+div[data-baseweb="textarea"]:focus-within {
+    border-color: #ffffff !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 0 3px rgba(147, 197, 253, 0.5), 0 0 14px rgba(59, 130, 246, 0.4) !important;
+    outline: none !important;
+}
+
+/* 11. Selectbox / Dropdowns (Dark Gray - Silver Metallic 3D) */
+div[data-baseweb="select"] > div {
+    background: linear-gradient(145deg, #374151 0%, #28303e 50%, #374151 100%) !important;
+    border: 1.5px solid #94a3b8 !important;
+    border-radius: 9px !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.35), inset 0 -2px 4px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
+
+div[data-baseweb="select"] * {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+
+/* Universal High-Contrast Styling for Captions and Helper Notes */
+[data-testid="stMain"] [data-testid="stCaptionContainer"],
+[data-testid="stMain"] [data-testid="stCaptionContainer"] p,
+[data-testid="stMain"] [data-testid="stCaptionContainer"] span,
+[data-testid="stMain"] [data-testid="stCaptionContainer"] em,
+[data-testid="stMain"] .stCaption,
+[data-testid="stMain"] .stCaption p,
+[data-testid="stMain"] .stCaption span,
+[data-testid="stMain"] .stCaption em {
+    color: #1e293b !important;
+    -webkit-text-fill-color: #1e293b !important;
+    font-weight: 500 !important;
+}
+
+[data-testid="stMain"] [data-testid="stCaptionContainer"] code,
+[data-testid="stMain"] .stCaption code {
+    background: #1e3a8a !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
     font-weight: 700 !important;
 }
 
-.stButton > button[kind="secondary"]:hover,
-button[data-testid="baseButton-secondary"]:hover,
-[data-testid="stMain"] .stButton > button:not([kind="primary"]):not([type="primary"]):hover,
-[data-testid="stMain"] button:not([kind="primary"]):not([type="primary"]):hover,
-[data-testid="stDownloadButton"] > button:hover,
-[data-testid="stPopover"] > button:hover,
-[data-testid="stPopoverButton"]:hover,
-div[data-testid="stPopover"] button:hover {
-    background-color: #eff6ff !important;
-    background: #eff6ff !important;
-    color: #1d4ed8 !important;
-    -webkit-text-fill-color: #1d4ed8 !important;
-    border-color: #2563eb !important;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important;
-    transform: translateY(-1px) !important;
+
+/* Metallic 3D Tip Badge */
+.metallic-tip-badge {
+    background: linear-gradient(135deg, #374151 0%, #28303e 50%, #374151 100%) !important;
+    border: 1.5px solid #94a3b8 !important;
+    border-radius: 9px !important;
+    padding: 8px 14px !important;
+    font-size: 0.86rem !important;
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), inset 0 -2px 4px rgba(0, 0, 0, 0.35), 0 3px 8px rgba(0, 0, 0, 0.25) !important;
 }
 
-.stButton > button[kind="secondary"]:hover *,
-button[data-testid="baseButton-secondary"]:hover *,
-[data-testid="stMain"] .stButton > button:not([kind="primary"]):not([type="primary"]):hover *,
-[data-testid="stMain"] button:not([kind="primary"]):not([type="primary"]):hover *,
-[data-testid="stDownloadButton"] > button:hover *,
-[data-testid="stPopover"] > button:hover *,
-[data-testid="stPopoverButton"]:hover *,
-div[data-testid="stPopover"] button:hover * {
-    color: #1d4ed8 !important;
-    -webkit-text-fill-color: #1d4ed8 !important;
+.metallic-tip-badge > span {
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
 }
 
-[data-testid="stMain"] .stButton > button:not([kind="primary"]):hover:not(:disabled),
-[data-testid="stDownloadButton"] > button:hover:not(:disabled) {
-    background: #edf5fc !important;
-    color: #0c315c !important;
-    border-color: #174a80 !important;
-    transform: none !important;
-}
-
-button:disabled,
-button:disabled:hover {
-    background: #e4e9f0 !important;
-    color: #69788d !important;
-    border-color: #c7d2e1 !important;
-    box-shadow: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-}
-
-/* Compact navigation that remains usable at narrow widths. */
-[data-testid="stTabs"] [role="tablist"] {
-    gap: 3px !important;
-    border-bottom: 1px solid var(--ui-border) !important;
-    overflow-x: auto !important;
-}
-
-[data-testid="stTabs"] [role="tab"] {
-    color: #40536e !important;
-    font-size: 0.88rem !important;
-    font-weight: 700 !important;
-    min-height: 42px !important;
-    padding: 0 13px !important;
-}
-
-[data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-    color: #0d567f !important;
-    border-bottom: 3px solid #0b73ce !important;
-    background: linear-gradient(180deg, rgba(210, 239, 255, 0.84), rgba(255, 255, 255, 0)) !important;
-}
-
-
-
-/* Selected syllabus tags and objective chips maintain high-contrast crisp white typography */
-[data-baseweb="tag"],
-[data-testid="stMultiSelect"] [data-baseweb="tag"],
-[data-testid="stMain"] [data-baseweb="tag"],
-.objective-chip,
-[data-testid="stMain"] .objective-chip {
-    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
+.metallic-tip-badge code,
+.metallic-tip-badge .metallic-code-chip {
+    background: #1e3a8a !important;
+    color: #60a5fa !important;
+    -webkit-text-fill-color: #60a5fa !important;
     border: 1.5px solid #3b82f6 !important;
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-}
-
-[data-baseweb="tag"] *,
-[data-testid="stMultiSelect"] [data-baseweb="tag"] *,
-[data-testid="stMain"] [data-baseweb="tag"] *,
-.objective-chip *,
-[data-testid="stMain"] .objective-chip * {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-    fill: #ffffff !important;
-}
-
-@media (max-width: 720px) {
-    [data-testid="stMain"] .block-container {
-        padding-left: 0.85rem !important;
-        padding-right: 0.85rem !important;
-    }
-
-    [data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label {
-        width: 100% !important;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
-    }
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-weight: 800 !important;
+    font-size: 0.88rem !important;
+    padding: 2px 8px !important;
+    border-radius: 5px !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    display: inline-block !important;
 }

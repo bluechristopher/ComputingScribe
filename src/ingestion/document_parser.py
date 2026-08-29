@@ -9,7 +9,10 @@ from typing import Dict, Any, List, Optional
 try:
     import pypdf
 except ImportError:
-    pypdf = None
+    try:
+        import PyPDF2 as pypdf
+    except ImportError:
+        pypdf = None
 
 try:
     import docx
@@ -20,20 +23,52 @@ class DocumentParser:
     @staticmethod
     def parse_pdf(file_bytes: bytes, filename: str = "document.pdf") -> Dict[str, Any]:
         """Parses PDF bytes into extracted page-by-page text."""
-        reader = pypdf.PdfReader(io.BytesIO(file_bytes))
-        pages_text = []
-        for idx, page in enumerate(reader.pages):
-            text = page.extract_text() or ""
-            pages_text.append({"page_num": idx + 1, "text": text})
+        global pypdf
+        if pypdf is None:
+            try:
+                import pypdf
+            except ImportError:
+                try:
+                    import PyPDF2 as pypdf
+                except ImportError:
+                    pypdf = None
 
-        full_text = "\n\n".join([f"--- Page {p['page_num']} ---\n{p['text']}" for p in pages_text])
-        return {
-            "filename": filename,
-            "file_type": "pdf",
-            "page_count": len(pages_text),
-            "pages": pages_text,
-            "full_text": full_text
-        }
+        if pypdf is None:
+            # Fallback: extract printable ASCII/text strings if PDF library unavailable
+            text_preview = file_bytes.decode("utf-8", errors="ignore")
+            clean_lines = [line.strip() for line in text_preview.splitlines() if len(line.strip()) > 3]
+            fallback_text = "\n".join(clean_lines[:100]) if clean_lines else f"[PDF parsing requires 'pypdf': pip install pypdf]"
+            return {
+                "filename": filename,
+                "file_type": "pdf",
+                "page_count": 1,
+                "pages": [{"page_num": 1, "text": fallback_text}],
+                "full_text": fallback_text
+            }
+
+        try:
+            reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+            pages_text = []
+            for idx, page in enumerate(reader.pages):
+                text = page.extract_text() or ""
+                pages_text.append({"page_num": idx + 1, "text": text})
+
+            full_text = "\n\n".join([f"--- Page {p['page_num']} ---\n{p['text']}" for p in pages_text])
+            return {
+                "filename": filename,
+                "file_type": "pdf",
+                "page_count": len(pages_text),
+                "pages": pages_text,
+                "full_text": full_text
+            }
+        except Exception as e:
+            return {
+                "filename": filename,
+                "file_type": "pdf",
+                "page_count": 0,
+                "pages": [],
+                "full_text": f"[Error reading PDF '{filename}': {str(e)}]"
+            }
 
     @staticmethod
     def parse_docx(file_bytes: bytes, filename: str = "document.docx") -> Dict[str, Any]:
