@@ -6,8 +6,15 @@ Extracts structured text and question patterns from PDF past papers, Word DOCX r
 import io
 from pathlib import Path
 from typing import Dict, Any, List, Optional
-import pypdf
-import docx
+try:
+    import pypdf
+except ImportError:
+    pypdf = None
+
+try:
+    import docx
+except ImportError:
+    docx = None
 
 class DocumentParser:
     @staticmethod

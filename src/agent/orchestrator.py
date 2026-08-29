@@ -17,6 +17,7 @@ from src.generators.dataset_generator import DatasetGenerator, SyntheticDataset
 from src.generators.question_author import QuestionAuthor, ExamBlueprint
 from src.generators.document_transcriber import DocumentTranscriber
 from src.sandbox.latex_compiler import LaTeXCompiler, LaTeXCompilationResult, LaTeXSyntaxValidator
+from src.agent.image_generator import ExamImageGenerator, ImageGenerationResult
 from config.gcp_config import AppConfig, LOCAL_SESSIONS_DIR
 
 class ExamGenerationProgress:
@@ -38,6 +39,7 @@ class EduScribeOrchestrator:
         self.question_author = QuestionAuthor()
         self.document_transcriber = DocumentTranscriber()
         self.latex_compiler = LaTeXCompiler(max_healing_attempts=3)
+        self.image_generator = ExamImageGenerator()
 
         # Pre-seed authentic Cambridge 9569 exemplar grounding
         sample_path = Path(__file__).resolve().parent.parent.parent / "sample" / "practical.txt"
@@ -56,11 +58,9 @@ class EduScribeOrchestrator:
         self.preference_learner = PreferenceLearner(teacher_id=teacher_id)
 
     def rename_session(self, session_id: str, new_title: str) -> Optional[ExamSession]:
-        """Renames an existing session's title in storage."""
         return self.session_manager.rename_session(session_id, new_title)
 
     def ingest_past_papers(self, uploaded_files: List[Any]) -> int:
-        """Parses and indexes past papers into the RAG retriever."""
         indexed_count = 0
         for uf in uploaded_files:
             file_bytes = uf.getvalue() if hasattr(uf, "getvalue") else uf.read()
@@ -731,3 +731,27 @@ Return a valid JSON object matching this schema:
             "audit_summary": "Static syntax verification passed." if paper_report.is_valid and ms_report.is_valid else "Static syntax verification found unresolved issues; inspect the reported source before export.",
             "fixes_applied": paper_fixes + ms_fixes + paper_report.issues + ms_report.issues,
         }
+
+    def generate_exam_image(
+        self,
+        prompt: str,
+        aspect_ratio: str = "1:1",
+        style_preset: Optional[str] = None
+    ) -> ImageGenerationResult:
+        """Generates an exam diagram using Gemini 3.1 Flash Image via Vertex AI."""
+        return self.image_generator.generate_image(prompt, aspect_ratio=aspect_ratio, style_preset=style_preset)
+
+    def refine_exam_image(
+        self,
+        instruction: str,
+        previous_image_bytes: bytes,
+        previous_prompt: str = "",
+        iteration_count: int = 2
+    ) -> ImageGenerationResult:
+        """Refines an existing exam diagram iteratively using Gemini 3.1 Flash Image."""
+        return self.image_generator.refine_image(
+            instruction=instruction,
+            previous_image_bytes=previous_image_bytes,
+            previous_prompt=previous_prompt,
+            iteration_count=iteration_count
+        )

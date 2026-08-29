@@ -3,6 +3,7 @@
 > **The adaptive co-authoring agent for technical educators:** turning syllabus standards into compiled LaTeX papers, balanced synthetic datasets, and verified mark schemes.
 
 [![Google Gemini 3.7 Flash](https://img.shields.io/badge/Model-Gemini%203.7%20Flash-4285F4?logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Google Gemini 3.1 Flash Image](https://img.shields.io/badge/Image%20Model-Gemini%203.1%20Flash%20Image-34A853?logo=google&logoColor=white)](https://cloud.google.com/vertex-ai)
 [![Google Cloud Vertex AI](https://img.shields.io/badge/Agent%20Platform-Vertex%20AI-2463EB?logo=googlecloud&logoColor=white)](https://cloud.google.com/vertex-ai)
 [![Google Cloud Secret Manager](https://img.shields.io/badge/Security-Secret%20Manager-34A853?logo=googlecloud&logoColor=white)](https://cloud.google.com/secret-manager)
 [![Google GenAI SDK](https://img.shields.io/badge/SDK-Google%20GenAI%20SDK-34A853?logo=googlecloud&logoColor=white)](https://cloud.google.com/vertex-ai)
@@ -79,14 +80,14 @@ flowchart TD
     end
 
     subgraph Security["Security & Access Layer"]
-        SecretMgr[("Google Cloud Secret Manager: computingscribe-auth-credentials")]
+        SecretMgr[("Google Cloud Secret Manager: <AUTH_SECRET_NAME>")]
         BYOK["Local Session BYOK: Google AI Studio Gemini API Key"]
     end
 
-    subgraph GCP["Google Cloud Platform (Singapore - asia-southeast1)"]
-        CR["Google Cloud Run (eduscribe-ai Serverless Container)"]
+    subgraph GCP["Google Cloud Platform (Configurable Region: <GCP_LOCATION>)"]
+        CR["Google Cloud Run (Serverless Container)"]
         Firestore[("Google Cloud Firestore: Teacher Profiles & Sessions")]
-        ArtifactReg["Google Artifact Registry: eduscribe-repo"]
+        ArtifactReg["Google Artifact Registry: <REPO_NAME>"]
         CloudBuild["Google Cloud Build: Automated CI/CD Engine"]
     end
 
@@ -133,11 +134,11 @@ ComputingScribe AI demonstrates deep architectural synergy between **Google Clou
 | Google Cloud Service | Role in Agentic Workflow | Synergy Mechanism |
 | :--- | :--- | :--- |
 | **Google Cloud Vertex AI** | **Enterprise Agent Platform** | Powers enterprise-grade inference with **Gemini 3.7 Flash** (`gemini-3.7-flash`). Operates via Application Default Credentials (ADC) without requiring user API keys. |
-| **Google Cloud Secret Manager** | **Zero-Trust Access Control** | Stores encrypted authentication credentials (`computingscribe-auth-credentials`). Authorizes educators securely to unlock the Vertex AI Agent Platform with timing-safe verification (`hmac.compare_digest`). |
+| **Google Cloud Secret Manager** | **Zero-Trust Access Control** | Stores encrypted authentication credentials (`<AUTH_SECRET_NAME>`). Authorizes educators securely to unlock the Vertex AI Agent Platform with timing-safe verification (`hmac.compare_digest`). |
 | **Gemini 3.7 Flash** | **Cognitive Agent Brain** | Handles multi-step reasoning: deconstructs prompts into structured blueprints, synthesizes Cambridge LaTeX markup, diagnoses compiler error logs, and extracts pedagogical rules from educator feedback. |
 | **Google GenAI SDK (`google-genai`)** | **Agentic Tool & Schema Layer** | Enforces structured Pydantic JSON schemas, coordinates multi-modal RAG past-paper grounding, and orchestrates tool calling across data generators. |
 | **Google Cloud Firestore** | **Persistent Long-Term Agent Memory** | Acts as the agent's memory cortex (`teacher_profiles/{teacher_id}` and `exam_sessions/{session_id}`). Persists learned styles (question depth, rubric granularity, custom phrasing directives) across user sessions so the agent continuously adapts. |
-| **Google Cloud Run** | **Serverless Execution Runtime** | Hosts the containerized application in Singapore (`asia-southeast1`). Scales dynamically from zero to handle compute-intensive LaTeX compilation without persistent server overhead. |
+| **Google Cloud Run** | **Serverless Execution Runtime** | Hosts the containerized application in your configured region (e.g. `asia-southeast1`, `us-central1`). Scales dynamically from zero to handle compute-intensive LaTeX compilation without persistent server overhead. |
 | **Google Cloud Build & Artifact Registry** | **Automated CI/CD Pipeline** | Builds the production container with full headless TeXLive packages and deploys automatically on every `git push` to `main`. |
 
 ### The 7-Station Autonomous Agent Pipeline:
@@ -197,6 +198,15 @@ ComputingScribe AI demonstrates deep architectural synergy between **Google Clou
   - Formats practical subtasks in Cambridge-style prose with right-aligned `\Marks{<n>}` brackets; bullets are reserved for genuine lists.
   - Normalizes relational schemas with solid underline (`\uline{...}`) for Primary Keys and dashed underline (`\dashuline{...}`) for Foreign Keys.
   - Automatically synthesizes matching Cambridge Mark Scheme rows and compiles to PDF.
+
+### 10. AI Diagram Studio & Conversational Image Refinement (Gemini 3.1 Flash Image)
+- **Dedicated Diagram Model**: Powered by **Gemini 3.1 Flash Image** (`gemini-3.1-flash-image`) via **Google Cloud Vertex AI** enterprise access (with BYOK fallback).
+- **Natural-Language Diagram Synthesis**: Generates crisp, high-contrast, Cambridge-standard vector diagrams matching technical prompts (Binary Search Trees, Circular/Linear Queues, Linked Lists, Relational Database ERD Schematics, IEEE Logic Circuits, and Network Topologies).
+- **Multi-Turn Conversational Refinement (Iterative Editing)**: Educators can iteratively converse with the model to modify existing graphics (e.g., *"Add a temporary pointer named 'p' pointing to Node 2"*, *"Change root node value to 60"*). The agent preserves established visual structure and modifies only the requested elements rather than regenerating random images from scratch.
+- **Credit-Conscious Architecture**: Lightweight multimodal payloads transmit only the latest graphic iteration and compact instructions, keeping credit consumption and token latency minimal.
+- **Seamless Exam Paper Integration**:
+  - Direct 1-click download as high-resolution `.png`.
+  - Interactive insertion into `paper.tex` using `\ExamImage{assets/...}{<width>\linewidth}` with clickable TeX line picker and live context preview.
 
 ### 9. One-Click Multi-Artifact Export Bundle
 - Instantly packages a production-ready `.zip` archive containing:
@@ -272,8 +282,11 @@ Follow these steps in **[Google Cloud Shell](https://shell.cloud.google.com/)** 
 
 #### Step 1: Enable Google Cloud APIs
 ```bash
-# 1. Set your active Project ID
-export PROJECT_ID="eduscribe-505616"
+# 1. Set your custom Project ID and Region
+export PROJECT_ID="YOUR_GCP_PROJECT_ID"
+export GCP_LOCATION="YOUR_GCP_REGION"              # e.g., "asia-southeast1", "us-central1"
+export SECRET_NAME="computingscribe-auth-credentials" # or your chosen secret name
+
 gcloud config set project $PROJECT_ID
 
 # 2. Enable Vertex AI, Secret Manager, Cloud Run, and Firestore APIs
@@ -288,18 +301,17 @@ gcloud services enable \
 
 #### Step 2: Create Authentication Secret in Google Cloud Secret Manager
 ```bash
-# 1. Create your credentials JSON payload (custom username and password)
+# 1. Create your credentials JSON payload with your own users/passwords
 cat <<EOF > auth_credentials.json
 {
   "users": {
-    "gcp+allthingsagentic*2026": "YourSecurePassword2026!",
-    "admin": "AdminPassword2026!"
+    "your_username": "your_secure_password_here"
   }
 }
 EOF
 
 # 2. Upload to Google Cloud Secret Manager
-gcloud secrets create computingscribe-auth-credentials \
+gcloud secrets create $SECRET_NAME \
     --replication-policy="automatic" \
     --data-file="auth_credentials.json"
 
@@ -314,11 +326,11 @@ export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(pro
 export SERVICE_ACCOUNT="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 
 # 2. Grant permission to read Secret Manager credentials
-gcloud secrets add-iam-policy-binding computingscribe-auth-credentials \
+gcloud secrets add-iam-policy-binding $SECRET_NAME \
     --member="serviceAccount:${SERVICE_ACCOUNT}" \
     --role="roles/secretmanager.secretAccessor"
 
-# 3. Grant permission to invoke Vertex AI models (Gemini 3.7 Flash)
+# 3. Grant permission to invoke Vertex AI models (Gemini 3.7 Flash & Gemini 3.1 Flash Image)
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:${SERVICE_ACCOUNT}" \
     --role="roles/aiplatform.user"
@@ -326,15 +338,15 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 
 #### Step 4: Deploy to Google Cloud Run
 ```bash
-gcloud run deploy eduscribe-ai \
+gcloud run deploy computingscribe-app \
   --source . \
-  --region=asia-southeast1 \
+  --region=$GCP_LOCATION \
   --platform=managed \
   --allow-unauthenticated \
   --memory=2Gi \
   --cpu=2 \
   --timeout=10m \
-  --set-env-vars="GCP_PROJECT_ID=eduscribe-505616,GCP_LOCATION=asia-southeast1"
+  --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID,GCP_LOCATION=$GCP_LOCATION,AUTH_SECRET_NAME=$SECRET_NAME"
 ```
 
 ---

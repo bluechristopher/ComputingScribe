@@ -1105,7 +1105,8 @@ span[data-baseweb="tag"] *,
    ============================================================================== */
 [data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] {
     display: flex !important;
-    flex-wrap: wrap !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     gap: 8px !important;
     background: #f1f5f9 !important;
     border: 1px solid #cbd5e1 !important;
@@ -1113,18 +1114,27 @@ span[data-baseweb="tag"] *,
     padding: 6px !important;
     margin: 8px 0 16px 0 !important;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 [data-testid="stMain"] div[data-testid="stRadio"] > div[role="radiogroup"] > label {
+    flex: 1 1 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    white-space: nowrap !important;
     background: transparent !important;
     border: 1px solid transparent !important;
     border-radius: 9px !important;
-    padding: 8px 16px !important;
+    padding: 9px 6px !important;
     margin: 0 !important;
     cursor: pointer !important;
     transition: all 0.2s ease-in-out !important;
     font-weight: 600 !important;
-    font-size: 0.93rem !important;
+    font-size: 0.84rem !important;
+    min-width: 0 !important;
 }
 
 /* Labels are the visible segmented controls. Preserve native radio semantics

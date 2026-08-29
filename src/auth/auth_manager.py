@@ -34,7 +34,7 @@ class AuthManager:
         Expected format in Secret Manager:
         {
           "users": {
-            "gcp+allthingsagentic*2026": "YourSecretPassword",
+            "username_1": "user_password_1",
             "admin": {
               "password_hash": "...",
               "salt": "..."
@@ -43,7 +43,7 @@ class AuthManager:
         }
         or simple key-value:
         {
-          "gcp+allthingsagentic*2026": "YourSecretPassword"
+          "username_1": "user_password_1"
         }
         """
         now = time.time()

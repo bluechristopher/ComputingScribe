@@ -1041,17 +1041,17 @@ with st.expander("Copy Adaptable TeX Question Structures", expanded=False):
     render_structure_copy_buttons()
 
 # Authoring Mode Selection
-col_m1, col_m2 = st.columns([1, 1])
-with col_m1:
-    author_mode = st.radio(
-        "🛠️ Choose Authoring Mode",
-        options=[
-            "⚡ Full Paper Co-Authoring (All-in-One)",
-            "🎨 Question-by-Question Studio (Iterative & Modular)",
-            "📄 Document Transcriber (Word / PDF to Cambridge LaTeX)"
-        ],
-        horizontal=True
-    )
+author_mode = st.radio(
+    "🛠️ Choose Authoring Mode",
+    options=[
+        "⚡ Full Paper Co-Authoring (All-in-One)",
+        "🎨 Question-by-Question Studio (Iterative & Modular)",
+        "📄 Document Transcriber (Word / PDF to Cambridge LaTeX)",
+        "🖼️ AI Diagram Studio (Gemini 3.1 Flash Image)"
+    ],
+    horizontal=True,
+    key="main_authoring_mode_radio"
+)
 
 PRACTICAL_TOPICS = [
     "Data Representation and Character Encoding",
@@ -1641,6 +1641,145 @@ elif "Document Transcriber" in author_mode:
         st.rerun()
 
 # ==============================================================================
+# ==============================================================================
+# MODE D: AI DIAGRAM & IMAGE STUDIO (GEMINI 3.1 FLASH IMAGE)
+# ==============================================================================
+elif "AI Diagram Studio" in author_mode:
+    with st.expander("🖼️ AI Diagram & Visual Asset Studio (Gemini 3.1 Flash Image)", expanded=True):
+        st.markdown("<div style='font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 4px;'>Generate & Refine Exam Diagrams with Gemini 3.1 Flash Image</div>", unsafe_allow_html=True)
+        st.caption("Create publication-grade Cambridge assessment diagrams, flowcharts, data structures, and schematics. Converse iteratively to refine the graphic, download high-res PNGs, or insert directly into an exam paper.")
+
+        if "ai_img_bytes" not in st.session_state:
+            st.session_state.ai_img_bytes = None
+        if "ai_img_prompt" not in st.session_state:
+            st.session_state.ai_img_prompt = ""
+        if "ai_img_commentary" not in st.session_state:
+            st.session_state.ai_img_commentary = ""
+        if "ai_img_iter" not in st.session_state:
+            st.session_state.ai_img_iter = 1
+        if "ai_img_history" not in st.session_state:
+            st.session_state.ai_img_history = []
+
+        prompt_val_d = st.text_area(
+            "Diagram or Scenario Prompt",
+            placeholder="e.g. A photo of an automated MRT transit gate with contactless card tap reader, or a binary search tree diagram with root 50 and children 25, 75.",
+            key="ai_prompt_mode_d",
+            height=90
+        )
+
+        STYLE_OPTIONS = [
+            "Generic / Direct Description (Photos & Scenarios)",
+            "Data Structure Diagram",
+            "Flowchart / Process Graph",
+            "Database ERD Schema",
+            "Logic Gate Circuit",
+            "Network Architecture"
+        ]
+        STYLE_CODE_MAP = {
+            "Generic / Direct Description (Photos & Scenarios)": "generic",
+            "Data Structure Diagram": "data_structure",
+            "Flowchart / Process Graph": "flowchart",
+            "Database ERD Schema": "database_erd",
+            "Logic Gate Circuit": "circuit_logic",
+            "Network Architecture": "network_topology"
+        }
+
+        c_gen_btn_d, c_ratio_d, c_style_d = st.columns([1.4, 1, 1.6])
+        with c_ratio_d:
+            aspect_d = st.selectbox("Aspect Ratio", options=["1:1", "4:3", "16:9", "3:4"], index=0, key="mode_d_aspect")
+        with c_style_d:
+            style_label_d = st.selectbox("Style Category", options=STYLE_OPTIONS, index=0, key="mode_d_style")
+            style_d = STYLE_CODE_MAP.get(style_label_d, "generic")
+        with c_gen_btn_d:
+            st.write("")
+            gen_btn_d = st.button("✨ Generate with Gemini 3.1 Flash Image", type="primary", use_container_width=True, key="mode_d_generate_btn")
+
+        if gen_btn_d and prompt_val_d:
+            with st.spinner("Generating exam diagram with Gemini 3.1 Flash Image..."):
+                img_res = st.session_state.orchestrator.generate_exam_image(
+                    prompt=prompt_val_d,
+                    aspect_ratio=aspect_d,
+                    style_preset=style_d
+                )
+                if img_res.success and img_res.image_bytes:
+                    st.session_state.ai_img_bytes = img_res.image_bytes
+                    st.session_state.ai_img_prompt = prompt_val_d
+                    st.session_state.ai_img_commentary = img_res.commentary
+                    st.session_state.ai_img_iter = 1
+                    st.session_state.ai_img_history = [{"iter": 1, "prompt": prompt_val_d, "commentary": img_res.commentary}]
+                    st.success(f"✅ Generated diagram via {img_res.model_used}!")
+                    st.rerun()
+                else:
+                    st.error(f"Failed to generate diagram: {img_res.error_message}")
+
+        if st.session_state.ai_img_bytes:
+            st.markdown("---")
+            c_prev_d, c_refine_d = st.columns([1.2, 1.3])
+            
+            with c_prev_d:
+                st.markdown(f"**🖼️ Diagram Canvas (Iteration #{st.session_state.ai_img_iter})**")
+                st.image(st.session_state.ai_img_bytes, use_container_width=True)
+                if st.session_state.ai_img_commentary:
+                    st.info(f"💡 {st.session_state.ai_img_commentary}")
+                
+                c_dl_d, c_rst_d = st.columns([1.2, 1])
+                with c_dl_d:
+                    st.download_button(
+                        "⬇️ Download Diagram (.png)",
+                        data=st.session_state.ai_img_bytes,
+                        file_name=f"exam_diagram_iter_{st.session_state.ai_img_iter}.png",
+                        mime="image/png",
+                        use_container_width=True,
+                        key="mode_d_download_btn"
+                    )
+                with c_rst_d:
+                    if st.button("🔄 Start Afresh", use_container_width=True, key="mode_d_reset_canvas_btn"):
+                        st.session_state.ai_img_bytes = None
+                        st.session_state.ai_img_prompt = ""
+                        st.session_state.ai_img_commentary = ""
+                        st.session_state.ai_img_iter = 1
+                        st.session_state.ai_img_history = []
+                        st.rerun()
+
+            with c_refine_d:
+                st.markdown("**💬 Conversational Refinement (Iterative Editing)**")
+                st.caption("Prompt Gemini 3.1 Flash Image to refine or modify the existing diagram without starting from scratch:")
+                
+                refine_instr_d = st.text_area(
+                    "Refinement instruction",
+                    placeholder="e.g. Add a temporary pointer named 'current' pointing to Node 2 or Change the value in root node to 60.",
+                    key="mode_d_refine_instruction",
+                    height=75
+                )
+                if st.button("🎨 Refine Diagram (Iterate)", type="primary", use_container_width=True, key="mode_d_refine_btn"):
+                    if refine_instr_d:
+                        with st.spinner("Refining existing diagram with Gemini 3.1 Flash Image..."):
+                            refine_res = st.session_state.orchestrator.refine_exam_image(
+                                instruction=refine_instr_d,
+                                previous_image_bytes=st.session_state.ai_img_bytes,
+                                previous_prompt=st.session_state.ai_img_prompt,
+                                iteration_count=st.session_state.ai_img_iter + 1
+                            )
+                            if refine_res.success and refine_res.image_bytes:
+                                st.session_state.ai_img_bytes = refine_res.image_bytes
+                                st.session_state.ai_img_prompt = refine_instr_d
+                                st.session_state.ai_img_commentary = refine_res.commentary
+                                st.session_state.ai_img_iter += 1
+                                st.session_state.ai_img_history.append({
+                                    "iter": st.session_state.ai_img_iter,
+                                    "prompt": refine_instr_d,
+                                    "commentary": refine_res.commentary
+                                })
+                                st.success(f"✅ Refined diagram (Iteration #{st.session_state.ai_img_iter})!")
+                                st.rerun()
+                            else:
+                                st.error(f"Refinement error: {refine_res.error_message}")
+
+                if len(st.session_state.ai_img_history) > 1:
+                    st.markdown("<div style='font-size: 0.82rem; color: #64748b; margin-top: 8px;'><strong>Iteration Trail:</strong></div>", unsafe_allow_html=True)
+                    for h in st.session_state.ai_img_history:
+                        st.markdown(f"<div style='font-size: 0.8rem; color: #475569;'>• #{h['iter']}: {h['prompt'][:60]}</div>", unsafe_allow_html=True)
+
 # DISPLAY ARTIFACTS & RESULTS
 # ==============================================================================
 curr_sess: ExamSession = st.session_state.current_session
@@ -1853,172 +1992,423 @@ if curr_sess:
         render_tex_copy_control(curr_sess.latex_source, "paper.tex", "paper-tex")
 
         with st.expander("🖼️ Insert Exam Image", expanded=False):
-            st.caption("PNG and JPEG images are stored in this paper's `assets/` folder. They render in the browser preview and are included with `paper.tex` in the export ZIP.")
-            
-            col_img_up, col_img_w = st.columns([1.6, 1])
-            with col_img_up:
-                image_file = st.file_uploader(
-                    "Image file (PNG/JPG)",
-                    type=["png", "jpg", "jpeg"],
-                    key="paper_image_uploader",
-                )
-            with col_img_w:
-                image_width = st.slider(
-                    "Display width (% of text width)",
-                    min_value=10,
-                    max_value=100,
-                    value=65,
-                    key="paper_image_width",
-                )
+            st.caption("Generate Cambridge-standard diagrams with **Gemini 3.1 Flash Image** or upload existing PNG/JPEG assets. Images are stored under `assets/` and compiled into `paper.tex`.")
 
-            image_placement = st.radio(
-                "Placement method",
-                options=["Click to select line in paper.tex", "At end of paper", "After an exact phrase"],
-                horizontal=True,
-                key="paper_image_placement",
-            )
+            tab_ai_gen, tab_upload = st.tabs(["🤖 AI Diagram Studio (Gemini 3.1 Flash Image)", "📁 Upload Local Image"])
 
-            raw_tex_lines = curr_sess.latex_source.splitlines()
-            total_tex_lines = len(raw_tex_lines)
-            
-            target_line_num = None
-            pos_choice = "after"
-            image_anchor = ""
+            # --- TAB 1: AI Diagram Studio (Gemini 3.1 Flash Image) ---
+            with tab_ai_gen:
+                if "ai_img_bytes" not in st.session_state:
+                    st.session_state.ai_img_bytes = None
+                if "ai_img_prompt" not in st.session_state:
+                    st.session_state.ai_img_prompt = ""
+                if "ai_img_commentary" not in st.session_state:
+                    st.session_state.ai_img_commentary = ""
+                if "ai_img_iter" not in st.session_state:
+                    st.session_state.ai_img_iter = 1
+                if "ai_img_history" not in st.session_state:
+                    st.session_state.ai_img_history = []
 
-            if image_placement == "Click to select line in paper.tex":
-                if "img_insert_line" not in st.session_state or st.session_state.img_insert_line > total_tex_lines:
-                    st.session_state.img_insert_line = min(20, total_tex_lines) if total_tex_lines > 0 else 1
-
-                col_pos_sel, col_line_pick = st.columns([1.1, 1.4])
-                with col_pos_sel:
-                    pos_choice_label = st.radio(
-                        "Position relative to selected line",
-                        options=["Insert AFTER line", "Insert BEFORE line"],
-                        horizontal=True,
-                        key="paper_img_pos_choice"
-                    )
-                    pos_choice = "after" if "AFTER" in pos_choice_label else "before"
-                
-                with col_line_pick:
-                    manual_line = st.number_input(
-                        "Selected Line # (or click row below)",
-                        min_value=1,
-                        max_value=max(1, total_tex_lines),
-                        value=st.session_state.img_insert_line,
-                        step=1,
-                        key="paper_img_line_num_input"
-                    )
-                    if manual_line != st.session_state.img_insert_line:
-                        st.session_state.img_insert_line = manual_line
-
-                target_line_num = st.session_state.img_insert_line
-
-                # Interactive TeX Line Clicker Table
-                st.markdown("**👇 Click on any line in the TeX source code to select the insertion position:**")
-                df_source = pd.DataFrame({
-                    "Line #": list(range(1, total_tex_lines + 1)),
-                    "LaTeX Code": raw_tex_lines
-                })
-                
-                sel_event = st.dataframe(
-                    df_source,
-                    use_container_width=True,
-                    hide_index=True,
-                    height=280,
-                    selection_mode="single-row",
-                    on_select="rerun",
-                    key="paper_tex_line_clicker_df",
-                    column_config={
-                        "Line #": st.column_config.NumberColumn("Line #", width=70),
-                        "LaTeX Code": st.column_config.TextColumn("LaTeX Source Content", width="large"),
-                    }
+                ai_prompt_val = st.text_area(
+                    "Prompt description",
+                    placeholder="e.g. A photo of an automated MRT transit gate with card tap reader, or a binary search tree diagram with root 50 and children 25, 75.",
+                    key="ai_prompt_text_area",
+                    label_visibility="collapsed",
+                    height=85
                 )
 
-                if sel_event and hasattr(sel_event, "selection") and sel_event.selection and sel_event.selection.rows:
-                    clicked_row = sel_event.selection.rows[0]
-                    clicked_line = clicked_row + 1
-                    if clicked_line != st.session_state.img_insert_line:
-                        st.session_state.img_insert_line = clicked_line
-                        target_line_num = clicked_line
-                        st.rerun()
+                STYLE_OPTIONS_TAB = [
+                    "Generic / Direct Description (Photos & Scenarios)",
+                    "Data Structure Diagram",
+                    "Flowchart / Process Graph",
+                    "Database ERD Schema",
+                    "Logic Gate Circuit",
+                    "Network Architecture"
+                ]
+                STYLE_CODE_MAP_TAB = {
+                    "Generic / Direct Description (Photos & Scenarios)": "generic",
+                    "Data Structure Diagram": "data_structure",
+                    "Flowchart / Process Graph": "flowchart",
+                    "Database ERD Schema": "database_erd",
+                    "Logic Gate Circuit": "circuit_logic",
+                    "Network Architecture": "network_topology"
+                }
 
-                # Live Context Preview Box
-                if 1 <= target_line_num <= total_tex_lines:
-                    ctx_start = max(0, target_line_num - 3)
-                    ctx_end = min(total_tex_lines, target_line_num + 2)
-                    
-                    preview_snippets = []
-                    img_name_disp = html.escape(image_file.name) if image_file else "uploaded_image.png"
-                    marker_badge = (
-                        f"<div style='background: #dbeafe; color: #1e40af; border: 1.5px dashed #3b82f6; "
-                        f"border-radius: 6px; padding: 5px 12px; margin: 5px 0; font-weight: 700; "
-                        f"font-family: sans-serif; display: flex; align-items: center; gap: 8px;'>"
-                        f"<span>🖼️</span> <span>[Image: <strong>{img_name_disp}</strong> will be inserted here at {image_width}% width]</span>"
-                        f"</div>"
-                    )
-                    
-                    for idx in range(ctx_start, ctx_end):
-                        curr_l = idx + 1
-                        line_text = html.escape(raw_tex_lines[idx])
-                        line_num_badge = f"<span style='color: #64748b; font-weight: 600;'>{curr_l:3d} |</span> "
-                        
-                        if pos_choice == "before" and curr_l == target_line_num:
-                            preview_snippets.append(marker_badge)
-                        
-                        is_target = (curr_l == target_line_num)
-                        bg_style = "background: #f1f5f9; padding: 2px 4px; border-radius: 4px;" if is_target else ""
-                        preview_snippets.append(f"<div style='{bg_style}'>{line_num_badge}{line_text if line_text else '<em>(blank line)</em>'}</div>")
-                        
-                        if pos_choice == "after" and curr_l == target_line_num:
-                            preview_snippets.append(marker_badge)
+                col_ai_gen_btn, col_ai_ratio, col_ai_preset = st.columns([1.4, 1, 1.6])
+                with col_ai_ratio:
+                    ai_aspect = st.selectbox("Aspect Ratio", options=["1:1", "4:3", "16:9", "3:4"], index=0, key="ai_img_aspect")
+                with col_ai_preset:
+                    ai_style_label = st.selectbox("Style Category", options=STYLE_OPTIONS_TAB, index=0, key="ai_img_style")
+                    ai_style = STYLE_CODE_MAP_TAB.get(ai_style_label, "generic")
+                with col_ai_gen_btn:
+                    st.write("")
+                    generate_img_clicked = st.button("✨ Generate with Gemini 3.1 Flash Image", type="primary", use_container_width=True, key="ai_img_generate_btn")
 
-                    pos_desc = f"AFTER Line {target_line_num}" if pos_choice == "after" else f"BEFORE Line {target_line_num}"
-                    st.markdown(
-                        f"<div style='background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-top: 10px; font-family: monospace; font-size: 0.86rem; line-height: 1.5;'>"
-                        f"<div style='font-family: sans-serif; font-weight: 700; color: #0f172a; margin-bottom: 8px; display: flex; justify-content: space-between;'>"
-                        f"<span>📍 Insertion Point: <span style='color: #2563eb;'>{pos_desc}</span></span>"
-                        f"<span style='font-size: 0.8rem; color: #64748b; font-weight: normal;'>Displaying context around line {target_line_num}</span>"
-                        f"</div>"
-                        + "".join(preview_snippets) +
-                        "</div>",
-                        unsafe_allow_html=True
-                    )
-
-            elif image_placement == "After an exact phrase":
-                image_anchor = st.text_input(
-                    "Exact phrase in paper.tex",
-                    placeholder="Paste a unique phrase from the question text",
-                    key="paper_image_anchor",
-                )
-
-            if st.button("🖼️ Insert image into paper.tex", type="primary", key="insert_paper_image_btn", disabled=not image_file, use_container_width=True):
-                image_macro_placeholder = "__IMAGE_MACRO__"
-                updated_source, insert_error = insert_exam_image(
-                    latex_source=curr_sess.latex_source,
-                    image_macro=image_macro_placeholder,
-                    placement=image_placement,
-                    phrase=image_anchor,
-                    line_number=target_line_num,
-                    position=pos_choice,
-                )
-                if insert_error:
-                    st.error(insert_error)
-                else:
-                    try:
-                        asset = st.session_state.orchestrator.session_manager.save_image_asset(
-                            curr_sess,
-                            image_file.name,
-                            image_file.getvalue(),
-                            image_file.type,
+                if generate_img_clicked and ai_prompt_val:
+                    with st.spinner("Generating image with Gemini 3.1 Flash Image..."):
+                        img_res = st.session_state.orchestrator.generate_exam_image(
+                            prompt=ai_prompt_val,
+                            aspect_ratio=ai_aspect,
+                            style_preset=ai_style
                         )
-                        image_macro = rf"\ExamImage{{{asset['path']}}}{{{image_width / 100:.2f}\linewidth}}"
-                        curr_sess.latex_source = updated_source.replace(image_macro_placeholder, image_macro, 1)
-                        st.session_state.orchestrator.session_manager.save_session(curr_sess)
-                        st.session_state.current_session = curr_sess
-                        st.success(f"✅ Successfully inserted {asset['original_name']} ({image_width}% width) into paper.tex!")
-                        st.rerun()
-                    except ValueError as exc:
-                        st.error(str(exc))
+                        if img_res.success and img_res.image_bytes:
+                            st.session_state.ai_img_bytes = img_res.image_bytes
+                            st.session_state.ai_img_prompt = ai_prompt_val
+                            st.session_state.ai_img_commentary = img_res.commentary
+                            st.session_state.ai_img_iter = 1
+                            st.session_state.ai_img_history = [{"iter": 1, "prompt": ai_prompt_val, "commentary": img_res.commentary}]
+                            st.success(f"✅ Generated diagram via {img_res.model_used}!")
+                            st.rerun()
+                        else:
+                            st.error(f"Failed to generate image: {img_res.error_message}")
+
+                # If active AI image exists, display preview, conversational refinement & insertion controls
+                if st.session_state.ai_img_bytes:
+                    st.markdown("---")
+                    col_prev_img, col_refine_chat = st.columns([1.2, 1.3])
+                    
+                    with col_prev_img:
+                        st.markdown(f"**🖼️ Active Diagram Preview (Iteration #{st.session_state.ai_img_iter})**")
+                        st.image(st.session_state.ai_img_bytes, use_container_width=True)
+                        if st.session_state.ai_img_commentary:
+                            st.info(f"💡 {st.session_state.ai_img_commentary}")
+                        
+                        col_dl_img, col_rst_img = st.columns([1.2, 1])
+                        with col_dl_img:
+                            st.download_button(
+                                "⬇️ Download Diagram (.png)",
+                                data=st.session_state.ai_img_bytes,
+                                file_name=f"exam_diagram_iter_{st.session_state.ai_img_iter}.png",
+                                mime="image/png",
+                                use_container_width=True,
+                                key="download_active_ai_img_btn"
+                            )
+                        with col_rst_img:
+                            if st.button("🔄 Start Afresh", use_container_width=True, key="reset_ai_img_canvas_btn"):
+                                st.session_state.ai_img_bytes = None
+                                st.session_state.ai_img_prompt = ""
+                                st.session_state.ai_img_commentary = ""
+                                st.session_state.ai_img_iter = 1
+                                st.session_state.ai_img_history = []
+                                st.rerun()
+
+                    with col_refine_chat:
+                        st.markdown("**💬 Conversational Refinement (Iterative Editing)**")
+                        st.caption("Prompt Gemini 3.1 Flash Image to refine or modify the existing diagram without starting from scratch:")
+                        
+                        refine_instr = st.text_area(
+                            "Refinement instruction",
+                            placeholder="e.g. Add a temporary pointer named 'current' pointing to Node 2 or Change the value in root node to 60.",
+                            key="ai_img_refine_instruction",
+                            height=70
+                        )
+                        if st.button("🎨 Refine Diagram (Iterate)", type="primary", use_container_width=True, key="refine_ai_img_action_btn"):
+                            if refine_instr:
+                                with st.spinner("Refining existing diagram with Gemini 3.1 Flash Image..."):
+                                    refine_res = st.session_state.orchestrator.refine_exam_image(
+                                        instruction=refine_instr,
+                                        previous_image_bytes=st.session_state.ai_img_bytes,
+                                        previous_prompt=st.session_state.ai_img_prompt,
+                                        iteration_count=st.session_state.ai_img_iter + 1
+                                    )
+                                    if refine_res.success and refine_res.image_bytes:
+                                        st.session_state.ai_img_bytes = refine_res.image_bytes
+                                        st.session_state.ai_img_prompt = refine_instr
+                                        st.session_state.ai_img_commentary = refine_res.commentary
+                                        st.session_state.ai_img_iter += 1
+                                        st.session_state.ai_img_history.append({
+                                            "iter": st.session_state.ai_img_iter,
+                                            "prompt": refine_instr,
+                                            "commentary": refine_res.commentary
+                                        })
+                                        st.success(f"✅ Refined diagram (Iteration #{st.session_state.ai_img_iter})!")
+                                        st.rerun()
+                                    else:
+                                        st.error(f"Refinement error: {refine_res.error_message}")
+
+                        if len(st.session_state.ai_img_history) > 1:
+                            st.markdown("<div style='font-size: 0.8rem; color: #64748b; margin-top: 6px;'><strong>Iteration Trail:</strong></div>", unsafe_allow_html=True)
+                            for h in st.session_state.ai_img_history:
+                                st.markdown(f"<div style='font-size: 0.78rem; color: #475569;'>• #{h['iter']}: {h['prompt'][:50]}</div>", unsafe_allow_html=True)
+
+                    st.markdown("---")
+                    st.markdown("#### 📥 Insert Active AI Diagram into `paper.tex`")
+                    
+                    col_ai_pos_choice, col_ai_w = st.columns([1.5, 1])
+                    with col_ai_w:
+                        ai_insert_width = st.slider(
+                            "Diagram display width (% of linewidth)",
+                            min_value=10,
+                            max_value=100,
+                            value=65,
+                            key="ai_diagram_insert_width",
+                        )
+                    with col_ai_pos_choice:
+                        ai_insert_placement = st.radio(
+                            "Placement position in paper.tex",
+                            options=["Click to select line in paper.tex", "At end of paper", "After an exact phrase"],
+                            horizontal=True,
+                            key="ai_diagram_placement_mode",
+                        )
+
+                    raw_tex_lines_ai = curr_sess.latex_source.splitlines()
+                    total_tex_lines_ai = len(raw_tex_lines_ai)
+                    ai_target_line = None
+                    ai_pos = "after"
+                    ai_phrase = ""
+
+                    if ai_insert_placement == "Click to select line in paper.tex":
+                        if "ai_img_insert_line" not in st.session_state or st.session_state.ai_img_insert_line > total_tex_lines_ai:
+                            st.session_state.ai_img_insert_line = min(20, total_tex_lines_ai) if total_tex_lines_ai > 0 else 1
+
+                        col_ai_p1, col_ai_p2 = st.columns([1.1, 1.4])
+                        with col_ai_p1:
+                            pos_ai_lbl = st.radio(
+                                "Position relative to line",
+                                options=["Insert AFTER line", "Insert BEFORE line"],
+                                horizontal=True,
+                                key="ai_paper_img_pos_choice"
+                            )
+                            ai_pos = "after" if "AFTER" in pos_ai_lbl else "before"
+                        with col_ai_p2:
+                            manual_ai_line = st.number_input(
+                                "Selected Line #",
+                                min_value=1,
+                                max_value=max(1, total_tex_lines_ai),
+                                value=st.session_state.ai_img_insert_line,
+                                step=1,
+                                key="ai_paper_img_line_num_input"
+                            )
+                            if manual_ai_line != st.session_state.ai_img_insert_line:
+                                st.session_state.ai_img_insert_line = manual_ai_line
+                        
+                        ai_target_line = st.session_state.ai_img_insert_line
+
+                        df_source_ai = pd.DataFrame({
+                            "Line #": list(range(1, total_tex_lines_ai + 1)),
+                            "LaTeX Code": raw_tex_lines_ai
+                        })
+                        sel_event_ai = st.dataframe(
+                            df_source_ai,
+                            use_container_width=True,
+                            hide_index=True,
+                            height=200,
+                            selection_mode="single-row",
+                            on_select="rerun",
+                            key="ai_paper_tex_line_clicker_df",
+                            column_config={
+                                "Line #": st.column_config.NumberColumn("Line #", width=70),
+                                "LaTeX Code": st.column_config.TextColumn("LaTeX Source Content", width="large"),
+                            }
+                        )
+                        if sel_event_ai and hasattr(sel_event_ai, "selection") and sel_event_ai.selection and sel_event_ai.selection.rows:
+                            clicked_row_ai = sel_event_ai.selection.rows[0]
+                            clicked_line_ai = clicked_row_ai + 1
+                            if clicked_line_ai != st.session_state.ai_img_insert_line:
+                                st.session_state.ai_img_insert_line = clicked_line_ai
+                                ai_target_line = clicked_line_ai
+                                st.rerun()
+
+                    elif ai_insert_placement == "After an exact phrase":
+                        ai_phrase = st.text_input("Exact phrase in paper.tex", placeholder="Paste a unique phrase from the question text", key="ai_img_anchor_phrase")
+
+                    if st.button("📥 Insert AI Diagram into paper.tex", type="primary", use_container_width=True, key="insert_ai_diagram_to_paper_btn"):
+                        img_placeholder = "__IMAGE_MACRO__"
+                        up_source, ins_err = insert_exam_image(
+                            latex_source=curr_sess.latex_source,
+                            image_macro=img_placeholder,
+                            placement=ai_insert_placement,
+                            phrase=ai_phrase,
+                            line_number=ai_target_line,
+                            position=ai_pos
+                        )
+                        if ins_err:
+                            st.error(ins_err)
+                        else:
+                            try:
+                                default_name = f"ai_diagram_iter_{st.session_state.ai_img_iter}.png"
+                                asset = st.session_state.orchestrator.session_manager.save_image_asset(
+                                    curr_sess,
+                                    default_name,
+                                    st.session_state.ai_img_bytes,
+                                    "image/png"
+                                )
+                                macro_tex = rf"\ExamImage{{{asset['path']}}}{{{ai_insert_width / 100:.2f}\linewidth}}"
+                                curr_sess.latex_source = up_source.replace(img_placeholder, macro_tex, 1)
+                                st.session_state.orchestrator.session_manager.save_session(curr_sess)
+                                st.session_state.current_session = curr_sess
+                                st.success(f"✅ Successfully inserted AI diagram into paper.tex ({ai_insert_width}% width)!")
+                                st.rerun()
+                            except ValueError as exc:
+                                st.error(str(exc))
+
+            # --- TAB 2: Upload Local Image ---
+            with tab_upload:
+                col_img_up, col_img_w = st.columns([1.6, 1])
+                with col_img_up:
+                    image_file = st.file_uploader(
+                        "Image file (PNG/JPG)",
+                        type=["png", "jpg", "jpeg"],
+                        key="paper_image_uploader",
+                    )
+                with col_img_w:
+                    image_width = st.slider(
+                        "Display width (% of text width)",
+                        min_value=10,
+                        max_value=100,
+                        value=65,
+                        key="paper_image_width",
+                    )
+
+                image_placement = st.radio(
+                    "Placement method",
+                    options=["Click to select line in paper.tex", "At end of paper", "After an exact phrase"],
+                    horizontal=True,
+                    key="paper_image_placement",
+                )
+
+                raw_tex_lines = curr_sess.latex_source.splitlines()
+                total_tex_lines = len(raw_tex_lines)
+                
+                target_line_num = None
+                pos_choice = "after"
+                image_anchor = ""
+
+                if image_placement == "Click to select line in paper.tex":
+                    if "img_insert_line" not in st.session_state or st.session_state.img_insert_line > total_tex_lines:
+                        st.session_state.img_insert_line = min(20, total_tex_lines) if total_tex_lines > 0 else 1
+
+                    col_pos_sel, col_line_pick = st.columns([1.1, 1.4])
+                    with col_pos_sel:
+                        pos_choice_label = st.radio(
+                            "Position relative to selected line",
+                            options=["Insert AFTER line", "Insert BEFORE line"],
+                            horizontal=True,
+                            key="paper_img_pos_choice"
+                        )
+                        pos_choice = "after" if "AFTER" in pos_choice_label else "before"
+                    
+                    with col_line_pick:
+                        manual_line = st.number_input(
+                            "Selected Line # (or click row below)",
+                            min_value=1,
+                            max_value=max(1, total_tex_lines),
+                            value=st.session_state.img_insert_line,
+                            step=1,
+                            key="paper_img_line_num_input"
+                        )
+                        if manual_line != st.session_state.img_insert_line:
+                            st.session_state.img_insert_line = manual_line
+
+                    target_line_num = st.session_state.img_insert_line
+
+                    # Interactive TeX Line Clicker Table
+                    st.markdown("**👇 Click on any line in the TeX source code to select the insertion position:**")
+                    df_source = pd.DataFrame({
+                        "Line #": list(range(1, total_tex_lines + 1)),
+                        "LaTeX Code": raw_tex_lines
+                    })
+                    
+                    sel_event = st.dataframe(
+                        df_source,
+                        use_container_width=True,
+                        hide_index=True,
+                        height=280,
+                        selection_mode="single-row",
+                        on_select="rerun",
+                        key="paper_tex_line_clicker_df",
+                        column_config={
+                            "Line #": st.column_config.NumberColumn("Line #", width=70),
+                            "LaTeX Code": st.column_config.TextColumn("LaTeX Source Content", width="large"),
+                        }
+                    )
+
+                    if sel_event and hasattr(sel_event, "selection") and sel_event.selection and sel_event.selection.rows:
+                        clicked_row = sel_event.selection.rows[0]
+                        clicked_line = clicked_row + 1
+                        if clicked_line != st.session_state.img_insert_line:
+                            st.session_state.img_insert_line = clicked_line
+                            target_line_num = clicked_line
+                            st.rerun()
+
+                    # Live Context Preview Box
+                    if 1 <= target_line_num <= total_tex_lines:
+                        ctx_start = max(0, target_line_num - 3)
+                        ctx_end = min(total_tex_lines, target_line_num + 2)
+                        
+                        preview_snippets = []
+                        img_name_disp = html.escape(image_file.name) if image_file else "uploaded_image.png"
+                        marker_badge = (
+                            f"<div style='background: #dbeafe; color: #1e40af; border: 1.5px dashed #3b82f6; "
+                            f"border-radius: 6px; padding: 5px 12px; margin: 5px 0; font-weight: 700; "
+                            f"font-family: sans-serif; display: flex; align-items: center; gap: 8px;'>"
+                            f"<span>🖼️</span> <span>[Image: <strong>{img_name_disp}</strong> will be inserted here at {image_width}% width]</span>"
+                            f"</div>"
+                        )
+                        
+                        for idx in range(ctx_start, ctx_end):
+                            curr_l = idx + 1
+                            line_text = html.escape(raw_tex_lines[idx])
+                            line_num_badge = f"<span style='color: #64748b; font-weight: 600;'>{curr_l:3d} |</span> "
+                            
+                            if pos_choice == "before" and curr_l == target_line_num:
+                                preview_snippets.append(marker_badge)
+                            
+                            is_target = (curr_l == target_line_num)
+                            bg_style = "background: #f1f5f9; padding: 2px 4px; border-radius: 4px;" if is_target else ""
+                            preview_snippets.append(f"<div style='{bg_style}'>{line_num_badge}{line_text if line_text else '<em>(blank line)</em>'}</div>")
+                            
+                            if pos_choice == "after" and curr_l == target_line_num:
+                                preview_snippets.append(marker_badge)
+
+                        pos_desc = f"AFTER Line {target_line_num}" if pos_choice == "after" else f"BEFORE Line {target_line_num}"
+                        st.markdown(
+                            f"<div style='background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-top: 10px; font-family: monospace; font-size: 0.86rem; line-height: 1.5;'>"
+                            f"<div style='font-family: sans-serif; font-weight: 700; color: #0f172a; margin-bottom: 8px; display: flex; justify-content: space-between;'>"
+                            f"<span>📍 Insertion Point: <span style='color: #2563eb;'>{pos_desc}</span></span>"
+                            f"<span style='font-size: 0.8rem; color: #64748b; font-weight: normal;'>Displaying context around line {target_line_num}</span>"
+                            f"</div>"
+                            + "".join(preview_snippets) +
+                            "</div>",
+                            unsafe_allow_html=True
+                        )
+
+                elif image_placement == "After an exact phrase":
+                    image_anchor = st.text_input(
+                        "Exact phrase in paper.tex",
+                        placeholder="Paste a unique phrase from the question text",
+                        key="paper_image_anchor",
+                    )
+
+                if st.button("🖼️ Insert image into paper.tex", type="primary", key="insert_paper_image_btn", disabled=not image_file, use_container_width=True):
+                    image_macro_placeholder = "__IMAGE_MACRO__"
+                    updated_source, insert_error = insert_exam_image(
+                        latex_source=curr_sess.latex_source,
+                        image_macro=image_macro_placeholder,
+                        placement=image_placement,
+                        phrase=image_anchor,
+                        line_number=target_line_num,
+                        position=pos_choice,
+                    )
+                    if insert_error:
+                        st.error(insert_error)
+                    else:
+                        try:
+                            asset = st.session_state.orchestrator.session_manager.save_image_asset(
+                                curr_sess,
+                                image_file.name,
+                                image_file.getvalue(),
+                                image_file.type,
+                            )
+                            image_macro = rf"\ExamImage{{{asset['path']}}}{{{image_width / 100:.2f}\linewidth}}"
+                            curr_sess.latex_source = updated_source.replace(image_macro_placeholder, image_macro, 1)
+                            st.session_state.orchestrator.session_manager.save_session(curr_sess)
+                            st.session_state.current_session = curr_sess
+                            st.success(f"✅ Successfully inserted {asset['original_name']} ({image_width}% width) into paper.tex!")
+                            st.rerun()
+                        except ValueError as exc:
+                            st.error(str(exc))
+
 
         tex_bundle = st.session_state.orchestrator.session_manager.export_bundle_zip(curr_sess.session_id)
         if tex_bundle:
