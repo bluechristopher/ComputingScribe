@@ -163,12 +163,60 @@ class LaTeXSyntaxValidator:
                 source = source.replace(r"\begin{document}", exam_image_macro + "\n\\begin{document}", 1)
             fixes.append("Injected missing \\ExamImage macro definition into preamble.")
 
+        # 2b. Ensure enumitem, amsmath, tabularx, booktabs, makecell are present if needed
+        if document_mode and r"\documentclass" in source:
+            needed_packages = []
+            if (r"[leftmargin=" in source or r"itemsep=" in source or r"topsep=" in source) and r"\usepackage{enumitem}" not in source:
+                needed_packages.append(r"\usepackage{enumitem}")
+            if (r"\begin{tabularx}" in source or r"tabularx" in source) and r"\usepackage{tabularx}" not in source:
+                needed_packages.append(r"\usepackage{tabularx}")
+            if r"\usepackage{booktabs}" not in source:
+                needed_packages.append(r"\usepackage{booktabs}")
+            if r"\usepackage{makecell}" not in source:
+                needed_packages.append(r"\usepackage{makecell}")
+            if (r"\begin{align}" in source or r"\text{" in source or r"$" in source) and r"\usepackage{amsmath}" not in source:
+                needed_packages.append(r"\usepackage{amsmath,amssymb}")
+            
+            if needed_packages:
+                pkg_block = "\n".join(needed_packages)
+                source = source.replace(r"\begin{document}", f"{pkg_block}\n\\begin{{document}}", 1)
+                fixes.append(f"Injected missing package(s) into preamble: {', '.join(needed_packages)}.")
+
+        # 2c. Ensure \Marks and \code macros are declared
+        if document_mode:
+            macro_injections = []
+            if r"\Marks" in source and r"\Marks" not in source.split(r"\begin{document}")[0]:
+                macro_injections.append(r"\providecommand{\Marks}[1]{\textbf{[#1]}}")
+            if r"\code" in source and r"\code" not in source.split(r"\begin{document}")[0]:
+                macro_injections.append(r"\providecommand{\code}[1]{{\begingroup\urlstyle{tt}\path{#1}\endgroup}}")
+            if r"\prompt" in source and r"\prompt" not in source.split(r"\begin{document}")[0]:
+                macro_injections.append(r"\providecommand{\prompt}[1]{\textbf{\ttfamily #1}}")
+            if macro_injections:
+                macros_str = "\n".join(macro_injections)
+                source = source.replace(r"\begin{document}", f"{macros_str}\n\\begin{{document}}", 1)
+                fixes.append("Injected standard macros into preamble.")
+
         # 3. Ensure \usepackage{underscore} is present in preamble
         if document_mode and r"\usepackage{underscore}" not in source and r"\documentclass" in source:
             source = source.replace(r"\begin{document}", r"\usepackage{underscore}" + "\n\\begin{document}", 1)
             fixes.append("Added \\usepackage{underscore} to preamble.")
 
         # 4. Fix unescaped underscores outside verbatim/lstlisting and clean backslashes inside verbatim/lstlisting
+
+        # Convert any \begin{lstlisting} or \begin{verbatim} accidentally placed inside tabularx/tabular cells
+        def clean_table_listings(match):
+            table_content = match.group(0)
+            cleaned = re.sub(
+                r"\\begin\{(?:lstlisting|verbatim|minted|python)\}(.*?)\\end\{(?:lstlisting|verbatim|minted|python)\}",
+                lambda m: r"{\ttfamily\small " + m.group(1).strip().replace("\n", r"\par ") + r"}",
+                table_content,
+                flags=re.DOTALL
+            )
+            return cleaned
+
+        source = re.sub(r"\\begin\{tabularx\}.*?\\end\{tabularx\}", clean_table_listings, source, flags=re.DOTALL)
+        source = re.sub(r"\\begin\{tabular\}.*?\\end\{tabular\}", clean_table_listings, source, flags=re.DOTALL)
+
         lines = source.splitlines()
         in_code_block = False
         repaired_lines = []

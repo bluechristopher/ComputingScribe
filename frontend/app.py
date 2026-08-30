@@ -1199,13 +1199,19 @@ if "Full Paper" in author_mode:
             key="full_prompt"
         )
 
-        col_opt, col_hint = st.columns([1.5, 1.5])
+        col_opt, col_hint = st.columns([1.6, 1.4])
         with col_opt:
             skip_healing_full = st.checkbox(
                 "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
                 value=True,
                 key="full_skip_healing",
                 help="Executes a single-pass compilation without calling iterative Gemini auto-repair loops if minor compiler warnings occur."
+            )
+            generate_data_files = st.checkbox(
+                "📊 Generate Companion Datasets & Starter Files (CSV / SQL / Starter Code)",
+                value=True,
+                key="full_gen_data_files",
+                help="When enabled, Station 4 synthesizes candidate datasets (CSV, SQL schemas, and starter Python files). Disable to skip dataset synthesis, save time, and conserve credits."
             )
         with col_hint:
             st.markdown(
@@ -1281,7 +1287,8 @@ if "Full Paper" in author_mode:
                 exam_series=exam_series,
                 progress=progress_handler,
                 skip_self_healing=skip_healing_full,
-                session_title=session_custom_title
+                session_title=session_custom_title,
+                generate_data_files=generate_data_files
             )
             st.session_state.current_session = session
             st.session_state.compilation_logs = logs
@@ -1504,12 +1511,21 @@ elif "Question-by-Question" in author_mode:
                     key="studio_custom_title"
                 )
 
-            skip_healing_studio = st.checkbox(
-                "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
-                value=True,
-                key="studio_skip_healing",
-                help="Executes single-pass compilation without calling iterative Gemini auto-repair loops if minor compiler warnings occur."
-            )
+            col_st_opt1, col_st_opt2 = st.columns(2)
+            with col_st_opt1:
+                skip_healing_studio = st.checkbox(
+                    "⚡ Fast Mode: Skip sandbox self-healing loop (Save API credits)",
+                    value=True,
+                    key="studio_skip_healing",
+                    help="Executes single-pass compilation without calling iterative Gemini auto-repair loops if minor compiler warnings occur."
+                )
+            with col_st_opt2:
+                studio_gen_data = st.checkbox(
+                    "📊 Generate Companion Datasets & Starter Files",
+                    value=True,
+                    key="studio_gen_data_files",
+                    help="When enabled, synthesizes candidate CSV/SQL datasets for practical coding tasks upon assembly."
+                )
 
             # Compile & Build Button styled with blue background & light blue text
             st.markdown("<div class='compile-build-box'>", unsafe_allow_html=True)
@@ -1531,7 +1547,8 @@ elif "Question-by-Question" in author_mode:
                     exam_year=b_exam_year if 'b_exam_year' in locals() else "2027",
                     exam_series=b_exam_series if 'b_exam_series' in locals() else "Prelim",
                     skip_self_healing=skip_healing_studio,
-                    session_title=b_custom_title if 'b_custom_title' in locals() else None
+                    session_title=b_custom_title if 'b_custom_title' in locals() else None,
+                    generate_data_files=studio_gen_data
                 )
                 st.session_state.current_session = compiled_sess
                 st.success("🎉 Full Exam Package Assembled and Compiled Successfully!")

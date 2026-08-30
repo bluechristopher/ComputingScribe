@@ -208,7 +208,7 @@ HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
         )
         latex_body = self._normalize_marks_spacing(latex_body)
 
-        # 3. Inject into Golden Template
+        # 3. Inject into Golden Paper Template
         template_name = "cambridge_practical_template.tex" if detected_type == "practical" else "cambridge_theory_template.tex"
         template_path = TEMPLATES_DIR / template_name
         with open(template_path, "r", encoding="utf-8") as f:
@@ -228,14 +228,20 @@ HIGH-FIDELITY FAITHFUL TRANSCRIPTION & CONFORMANCE RULES:
         with open(ms_template_path, "r", encoding="utf-8") as f:
             full_ms_tex = f.read()
 
+        clean_ms_body = re.sub(r"\\begin\{tabularx\}[^\n]*", "", ms_body)
+        clean_ms_body = re.sub(r"\\end\{tabularx\}", "", clean_ms_body)
+        clean_ms_body = re.sub(r"\\begin\{table\}[^\n]*", "", clean_ms_body)
+        clean_ms_body = re.sub(r"\\end\{table\}", "", clean_ms_body)
+        clean_ms_body = clean_ms_body.strip()
+
         combined_ms_table = f"""
-\\begin{{tabularx}}{{\\linewidth}}{{|p{{2.5cm}}|X|c|p{{4.5cm}}|}}
-\\hline
-\\textbf{{Question}} & \\textbf{{Answer / Indicative Content}} & \\textbf{{Marks}} & \\textbf{{Guidance / Partial Credit}} \\\\
-\\hline
-{ms_body}
-\\hline
-\\end{{tabularx}}
+\begin{{tabularx}}{{\linewidth}}{{|p{{2.2cm}}|X|c|p{{4.8cm}}|}}
+\hline
+\textbf{{Question}} & \textbf{{Answer / Indicative Content}} & \textbf{{Marks}} & \textbf{{Guidance / Partial Credit}} \\
+\hline
+{clean_ms_body}
+\hline
+\end{{tabularx}}
 """
         full_ms_tex = full_ms_tex.replace("((INSTITUTION))", institution)
         full_ms_tex = full_ms_tex.replace("((EXAM_YEAR))", exam_year)

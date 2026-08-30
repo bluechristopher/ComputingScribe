@@ -546,23 +546,28 @@ CRITICAL FORMATTING & CONTEXTUAL RULES:
             template_code = f.read()
 
         ms_prompt = f"""
-You are a Principal Cambridge Examiner for Computer Science (9618/0478).
+You are a Principal Cambridge Examiner for Computer Science (9618/0478/9569).
 Create the complete, publication-grade Mark Scheme corresponding to this exam paper:
 
-Blueprint:
+Exam Blueprint:
 {blueprint.model_dump_json(indent=2)}
 
-Format each question's rubric as a clean Cambridge Mark Scheme table using:
-\\begin{{tabularx}}{{\\linewidth}}{{|p{{2.2cm}}|X|c|p{{5.0cm}}|}}
+STRICT LATEX TABULARX RULES:
+1. Format as a clean Cambridge Mark Scheme table using:
+\\begin{{tabularx}}{{\\linewidth}}{{|p{{2.2cm}}|X|c|p{{4.8cm}}|}}
 \\hline
 \\textbf{{Question}} & \\textbf{{Answer / Indicative Content}} & \\textbf{{Marks}} & \\textbf{{Guidance / Partial Credit}} \\\\
 \\hline
-...
+... (table rows for each question/task) ...
 \\hline
 \\end{{tabularx}}
 
-Provide exact python/pseudocode solutions, exact point awards, and common candidate misconceptions.
-Output ONLY the LaTeX body to replace % __AGENT_BODY_SLOT__.
+2. CRITICAL SYNTAX CONSTRAINTS:
+   - Do NOT use \\begin{{lstlisting}} or \\begin{{verbatim}} inside table cells! Use \\code{{...}} or \\texttt{{...}}.
+   - Escape all underscores in variable names outside \\code (e.g. \\code{{student_id}} or student\\_id).
+   - Escape literal percent signs as \\% and ampersands in text as \\&.
+   - Each row must contain exactly 4 columns separated by 3 '&' characters and ending with '\\\\ \\hline'.
+   - Output ONLY the LaTeX table starting with \\begin{{tabularx}} and ending with \\end{{tabularx}}.
 """
         client = AppConfig.get_gemini_client()
         ms_body = ""
@@ -574,8 +579,19 @@ Output ONLY the LaTeX body to replace % __AGENT_BODY_SLOT__.
             except Exception as e:
                 print(f"[QuestionAuthor] Gemini Mark Scheme generation skipped/failed: {e}")
 
-        if not ms_body:
-            ms_body = self._generate_fallback_mark_scheme_body(blueprint)
+        if not ms_body or "\\begin{tabularx}" not in ms_body:
+            if ms_body and "&" in ms_body and "\\\\" in ms_body:
+                # Wrap standalone rows inside a valid tabularx table
+                ms_body = f"""\\begin{{tabularx}}{{\\linewidth}}{{|p{{2.2cm}}|X|c|p{{4.8cm}}|}}
+\\hline
+\\textbf{{Question}} & \\textbf{{Answer / Indicative Content}} & \\textbf{{Marks}} & \\textbf{{Guidance / Partial Credit}} \\\\
+\\hline
+{ms_body}
+\\hline
+\\end{{tabularx}}"""
+            else:
+                ms_body = self._generate_fallback_mark_scheme_body(blueprint)
+
         ms_body, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(
             ms_body,
             document_mode=False,
@@ -591,6 +607,8 @@ Output ONLY the LaTeX body to replace % __AGENT_BODY_SLOT__.
         full_ms = full_ms.replace("((TOTAL_MARKS))", str(blueprint.total_marks))
         full_ms = full_ms.replace("% __AGENT_BODY_SLOT__", ms_body)
 
+        # Final deterministic pass on the complete document
+        full_ms, _ = LaTeXSyntaxValidator.sanitize_and_repair_deterministically(full_ms, document_mode=True)
         return full_ms
 
     def author_single_task(
@@ -972,10 +990,22 @@ INSTRUCTIONS:
         # Build Full Mark Scheme
         ms_rows = []
         for t in tasks_list:
-            ms_rows.append(t.get("mark_scheme_code", "").strip())
+            raw_ms = t.get("mark_scheme_code", "").strip()
+            if not raw_ms:
+                continue
+            # Strip any accidental outer \begin{tabularx} / \end{tabularx} or \begin{table} wrappers
+            clean_ms = re.sub(r"\\begin\{tabularx\}[^\n]*", "", raw_ms)
+            clean_ms = re.sub(r"\\end\{tabularx\}", "", clean_ms)
+            clean_ms = re.sub(r"\\begin\{table\}[^\n]*", "", clean_ms)
+            clean_ms = re.sub(r"\\end\{table\}", "", clean_ms)
+            # Strip redundant column header rows if generated per task
+            clean_ms = re.sub(r"\\textbf\{Question\}\s*&\s*\\textbf\{Answer[^\\]*\\\\\s*\\hline", "", clean_ms, flags=re.IGNORECASE)
+            clean_ms = clean_ms.strip()
+            if clean_ms:
+                ms_rows.append(clean_ms)
         
         combined_ms_table = f"""
-\\begin{{tabularx}}{{\\linewidth}}{{|p{{2.5cm}}|X|c|p{{4.5cm}}|}}
+\\begin{{tabularx}}{{\\linewidth}}{{|p{{2.2cm}}|X|c|p{{4.8cm}}|}}
 \\hline
 \\textbf{{Question}} & \\textbf{{Answer / Indicative Content}} & \\textbf{{Marks}} & \\textbf{{Guidance / Partial Credit}} \\\\
 \\hline

@@ -82,7 +82,8 @@ class EduScribeOrchestrator:
         progress: Optional[ExamGenerationProgress] = None,
         session_id: Optional[str] = None,
         skip_self_healing: bool = False,
-        session_title: Optional[str] = None
+        session_title: Optional[str] = None,
+        generate_data_files: bool = True
     ) -> ExamSession:
         """
         Generates a complete, verified Cambridge exam package from user prompt.
@@ -145,12 +146,12 @@ class EduScribeOrchestrator:
         # -------------------------------------------------------------
         # Station 4: Demographic Synthesizer Agent
         # -------------------------------------------------------------
-        prog.notify("Station 4: Demographic Synthesizer Agent", "Synthesizing 50/50 gender balanced candidate datasets & SQL companion files...")
         companion_dataset = None
         generated_datasets = []
         starter_files = []
 
-        if getattr(blueprint, "dataset_required", False) or paper_type == "practical":
+        if generate_data_files and (getattr(blueprint, "dataset_required", False) or paper_type == "practical"):
+            prog.notify("Station 4: Demographic Synthesizer Agent", "Synthesizing 50/50 gender balanced candidate datasets & SQL companion files...")
             try:
                 companion_dataset = self.dataset_generator.generate_dataset(
                     domain_topic=user_prompt,
@@ -174,6 +175,8 @@ class EduScribeOrchestrator:
                         })
             except Exception as e:
                 print(f"[Orchestrator] Station 4 dataset fallback: {e}")
+        else:
+            prog.notify("Station 4: Demographic Synthesizer Agent", "Companion dataset generation skipped (disabled by educator setting).")
 
         # -------------------------------------------------------------
         # Station 5: Golden TeX Authoring Agent
@@ -399,7 +402,8 @@ class EduScribeOrchestrator:
         exam_series: str = "PRELIM",
         session_id: Optional[str] = None,
         skip_self_healing: bool = False,
-        session_title: Optional[str] = None
+        session_title: Optional[str] = None,
+        generate_data_files: bool = True
     ) -> ExamSession:
         """Assembles a list of authored tasks into a unified, compilable ExamSession."""
         sess_id = session_id or f"sess_{uuid.uuid4().hex[:8]}"
@@ -420,29 +424,31 @@ class EduScribeOrchestrator:
         mark_scheme_source = assembled["mark_scheme_source"]
         total_marks = assembled["total_marks"]
 
-        # Synthesize companion dataset if practical
+        # Synthesize companion dataset if practical and enabled
+        companion_dataset = None
         generated_datasets = []
         starter_files = []
-        if paper_type == "practical":
+        if generate_data_files and paper_type == "practical":
             companion_dataset = self.dataset_generator.generate_dataset(
                 domain_topic="Practical Assessment Tasks",
                 record_count=12,
                 preferred_format="csv"
             )
-            generated_datasets.append({
-                "filename": companion_dataset.filename,
-                "content": companion_dataset.csv_content
-            })
-            if companion_dataset.sql_schema_content:
+            if companion_dataset:
                 generated_datasets.append({
-                    "filename": "SCHEMA.sql",
-                    "content": companion_dataset.sql_schema_content
+                    "filename": companion_dataset.filename,
+                    "content": companion_dataset.csv_content
                 })
-            if companion_dataset.starter_python_code:
-                starter_files.append({
-                    "filename": "starter_task.py",
-                    "content": companion_dataset.starter_python_code
-                })
+                if companion_dataset.sql_schema_content:
+                    generated_datasets.append({
+                        "filename": "SCHEMA.sql",
+                        "content": companion_dataset.sql_schema_content
+                    })
+                if companion_dataset.starter_python_code:
+                    starter_files.append({
+                        "filename": "starter_task.py",
+                        "content": companion_dataset.starter_python_code
+                    })
 
         # Compile in sandbox
         comp_res = self.latex_compiler.compile(

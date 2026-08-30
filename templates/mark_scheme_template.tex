@@ -29,6 +29,11 @@
 
 \usepackage{textcomp}
 \usepackage{underscore}
+\usepackage{enumitem}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{calc}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{\usepackage{url}}
 \usepackage{tabularx}
 \usepackage{array}
@@ -41,7 +46,10 @@
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.4em}
 
-\newcommand{\code}[1]{{\begingroup\urlstyle{tt}\path{#1}\endgroup}}
+\providecommand{\code}[1]{{\begingroup\urlstyle{tt}\path{#1}\endgroup}}
+\providecommand{\Marks}[1]{\textbf{[#1]}}
+\providecommand{\prompt}[1]{\textbf{\ttfamily #1}}
+\providecommand{\blanklines}[1]{\vspace{#1\baselineskip}}
 
 \lstset{
   basicstyle=\ttfamily\upshape\small,
